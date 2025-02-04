@@ -1,0 +1,22 @@
+$fontname Lucida Console
+
+$outname 640_console
+$pointsize 10
+$canvaspt 12
+$weight 300
+$outline 1
+$append
+
+$outname 800_console
+$pointsize 11
+$canvaspt 14
+$weight 500
+$outline 1
+$append
+
+$outname 1024_console
+$pointsize 12
+$canvaspt 14
+$weight 600
+$outline 1
+$append

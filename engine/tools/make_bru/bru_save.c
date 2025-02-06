@@ -22,8 +22,14 @@ static byte gdata[16 * 1024 * 1024];
 static int glen_entstring;
 static char gent_data[MAX_MAP_ENTSTRING];
 
-static int glen_secstring;
-static byte gsec_data[MAX_MAP_SECSTRING];
+static int gnum_areas;
+static bru_area_s gareas[MAX_MAP_AREAS];
+
+static int gnum_sectors;
+static bru_sector_s gsectors[MAX_MAP_SECTORS];
+
+static int gnum_brushsectors;
+static word gbrushsectors[MAX_MAP_BRUSHSECTOR];
 
 static char* value_for_key(entity_s* ent, char* key)
 {
@@ -56,6 +62,9 @@ static void emit_entities()
 	for (i = 0; i < gnum_entities; i++)
 	{
 		e = &gentities[i];
+		if (e->is_area)
+			continue;
+
 		if (!_strnicmp("trigger_", value_for_key(e, "classname"), 10))
 			istrig = TRUE;
 		else
@@ -211,8 +220,10 @@ void bru_save(const char* filename)
 	lvl_lump_add(BRU_LUMP_TEXINFOS, gtexinfos, gnum_texinfos * sizeof(bru_texinfo_s));
 	lvl_lump_add(BRU_LUMP_MODELS, gmodels, gnum_models * sizeof(bru_model_s));
 	lvl_lump_add(BRU_LUMP_TEXTURES, gtextures, gnum_textures * sizeof(bru_texture_s));
+	lvl_lump_add(BRU_LUMP_SECTORS, gsectors, gnum_sectors * sizeof(bru_sector_s));
+	lvl_lump_add(BRU_LUMP_AREAS, gareas, gnum_areas * sizeof(bru_area_s));
+	lvl_lump_add(BRU_LUMP_BRUSHSECTORS, gbrushsectors, gnum_brushsectors * sizeof(word));
 	lvl_lump_add(BRU_LUMP_ENTITIES, gent_data, glen_entstring);
-	lvl_lump_add(BRU_LUMP_SECTORS, gsec_data, glen_secstring);
 
 	gmap.magic = MAP_MAGIC;
 	memcpy(gdata, &gmap, sizeof(bru_header_s));
@@ -229,12 +240,14 @@ void bru_save(const char* filename)
 	printf("Saved: %s - %i\n\n", outfile, gofs);
 
 	//print results
-	printf("%6i           entities data\n", glen_entstring);
-	printf("%6i           sector data\n", glen_secstring);
-	printf("%6i/%6i surfaces\t\t%7i\n", gnum_surfaces, MAX_MAP_SURFACES, (int)(gnum_surfaces * sizeof(bru_surf_s)));
-	printf("%6i/%6i brushes\t\t%7i\n", gnum_brushes, MAX_MAP_BRUSHES, (int)(gnum_brushes * sizeof(bru_brush_s)));
-	printf("%6i/%6i texinfos\t\t%7i\n", gnum_texinfos, MAX_MAP_TEXINFOS, (int)(gnum_texinfos * sizeof(bru_texinfo_s)));
-	printf("%6i/%6i entities\n", gnum_entities, MAX_MAP_ENTITIES);
-	printf("%6i/%6i models\t\t%7i\n", gnum_models, MAX_MAP_ENTITIES, (int)(gnum_models * sizeof(bru_model_s)));
-	printf("%6i/%6i textures\t\t%7i\n", gnum_textures, MAX_MAP_TEXTURES, (int)(gnum_textures * sizeof(bru_texture_s)));
+	printf("%7i           entities data\n", glen_entstring);
+	printf("%7i/%7i surfaces\t\t%7i\n", gnum_surfaces, MAX_MAP_SURFACES, (int)(gnum_surfaces * sizeof(bru_surf_s)));
+	printf("%7i/%7i brushes\t\t%7i\n", gnum_brushes, MAX_MAP_BRUSHES, (int)(gnum_brushes * sizeof(bru_brush_s)));
+	printf("%7i/%7i texinfos\t\t%7i\n", gnum_texinfos, MAX_MAP_TEXINFOS, (int)(gnum_texinfos * sizeof(bru_texinfo_s)));
+	printf("%7i/%7i entities\n", gnum_entities, MAX_MAP_ENTITIES);
+	printf("%7i/%7i models\t\t%7i\n", gnum_models, MAX_MAP_ENTITIES, (int)(gnum_models * sizeof(bru_model_s)));
+	printf("%7i/%7i textures\t\t%7i\n", gnum_textures, MAX_MAP_TEXTURES, (int)(gnum_textures * sizeof(bru_texture_s)));
+	printf("%7i/%7i areas\t\t%7i\n", gnum_areas, MAX_MAP_AREAS, (int)(gnum_areas * sizeof(bru_area_s)));
+	printf("%7i/%7i sectors\t\t%7i\n", gnum_sectors, MAX_MAP_SECTORS, (int)(gnum_sectors * sizeof(bru_sector_s)));
+	printf("%7i/%7i brushsectors\t\t%7i\n", gnum_brushsectors, MAX_MAP_BRUSHSECTOR, (int)(gnum_brushsectors * sizeof(word)));
 }

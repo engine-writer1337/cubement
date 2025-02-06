@@ -17,9 +17,51 @@
     <ClInclude Include="cubement.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="mathlib.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="console.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="vidinit.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="keys.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="input.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="font.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="image.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cubement.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="util.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="console.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="vidinit.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="input.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="font.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="image.c">
       <Filter>Source Code</Filter>
     </ClCompile>
   </ItemGroup>

@@ -3,3 +3,8 @@
 @baseclass size(-16 -16 -32, 16 16 32) color(0 255 0) = PlayerClass []
 
 @PointClass base(PlayerClass) = info_player_start : "Player 1 start" []
+
+@SolidClass = area : "Area" 
+[
+	name(string) : "Area name"
+]

@@ -233,6 +233,8 @@ static int get_texture(const char* name)
 		return TEX_CLIP;
 	if (!_stricmp(name, "trigger"))
 		return TEX_TRIGGER;
+	if (!_stricmp(name, "area"))
+		return TEX_AREA;
 
 	for (i = 0; i < gnum_textures; i++)
 	{
@@ -471,7 +473,7 @@ static void parse_brush(entity_s* mapent)
 			get_token(FALSE); //value = atoi(token);
 		}
 
-		if (t != TEX_NULL && t != TEX_TRIGGER)
+		if (t != TEX_NULL && t != TEX_TRIGGER && t != TEX_AREA)
 		{
 			surf->type = plane_frompoints(points[0], points[1], points[2]);
 			if (surf->type == SURF_TYPE_BAD)
@@ -512,6 +514,7 @@ static bool_t parse_ents(void)
 		fatal_error("gnum_ents == MAX_MAP_ENTITIES");
 
 	mapent = &gentities[gnum_entities];
+	mapent->is_area = FALSE;
 	gnum_entities++;
 
 	do
@@ -529,6 +532,9 @@ static bool_t parse_ents(void)
 			epair_s* e = parse_epair();
 			if (e)
 			{
+				if (_stricmp(e->key, "classname") && _stricmp(e->value, "area"))
+					mapent->is_area = TRUE;
+
 				if (_stricmp(e->key, "mapversion") && _stricmp(e->key, "_generator"))
 				{
 					e->next = mapent->epairs;

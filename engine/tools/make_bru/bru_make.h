@@ -19,6 +19,7 @@
 #define TEX_NULL	-1
 #define TEX_CLIP	-2
 #define TEX_TRIGGER	-3
+#define TEX_AREA	-4
 
 #define vec_dot(x, y)				(x[0] * y[0] + x[1] * y[1] + x[2] * y[2])
 #define vec_mul(v, a)				(v[0] *= a, v[1] *= a, v[2] *= a)
@@ -61,6 +62,7 @@ typedef struct _ebrush_s
 
 typedef struct
 {
+	bool_t is_area;
 	epair_s* epairs;
 	ebrush_s* ebrushes;
 }entity_s;

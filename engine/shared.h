@@ -1,6 +1,9 @@
 #ifndef _SHARED_H_
 #define _SHARED_H_
 
+#define _CRT_SECURE_NO_WARNINGS
+#pragma warning(disable : 4244)
+
 #include <math.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -11,12 +14,25 @@
 #define TRUE	1
 #define FALSE	0
 
+#define strnull(str)		(!str || !str[0])
+#define strcmpc(dst, src)	(!strcmp(dst, src))
+#define strcmpi(dst, src)	(!_stricmp(dst, src))
+#define strcpyn(dst, src)	(strncpy(dst, src, sizeof(dst) - 1), dst[sizeof(dst) - 1] = '\0')
+#define strcatn(dst, src)	(strncat(dst, src, sizeof(dst) - 1), dst[sizeof(dst) - 1] = '\0')
+#define memzero(mem, sz)	(memset(mem, 0, sz))
+
 #define SAVEFUNC		__declspec(dllexport)
 
 #define FL_INVISIBLE	(1 << 0)
 #define FL_BEAM			(1 << 1)
 #define FL_UPRIGHT		(1 << 2)
 
+#define IMG_NEAREST		(1 << 0)
+#define IMG_CLAMP		(1 << 1)
+
+#define BAD_HANDLE	-1
+
+typedef int ihandle_t;
 typedef float ftime_t;
 typedef float vec2_t[2];
 typedef float vec3_t[3];
@@ -24,12 +40,24 @@ typedef unsigned char byte;
 typedef unsigned char bool_t;
 typedef void (*conact_t)(const char* arg1, const char* arg2);
 
+#include "keys.h"
+#include "mathlib.h"
+
+typedef enum
+{
+	COLOR_WHITE,
+	COLOR_ORANGE,
+	COLOR_CYAN,
+	COLOR_RED,
+	COLOR_GREEN,
+}color_e;
+
 typedef enum
 {
 	RENDER_NORMAL,
 	RENDER_TRANSPARENT,
 	RENDER_ALPHA,
-	RENDER_ADDITIVE,
+	RENDER_ADDTIVE,
 }render_e;
 
 typedef enum
@@ -60,7 +88,7 @@ typedef enum
 typedef struct entity_t
 {
 	entid_e id;
-	char* model;
+	ihandle_t model;
 
 	int flags;
 	int contents;
@@ -87,13 +115,13 @@ typedef struct entity_t
 
 	vec2_t scroll;
 	
-	entvar_s* pev;
+	void* pev;
 }entity_s;
 
 typedef struct
 {
 	entid_e id;
-	char* model;
+	ihandle_t model;
 
 	int flags;
 	vec3_t origin;
@@ -139,11 +167,12 @@ typedef struct
 typedef struct
 {
 	entid_e id;
+	int pev_size;
 	const char* name;
 	bool_t(*spawn)(entity_s* self);
 	void (*precache)(entity_s* self);
 	void (*keyvalue)(entity_s* self, keyvalue_s* kv);
-	void (*saverestore)(entvar_s* pev);
+	void (*saverestore)(void* pev);
 }entmap_s;
 
 typedef struct
@@ -168,6 +197,11 @@ typedef struct
 
 typedef struct
 {
+	int x, y, w, h;
+}prect_s;
+
+typedef struct
+{
 	int num_entities;
 	entity_s* ent_base;
 
@@ -182,9 +216,11 @@ typedef struct
 
 	bool_t console_active;
 
+	void (*quit)();
 	char* (*alloc_string)(const char* string);
 	void (*execute_cmd)(const char* command);
 	void (*changelevel)(const char* nextmap);
+	void (*console_printf)(color_e color, const char* text, ...);
 
 	void (*register_entity)(const entmap_s* ent);
 	entity_s* (*create_entity)(const char* classname);
@@ -206,34 +242,34 @@ typedef struct
 
 	void (*saverestore)(void* data, int count, field_e type);
 
-	void (*precache_model)(const char* filename);
-	void (*precache_sound)(const char* filename);
-	void (*precache_sprite)(const char* filename);
-	void (*precache_font)(const char* filename);
-	void (*precache_pic)(const char* filename);
+	ihandle_t(*precache_model)(const char* filename);
+	ihandle_t(*precache_sound)(const char* filename);
+	ihandle_t(*precache_sprite)(const char* filename);
+	ihandle_t(*precache_font)(const char* filename);
+	ihandle_t(*precache_pic)(const char* filename, int flags);
 
-	int (*font_height)(const char* fontname);
-	int (*font_len)(const char* fontname, const char* text);
-	int (*font_print)(const char* fontname, const char* text, int x, int y, render_e render, byte r, byte g, byte b, byte a);
+	int (*font_height)(ihandle_t idx);
+	int (*font_len)(ihandle_t idx, const char* text);
+	int (*font_print)(ihandle_t idx, const char* text, int x, int y, render_e render, byte r, byte g, byte b, byte a);
 
-	void (*pic_size)(const char* picname, int* w, int* h);
-	void (*pic_draw)(const char* picname, int x, int y, render_e render, byte r, byte g, byte b, byte a);
-	void (*pic_draw_stretch)(const char* picname, int x, int y, int w, int h, render_e render, byte r, byte g, byte b, byte a);
+	void (*pic_size)(ihandle_t idx, int* w, int* h);
+	void (*pic_draw)(ihandle_t idx, int x, int y, render_e render, byte r, byte g, byte b, byte a, const prect_s* rect);
+	void (*pic_draw_stretch)(ihandle_t idx, int x, int y, int w, int h, render_e render, byte r, byte g, byte b, byte a, const prect_s* rect);
 
 	void (*world_to_screen)(const vec3_t org, int* x, int* y);
 
 	void (*rect_draw)(int x, int y, int w, int h, render_e render, byte r, byte g, byte b, byte a);
 
-	void (*particle_draw)(const char* picname, const vec3_t org, float size, render_e render, byte r, byte g, byte b, byte a);
+	void (*particle_draw)(ihandle_t pic, const vec3_t org, float size, render_e render, byte r, byte g, byte b, byte a);
 
 	void (*set_numframes)(entity_s* ent);
 	void (*set_sequence)(entity_s* ent, const char* name);
 	void (*set_bodygroup)(entity_s* ent, int group, int body);
 	void (*get_bonepos)(const entity_s* ent, const char* name, vec3_t pos);
 
-	void (*ambient_play)(const char* soundname, vec3_t org, float volume, float distance);
-	void (*sound_play)(const char* soundname, const entity_s* ent, channel_e chan, float volume, float distance);
-	void (*sound_play_local)(const char* soundname, float volume);
+	void (*ambient_play)(ihandle_t idx, vec3_t org, float volume, float distance);
+	void (*sound_play)(ihandle_t idx, const entity_s* ent, channel_e chan, float volume, float distance);
+	void (*sound_play_local)(ihandle_t idx, float volume);
 	void (*sound_stop)(const entity_s* ent, channel_e chan);
 
 	void (*set_view_far)(float far);
@@ -248,7 +284,7 @@ typedef struct
 
 typedef struct
 {
-	int pev_size;
+	const char* windowname;
 
 	void (*cvar_init)();
 	void (*font_init)();
@@ -264,24 +300,28 @@ typedef struct
 	void (*before_draw_3d)();
 	void (*after_draw_3d)();
 
-	void (*before_draw_2d)();
-	void (*after_draw_2d)();
+	void (*draw_2d)();
 
 	void (*before_chanelevel)();
 	void (*after_chanelevel)();
 
+	void (*window_active)();
+	void (*window_inactive)();
+
+	bool_t(*char_events)(int ch);
 	bool_t(*key_events)(int key, bool_t down);
 }game_s;
 
 extern engine_s* cment;
 
-SAVEFUNC void Cubement(engine_s** e, game_s* g);
+SAVEFUNC void cubement(engine_s** e, game_s* g);
 
-#define LINK_ENTITY(ename, eid) \
+#define LINK_ENTITY(ename, eid, esize) \
 void add_##ename() {\
 	entmap_s ent; \
 	ent.id = eid;\
 	ent.name = #ename;\
+	ent.pev_size = esize;\
 	ent.spawn = spawn_##ename;\
 	ent.precache = precache_##ename;\
 	ent.keyvalue = keyvalue_##ename;\

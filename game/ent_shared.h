@@ -17,9 +17,4 @@ typedef enum
 	ENTID_WALL,
 }entid_e;
 
-typedef struct
-{
-	struct entity_t* owner;
-}entvar_s;
-
 #endif

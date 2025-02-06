@@ -2,6 +2,7 @@
 #include <conio.h>
 #include <stdio.h>
 
+#define FONT_MAGIC		'TNOF'
 #define FONT_DIMENSION	16
 #define FONT_LETTERS	256
 
@@ -147,7 +148,7 @@ static void bmp_save(const char* name, byte* base, int width, int height, int ou
 	buffer = calloc(outsize, 1);
 
 	memset(buffer, 0, outsize);
-	*(int*)buffer = 'TNOF';
+	*(int*)buffer = FONT_MAGIC;
 	*(unsigned short*)(buffer + 4) = (unsigned short)width;
 
 	w1 = h1 = 0;
@@ -183,9 +184,15 @@ static void bmp_save(const char* name, byte* base, int width, int height, int ou
 		}
 
 		if (!w_end || x_start == 9999)
-			p[i] = 0;
+		{
+			*p++ = 0;
+			*p++ = 0;
+		}
 		else
-			p[i] = (byte)((w_end - x_start) + 1);
+		{
+			*p++ = (byte)x_start;
+			*p++ = (byte)((w_end - x_start) + 1);
+		}
 	}
 
 	count = 0;

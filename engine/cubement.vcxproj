@@ -11,11 +11,25 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="console.h" />
     <ClInclude Include="cubement.h" />
+    <ClInclude Include="font.h" />
+    <ClInclude Include="image.h" />
+    <ClInclude Include="input.h" />
+    <ClInclude Include="keys.h" />
+    <ClInclude Include="mathlib.h" />
     <ClInclude Include="shared.h" />
+    <ClInclude Include="util.h" />
+    <ClInclude Include="vidinit.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="console.c" />
     <ClCompile Include="cubement.c" />
+    <ClCompile Include="font.c" />
+    <ClCompile Include="image.c" />
+    <ClCompile Include="input.c" />
+    <ClCompile Include="util.c" />
+    <ClCompile Include="vidinit.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -52,6 +66,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>.\!debug\</OutDir>
     <IntDir>.\!debug\</IntDir>
+    <LinkIncremental />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>.\!release\</OutDir>
@@ -63,11 +78,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>opengl32.lib;dsound.lib;libs/libmpg.lib;libs/minipng.lib;libs/turbojpeg-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>LIBCMT</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "../example/$(TargetName)$(TargetExt)"</Command>
@@ -90,6 +107,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>opengl32.lib;dsound.lib;libs/libmpg.lib;libs/minipng.lib;libs/turbojpeg-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>LIBCMT</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "../example/$(TargetName)$(TargetExt)"</Command>

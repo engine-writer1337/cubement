@@ -218,7 +218,7 @@ static void font_load(const char* name, font_s* out)
 		return;
 	}
 
-	sz = *(unsigned short*)(file + 4);
+	sz = *(word*)(file + 4);
 	if (sz != ((sz >> 2) << 2) || sz * sz > IMG_MAX_SIZE)
 	{
 		util_free(src);

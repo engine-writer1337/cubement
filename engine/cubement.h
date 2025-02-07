@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <gl/gl.h>
 
+typedef unsigned short	word;
 typedef unsigned char	enum_t;
 typedef unsigned int	glbuf_t;
 typedef unsigned int	glpic_t;
@@ -48,5 +49,8 @@ void host_shutdown();
 
 #include "image.h"
 #include "font.h"
+
+#include "bru_load.h"
+#include "world.h"
 
 #endif

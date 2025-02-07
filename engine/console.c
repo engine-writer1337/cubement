@@ -506,7 +506,7 @@ void con_init()
 {
 	util_create_folder("misc");
 
-	//con_create_cmd("map", world_map_cmd);
+	con_create_cmd("map", world_map_cmd);
 	con_create_cmd("bind", in_bind_cmd);
 	con_create_cmd("unbind", in_unbind_cmd);
 	con_create_cmd("unbindall", in_unding_all_cmd);
@@ -527,6 +527,7 @@ void con_init()
 	//grdr.showfps = con_create_cvar("r_showfps", 1, TRUE);
 	//grdr.fov = con_create_cvar("r_fov", RDR_DEF_FOV, TRUE);
 	gimg.aniso = con_create_cvar("r_aniso", TRUE, TRUE);
+	gimg.nofilter = con_create_cvar("r_nearest", FALSE, TRUE);
 
 	//grdr.sens = con_create_cvar("m_sens", RDR_DEF_SENS, TRUE);
 

@@ -149,8 +149,8 @@ SAVEFUNC void cubement(engine_s** e, game_s* g)
 		ghost.time += ghost.frametime;
 		engine_update();
 
-		//if (ghost.newmap[0])
-		//	world_load_map();
+		if (ghost.newmap[0])
+			world_load_map();
 
 		in_gather();
 		vid_set_params();
@@ -178,7 +178,7 @@ void host_shutdown()
 	//snd_shutdown();
 
 	//world_clip_free();
-	//bsp_free();
+	bru_free();
 	//sky_free();
 
 	img_free_all();

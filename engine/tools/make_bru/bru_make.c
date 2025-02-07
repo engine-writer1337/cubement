@@ -157,7 +157,7 @@ static bool_t get_token(bool_t crossline)
 	return TRUE;
 }
 
-static bool_t token_available(void)
+static bool_t token_available()
 {
 	char* search_p;
 
@@ -193,7 +193,7 @@ static void strip_trailing(char* e)
 	}
 }
 
-static epair_s* parse_epair(void)
+static epair_s* parse_epair()
 {
 	epair_s* e;
 
@@ -500,7 +500,7 @@ static void parse_brush(entity_s* mapent)
 	gnum_brushes++;
 }
 
-static bool_t parse_ents(void)
+static bool_t parse_ents()
 {
 	entity_s* mapent;
 
@@ -514,7 +514,6 @@ static bool_t parse_ents(void)
 		fatal_error("gnum_ents == MAX_MAP_ENTITIES");
 
 	mapent = &gentities[gnum_entities];
-	mapent->is_area = FALSE;
 	gnum_entities++;
 
 	do
@@ -532,9 +531,6 @@ static bool_t parse_ents(void)
 			epair_s* e = parse_epair();
 			if (e)
 			{
-				if (_stricmp(e->key, "classname") && _stricmp(e->value, "area"))
-					mapent->is_area = TRUE;
-
 				if (_stricmp(e->key, "mapversion") && _stricmp(e->key, "_generator"))
 				{
 					e->next = mapent->epairs;
@@ -562,7 +558,7 @@ int main(int argc, char* argv[])
 
 	data = util_full(argv[1], &len);
 	if (!data)
-		fatal_error("%s - bad file", argv[1]);
+		fatal_error("%s - not found", argv[1]);
 
 	start_token(data, len);
 	while (parse_ents());

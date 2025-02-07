@@ -25,11 +25,11 @@ static char gent_data[MAX_MAP_ENTSTRING];
 static int gnum_areas;
 static bru_area_s gareas[MAX_MAP_AREAS];
 
-static int gnum_sectors;
-static bru_sector_s gsectors[MAX_MAP_SECTORS];
+static int gnum_areaboxes;
+static bru_areabox_s gareaboxes[MAX_MAP_AREABOXES];
 
-static int gnum_brushsectors;
-static word gbrushsectors[MAX_MAP_BRUSHSECTOR];
+static int gnum_brushareas;
+static word gbrushareas[MAX_MAP_BRUSHAREAS];
 
 static char* value_for_key(entity_s* ent, char* key)
 {
@@ -53,17 +53,52 @@ static void emit_entities()
 	string_t line;
 	ebrush_s* brush;
 	bru_model_s* mod;
-	char* buf, * end;
+	bru_area_s* area;
+	char* buf, * end, * name;
 
 	buf = gent_data;
 	end = buf;
 	*end = 0;
 
+	gnum_areas = 1;
+	gnum_areaboxes = 1;
+	gareas[0].num_boxes = 1;
+	strcpy(gareas[0].name, "*main*");
+
 	for (i = 0; i < gnum_entities; i++)
 	{
 		e = &gentities[i];
-		if (e->is_area)
+		if (!_stricmp("area", value_for_key(e, "classname")))
+		{
+			if (!e->ebrushes)
+				continue;
+
+			if (gnum_areas == MAX_MAP_AREAS)
+				fatal_error("gnum_areas == MAX_MAP_AREAS");
+
+			area = &gareas[gnum_areas];
+			name = value_for_key(e, "name");
+			if (name)
+				strncpy(area->name, name, sizeof(area->name) - 1);
+			else
+				sprintf(area->name, "*%i", gnum_areas);
+
+			area->start_box = gnum_areaboxes;
+			brush = e->ebrushes;
+			while (brush)
+			{
+				if (gnum_areaboxes == MAX_MAP_AREABOXES)
+					fatal_error("gnum_areaboxes == MAX_MAP_AREABOXES");
+
+				vec2_copy(gareaboxes[gnum_areaboxes].mins, brush->mins);
+				vec2_copy(gareaboxes[gnum_areaboxes].maxs, brush->maxs);
+				gnum_areaboxes++;
+			}
+
+			area->num_boxes = gnum_areaboxes - area->start_box;
+			gnum_areas++;
 			continue;
+		}
 
 		if (!_strnicmp("trigger_", value_for_key(e, "classname"), 10))
 			istrig = TRUE;
@@ -146,57 +181,64 @@ static void emit_entities()
 	glen_entstring = end - buf + 1;
 }
 
-static void emit_sector(void)
+static void emit_areas()
 {
+	int i, j, k;
 	bru_brush_s* b;
-	word* data, * pnum;
-	short mins[2], maxs[2];
-	int i, x, y, w, h, num, count;
+	bru_area_s* area;
+	bru_areabox_s* abox;
+	bool_t brushcheck[MAX_MAP_BRUSHES];
+	bool_t alreadyadded[MAX_MAP_BRUSHES];
 
-	w = ceilf(fabsf(gmodels[0].maxs[0] - gmodels[0].mins[0]) / SECTOR_SIZE);
-	h = ceilf(fabsf(gmodels[0].maxs[1] - gmodels[0].mins[1]) / SECTOR_SIZE);
+	vec2_copy(gareaboxes[0].mins, gmodels[0].mins);
+	vec2_copy(gareaboxes[0].maxs, gmodels[0].maxs);
+	memset(brushcheck, 0, sizeof(brushcheck));
 
-	if (w < 1) w = 1;
-	if (h < 1) h = 1;
-
-	count = 0;
-	data = (word*)gsec_data;
-	*data++ = (word)w;
-	*data++ = (word)h;
-	*data++ = (word)SECTOR_SIZE;
-	data += 2;
-
-	for (y = 0; y < h; y++)
+	for (i = 1; i < gnum_areas; i++)
 	{
-		mins[1] = gmodels[0].mins[1] + y * SECTOR_SIZE;
-		maxs[1] = mins[1] + SECTOR_SIZE;
-
-		for (x = 0; x < w; x++)
+		area = gareas + 1;
+		area->start_brusharea = gnum_brushareas;
+		memset(alreadyadded, 0, sizeof(alreadyadded));
+		for (j = area->start_box; j < area->num_boxes; j++)
 		{
-			mins[0] = gmodels[0].mins[0] + x * SECTOR_SIZE;
-			maxs[0] = mins[0] + SECTOR_SIZE;
-
-			num = 0;
-			pnum = data;
-			data++;
-
-			for (i = 0; i < gmodels[0].num_brushes; i++)
+			abox = gareaboxes + j;
+			for (k = 0; k < gmodels[0].num_brushes; k++)
 			{
-				b = &gbrushes[gmodels[0].start_brush + i];
-				if (mins[0] >= b->maxs[0] || mins[1] >= b->maxs[1] ||
-					maxs[0] <= b->mins[0] || maxs[1] <= b->mins[1])
+				if (alreadyadded[k])
 					continue;
 
-				num++;
-				count++;
-				*data++ = (word)(gmodels[0].start_brush + i);
-			}
+				b = &gbrushes[gmodels[0].start_brush + k];
+				if (abox->mins[0] >= b->maxs[0] || abox->mins[1] >= b->maxs[1] ||
+					abox->maxs[0] <= b->mins[0] || abox->maxs[1] <= b->mins[1])
+					continue;
 
-			*pnum = num;
+				if (gnum_brushareas == MAX_MAP_BRUSHAREAS)
+					fatal_error("gnum_brushareas == MAX_MAP_BRUSHAREAS");
+
+				brushcheck[k] = TRUE;
+				alreadyadded[k] = TRUE;
+				gbrushareas[gnum_brushareas] = gmodels[0].start_brush + k;
+				gnum_brushareas++;
+			}
 		}
+
+		area->num_brushareas = gnum_brushareas - area->start_brusharea;
 	}
 
-	*(int*)(gsec_data + 6) = count;
+	area = gareas;
+	area->start_brusharea = gnum_brushareas;
+	for (k = 0; k < gmodels[0].num_brushes; k++)
+	{
+		if (brushcheck[k])
+			continue;
+
+		gbrushareas[gnum_brushareas] = gmodels[0].start_brush + k;
+		gnum_brushareas++;
+	}
+
+	area->num_brushareas = gnum_brushareas - area->start_brusharea;
+	if (area->num_brushareas > 0)
+		printf("Common brushes: %i\n", area->num_brushareas);
 }
 
 static void lvl_lump_add(int lump, void* data, int size)
@@ -209,27 +251,30 @@ static void lvl_lump_add(int lump, void* data, int size)
 
 void bru_save(const char* filename)
 {
+	int len;
 	FILE* fp;
 	string_t outfile = { 0 };
 
 	emit_entities();
-	emit_sector();
+	emit_areas();
 
 	lvl_lump_add(BRU_LUMP_SURFACES, gsurfes, gnum_surfaces * sizeof(bru_surf_s));
 	lvl_lump_add(BRU_LUMP_BRUSHES, gbrushes, gnum_brushes * sizeof(bru_brush_s));
 	lvl_lump_add(BRU_LUMP_TEXINFOS, gtexinfos, gnum_texinfos * sizeof(bru_texinfo_s));
 	lvl_lump_add(BRU_LUMP_MODELS, gmodels, gnum_models * sizeof(bru_model_s));
 	lvl_lump_add(BRU_LUMP_TEXTURES, gtextures, gnum_textures * sizeof(bru_texture_s));
-	lvl_lump_add(BRU_LUMP_SECTORS, gsectors, gnum_sectors * sizeof(bru_sector_s));
+	lvl_lump_add(BRU_LUMP_AREABOXES, gareaboxes, gnum_areaboxes * sizeof(bru_areabox_s));
 	lvl_lump_add(BRU_LUMP_AREAS, gareas, gnum_areas * sizeof(bru_area_s));
-	lvl_lump_add(BRU_LUMP_BRUSHSECTORS, gbrushsectors, gnum_brushsectors * sizeof(word));
+	lvl_lump_add(BRU_LUMP_BRUSHAREAS, gbrushareas, gnum_brushareas * sizeof(word));
 	lvl_lump_add(BRU_LUMP_ENTITIES, gent_data, glen_entstring);
 
 	gmap.magic = MAP_MAGIC;
 	memcpy(gdata, &gmap, sizeof(bru_header_s));
 
 	//save file
-	sprintf(outfile, "%s.bru", filename);
+	len = (int)strlen(filename);
+	strncpy(outfile, filename, len - 4);
+	strcat(outfile, ".bru");
 
 	fp = fopen(outfile, "wb");
 	if (!fp)
@@ -240,14 +285,13 @@ void bru_save(const char* filename)
 	printf("Saved: %s - %i\n\n", outfile, gofs);
 
 	//print results
-	printf("%7i           entities data\n", glen_entstring);
-	printf("%7i/%7i surfaces\t\t%7i\n", gnum_surfaces, MAX_MAP_SURFACES, (int)(gnum_surfaces * sizeof(bru_surf_s)));
-	printf("%7i/%7i brushes\t\t%7i\n", gnum_brushes, MAX_MAP_BRUSHES, (int)(gnum_brushes * sizeof(bru_brush_s)));
-	printf("%7i/%7i texinfos\t\t%7i\n", gnum_texinfos, MAX_MAP_TEXINFOS, (int)(gnum_texinfos * sizeof(bru_texinfo_s)));
-	printf("%7i/%7i entities\n", gnum_entities, MAX_MAP_ENTITIES);
-	printf("%7i/%7i models\t\t%7i\n", gnum_models, MAX_MAP_ENTITIES, (int)(gnum_models * sizeof(bru_model_s)));
-	printf("%7i/%7i textures\t\t%7i\n", gnum_textures, MAX_MAP_TEXTURES, (int)(gnum_textures * sizeof(bru_texture_s)));
-	printf("%7i/%7i areas\t\t%7i\n", gnum_areas, MAX_MAP_AREAS, (int)(gnum_areas * sizeof(bru_area_s)));
-	printf("%7i/%7i sectors\t\t%7i\n", gnum_sectors, MAX_MAP_SECTORS, (int)(gnum_sectors * sizeof(bru_sector_s)));
-	printf("%7i/%7i brushsectors\t\t%7i\n", gnum_brushsectors, MAX_MAP_BRUSHSECTOR, (int)(gnum_brushsectors * sizeof(word)));
+	printf("%6i/%6i surfaces\t\t%7i\n", gnum_surfaces, MAX_MAP_SURFACES, (int)(gnum_surfaces * sizeof(bru_surf_s)));
+	printf("%6i/%6i brushes\t\t%7i\n", gnum_brushes, MAX_MAP_BRUSHES, (int)(gnum_brushes * sizeof(bru_brush_s)));
+	printf("%6i/%6i texinfos\t\t%7i\n", gnum_texinfos, MAX_MAP_TEXINFOS, (int)(gnum_texinfos * sizeof(bru_texinfo_s)));
+	printf("%6i/%6i entities\t\t%7i\n", gnum_entities, MAX_MAP_ENTITIES, glen_entstring);
+	printf("%6i/%6i models\t\t%7i\n", gnum_models, MAX_MAP_ENTITIES, (int)(gnum_models * sizeof(bru_model_s)));
+	printf("%6i/%6i textures\t\t%7i\n", gnum_textures, MAX_MAP_TEXTURES, (int)(gnum_textures * sizeof(bru_texture_s)));
+	printf("%6i/%6i areas\t\t%7i\n", gnum_areas, MAX_MAP_AREAS, (int)(gnum_areas * sizeof(bru_area_s)));
+	printf("%6i/%6i areaboxes\t\t%7i\n", gnum_areaboxes, MAX_MAP_AREABOXES, (int)(gnum_areaboxes * sizeof(bru_areabox_s)));
+	printf("%6i/%6i brushareas\t%7i\n", gnum_brushareas, MAX_MAP_BRUSHAREAS, (int)(gnum_brushareas * sizeof(word)));
 }

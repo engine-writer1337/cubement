@@ -41,6 +41,12 @@
     <ClInclude Include="image.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="bru_load.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="world.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cubement.c">
@@ -62,6 +68,12 @@
       <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="image.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="bru_load.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="world.c">
       <Filter>Source Code</Filter>
     </ClCompile>
   </ItemGroup>

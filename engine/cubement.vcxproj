@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bru_load.h" />
     <ClInclude Include="console.h" />
     <ClInclude Include="cubement.h" />
     <ClInclude Include="font.h" />
@@ -21,8 +22,10 @@
     <ClInclude Include="shared.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vidinit.h" />
+    <ClInclude Include="world.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="bru_load.c" />
     <ClCompile Include="console.c" />
     <ClCompile Include="cubement.c" />
     <ClCompile Include="font.c" />
@@ -30,6 +33,7 @@
     <ClCompile Include="input.c" />
     <ClCompile Include="util.c" />
     <ClCompile Include="vidinit.c" />
+    <ClCompile Include="world.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

@@ -21,6 +21,8 @@
 #define TEX_TRIGGER	-3
 #define TEX_AREA	-4
 
+#define vec2_copy(dst, src)			(dst[0] = src[0], dst[1] = src[1])
+
 #define vec_dot(x, y)				(x[0] * y[0] + x[1] * y[1] + x[2] * y[2])
 #define vec_mul(v, a)				(v[0] *= a, v[1] *= a, v[2] *= a)
 #define vec_copy(dst, src)			(dst[0] = src[0], dst[1] = src[1], dst[2] = src[2])
@@ -62,7 +64,6 @@ typedef struct _ebrush_s
 
 typedef struct
 {
-	bool_t is_area;
 	epair_s* epairs;
 	ebrush_s* ebrushes;
 }entity_s;

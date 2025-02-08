@@ -35,7 +35,6 @@ char* util_get_timestamp();
 float util_calc_fov(float* fov_x, float width, float height);
 void util_adjust_fov(float* fov_x, float* fov_y, float width, float height);
 
-hash_t util_gethash(const char* string, hash_t hashsize);
 hash_t util_hash_str(const char* string);
 
 #endif

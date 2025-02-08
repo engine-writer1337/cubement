@@ -92,6 +92,7 @@
     <ClCompile Include="ent_brush.c" />
     <ClCompile Include="game.c" />
     <ClCompile Include="menu.c" />
+    <ClCompile Include="player.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\engine\shared.h" />
@@ -99,6 +100,7 @@
     <ClInclude Include="ent_shared.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="menu.h" />
+    <ClInclude Include="player.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="game.rc" />

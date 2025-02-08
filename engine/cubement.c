@@ -73,6 +73,16 @@ static void host_command(LPSTR lpCmdLine)
 
 static void engine_int()
 {
+	gengine.register_entity = ent_register;
+
+	gengine.create_cmd = con_create_cmd;
+	gengine.create_cvar = con_create_cvar2;
+
+	gengine.reset_cursor_pos = in_reset_cursor_pos;
+	gengine.show_cursor = in_show_cursor;
+	gengine.set_cursor_pos = in_set_cursor_pos;
+	gengine.get_cursor_pos = in_get_cursor_pos;
+
 	gengine.precache_pic = img_precache_pic;
 	gengine.precache_font = font_precache;
 
@@ -81,10 +91,17 @@ static void engine_int()
 	gengine.font_print = font_print;
 
 	gengine.pic_draw = img_pic_draw;
+
+	gengine.set_view_fov = world_set_fov;
+	gengine.set_view_org = world_view_org;
+	gengine.set_view_ang = world_view_ang;
 }
 
 static void engine_update()
 {
+	gengine.ent_base = gents;
+	gengine.num_entities = gnuments;
+
 	gengine.time = ghost.time;
 	gengine.frametime = ghost.frametime;
 
@@ -120,17 +137,15 @@ SAVEFUNC void cubement(engine_s** e, game_s* g)
 	con_init();
 	SetUnhandledExceptionFilter(host_crash);
 
-	//ggame.entity_register();
+	ggame.entity_register();
 	vid_set_params();
 
 	ghost.load_as_temp = FALSE;
 	ghost.load_is_allow = TRUE;
-	img_start();
 	img_init();
 
 	ggame.after_engine_init();
 	ghost.load_is_allow = FALSE;
-	img_end();
 
 	con_printf(COLOR_WHITE, "Game Load Time: %ims", (int)(1000 * (util_time() - newtime)));
 	oldtime = util_time() - 0.01f;
@@ -154,13 +169,19 @@ SAVEFUNC void cubement(engine_s** e, game_s* g)
 
 		in_gather();
 		vid_set_params();
-		//world_set_param();
-		//plr_set_param();
+		img_set_param();
 		//snd_set_param();
-		//img_set_param();
-		//in_mouse_move();
 
-		glClear(GL_COLOR_BUFFER_BIT);
+		if (gworld.is_load && ggame.draw_world())
+		{
+			ggame.before_draw_3d();
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			world_setup3d();
+			world_draw();
+			ggame.after_draw_3d();
+		}
+		else
+			glClear(GL_COLOR_BUFFER_BIT);
 
 		vid_setup2d();
 		ggame.draw_2d();

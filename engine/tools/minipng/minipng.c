@@ -23,7 +23,29 @@ static const char idat_sign[] = { 'I', 'D', 'A', 'T' };
 static const char iend_sign[] = { 'I', 'E', 'N', 'D' };
 static const int  iend_crc32 = 0xAE426082;
 
-const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int maxsize, int* out_width, int* out_height, int* has_alpha)
+const char* minipng_size(const byte* buffer, int filesize, int* out_width, int* out_height)
+{
+	png_t png_hdr;
+
+	if (filesize < sizeof(png_hdr))
+		return "Bad size";
+
+	memcpy(&png_hdr, buffer, sizeof(png_t));
+	if (memcmp(png_hdr.sign, png_sign, sizeof(png_sign)))
+		return "Invalid PNG signature";
+
+	png_hdr.ihdr_len = ntohl(png_hdr.ihdr_len);
+	if (png_hdr.ihdr_len != sizeof(png_ihdr_t))
+		return "Invalid IHDR chunk size";
+	if (memcmp(png_hdr.ihdr_sign, ihdr_sign, sizeof(ihdr_sign)))
+		return "IHDR chunk corrupted";
+
+	*out_height = ntohl(png_hdr.ihdr_chunk.height);
+	*out_width = ntohl(png_hdr.ihdr_chunk.width);
+	return NULL;
+}
+
+const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int* has_alpha)
 {
 	int ret;
 	png_t png_hdr;
@@ -51,7 +73,7 @@ const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int maxsi
 
 	height = png_hdr.ihdr_chunk.height = ntohl(png_hdr.ihdr_chunk.height);
 	width = png_hdr.ihdr_chunk.width = ntohl(png_hdr.ihdr_chunk.width);
-	if (png_hdr.ihdr_chunk.height == 0 || png_hdr.ihdr_chunk.width == 0 || width * height > (uint32_t)maxsize || ((width >> 2) << 2) != width)
+	if (png_hdr.ihdr_chunk.height == 0 || png_hdr.ihdr_chunk.width == 0)
 		return "Invalid image size";
 	if (png_hdr.ihdr_chunk.bitdepth != 8)
 		return "Only 8-bit images is supported";
@@ -374,8 +396,6 @@ const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int maxsi
 		break;
 	}
 
-	*out_width = width;
-	*out_height = height;
 	free(uncompressed_buffer);
 	return NULL;
 }

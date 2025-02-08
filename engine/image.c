@@ -3,19 +3,8 @@
 
 image_s gimg;
 static pic_s gpics[IMG_MAX_PICS];
-extern const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int maxsize, int* out_width, int* out_height, int* has_alpha);
-
-void img_start()
-{
-	if (!gimg.rgba)
-		gimg.rgba = util_malloc(IMG_MAX_SIZE << 2);
-}
-
-void img_end()
-{
-	util_free(gimg.rgba);
-	gimg.rgba = NULL;
-}
+extern const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int* has_alpha);
+extern const char* minipng_size(const byte* buffer, int filesize, int* out_width, int* out_height);
 
 void img_bind(glpic_t t)
 {
@@ -76,8 +65,9 @@ static ihandle_t img_find_pic(const char* name)
 	return BAD_HANDLE;
 }
 
-static void img_set_filter(glpic_t pic)
+void img_set_filter(glpic_t pic)
 {
+	gimg.current = pic;
 	glBindTexture(GL_TEXTURE_2D, pic);
 	if (gimg.mipmap)
 	{
@@ -156,7 +146,7 @@ static void img_mipmap(byte* in, int width, int height, int format)
 	}
 }
 
-glpic_t img_upload(int width, int height, int format)
+glpic_t img_upload(byte* data, int width, int height, int format)
 {
 	glpic_t retval;
 
@@ -165,14 +155,14 @@ glpic_t img_upload(int width, int height, int format)
 
 	retval = util_tex_gen();
 	img_set_filter(retval);
-	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gimg.rgba);
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	if (gimg.mipmap)
 	{
 		int mipmap = 1;
 
 		while (width > 1 || height > 1)
 		{
-			img_mipmap(gimg.rgba, width, height, format);
+			img_mipmap(data, width, height, format);
 
 			width >>= 1;
 			height >>= 1;
@@ -180,17 +170,18 @@ glpic_t img_upload(int width, int height, int format)
 			if (width < 1) width = 1;
 			if (height < 1) height = 1;
 
-			glTexImage2D(GL_TEXTURE_2D, mipmap++, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gimg.rgba);
+			glTexImage2D(GL_TEXTURE_2D, mipmap++, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		}
 	}
 
+	util_free(data);
 	return retval;
 }
 
 static glpic_t img_load_jpg(const char* filename)
 {
-	byte* file;
 	tjhandle jpeg;
+	byte* file, * data;
 	int len, w, h, samps;
 
 	file = util_full(filename, &len);
@@ -217,8 +208,10 @@ static glpic_t img_load_jpg(const char* filename)
 		return 0;
 	}
 
-	if (tjDecompress2(jpeg, file, len, gimg.rgba, w, 0, h, TJPF_RGBX, TJFLAG_FASTDCT))
+	data = util_malloc((w * h) << 2);
+	if (tjDecompress2(jpeg, file, len, data, w, 0, h, TJPF_RGBX, TJFLAG_FASTDCT))
 	{
+		util_free(data);
 		util_free(file);
 		tjDestroy(jpeg);
 		con_printf(COLOR_RED, "%s - couldn't decompress", filename);
@@ -227,13 +220,13 @@ static glpic_t img_load_jpg(const char* filename)
 
 	tjDestroy(jpeg);
 	util_free(file);
-	return img_upload(w, h, GL_RGB);
+	return img_upload(data, w, h, GL_RGB);
 }
 
 static glpic_t img_load_png(const char* filename)
 {
-	byte* file;
 	const char* error;
+	byte* file, * data;
 	int has_alpha, w, h, len;
 
 	file = util_full(filename, &len);
@@ -243,15 +236,31 @@ static glpic_t img_load_png(const char* filename)
 		return 0;
 	}
 
-	if (error = minipng_load(file, len, gimg.rgba, IMG_MAX_SIZE, &w, &h, &has_alpha))
+	if (error = minipng_size(file, len, &w, &h))
 	{
 		util_free(file);
 		con_printf(COLOR_RED, "%s - %s", filename, error);
 		return 0;
 	}
 
+	if (w != ((w >> 2) << 2) || w * h > IMG_MAX_SIZE)
+	{
+		util_free(file);
+		con_printf(COLOR_RED, "%s - bad size %i x %i", filename, w, h);
+		return 0;
+	}
+
+	data = util_malloc((w * h) << 2);
+	if (error = minipng_load(file, len, data, &has_alpha))
+	{
+		util_free(data);
+		util_free(file);
+		con_printf(COLOR_RED, "%s - %s", filename, error);
+		return 0;
+	}
+
 	util_free(file);
-	return img_upload(w, h, has_alpha ? GL_RGBA : GL_RGB);
+	return img_upload(data, w, h, has_alpha ? GL_RGBA : GL_RGB);
 }
 
 glpic_t img_load(const char* filename)
@@ -330,8 +339,7 @@ void img_scrshot_cmd(const char* arg1, const char* arg2)
 	int i, pitch, size = 0;
 	byte* buffer, * output, * buffer2;
 
-	strcpy(name, "none");
-	//strcpy(name, gbru.name);//TODO:
+	strcpy(name, gbru.name);
 	strcat(name, util_get_timestamp());
 	strcat(name, ".jpg");
 	fp = util_open(name, "wb");
@@ -394,14 +402,12 @@ void img_init()
 {
 	int x, y,* data;
 
-	if (gimg.null)
-		return;
-
+	gimg.current = 0;
 	glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &gimg.max_aniso);
 	if (gimg.max_aniso > 8)
 		gimg.max_aniso = 8;
 
-	data = (int*)gimg.rgba;
+	data = util_malloc(16 * 16 * sizeof(int));
 	for (y = 0; y < 16; y++)
 	{
 		for (x = 0; x < 16; x++)
@@ -416,14 +422,13 @@ void img_init()
 	gimg.mipmap = TRUE;
 	gimg.clamp = FALSE;
 	gimg.nearest = TRUE;
-	gimg.null = img_upload(16, 16, GL_RGB);
+	gimg.null = img_upload((byte*)data, 16, 16, GL_RGB);
 }
 
 void img_free_all()
 {
 	int i;
 
-	img_end();
 	util_tex_free(gimg.null);
 	for (i = 0; i < IMG_MAX_PICS; i++)
 		util_tex_free(gpics[i].t);
@@ -442,25 +447,24 @@ void img_free_temp()
 
 void img_set_param()
 {
+	sky_set_param();
+
 	if (gimg.nofilter->is_change || gimg.aniso->is_change)
 	{
 		gimg.mipmap = TRUE;
 		gimg.clamp = FALSE;
 		gimg.nearest = gimg.nofilter->value;
 
-		/*if (gworld.is_load)
+		if (gworld.is_load)
 		{
-			int i, j;
+			int i;
 
 			for (i = 0; i < gbru.num_textures; i++)
 			{
-				for (j = 0; j < gbru.textures[i].numpics; j++)
-				{
-					if (gbru.textures[i].pics[j])
-						img_set_filter(gbru.textures[i].pics[j]);
-				}
+				if (gbru.textures[i].t)
+					img_set_filter(gbru.textures[i].t);
 			}
-		}*/
+		}
 
 		gimg.nofilter->is_change = FALSE;
 		gimg.aniso->is_change = FALSE;

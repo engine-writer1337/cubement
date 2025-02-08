@@ -19,6 +19,8 @@ static void font_init()
 static void entity_register()
 {
 	REGISTER_ENTITY(func_wall);
+	REGISTER_ENTITY(player);
+	REGISTER_ENTITY(worldspawn);
 }
 
 static void after_engine_init()
@@ -39,6 +41,19 @@ bool_t key_events(int key, bool_t down) { return FALSE; }
 static void window_active() { }
 static void window_inactive() {}
 
+static bool_t draw_world() { return TRUE; }
+
+void game_once_precache() { }
+void game_before_init() { }
+void game_after_init() { }
+void game_disconnect() { }
+void before_draw_3d()
+{ 
+	cment->set_view_fov(90);
+}
+
+void after_draw_3d() { }
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	game_s g;
@@ -57,6 +72,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	g.window_inactive = window_inactive;
 
 	g.draw_2d = draw_2d;
+	g.draw_world = draw_world;
+
+	g.game_once_precache = game_once_precache;
+
+	g.game_before_init = game_before_init;
+	g.game_after_init = game_after_init;
+	g.game_disconnect = game_disconnect;
+	g.before_draw_3d = before_draw_3d;
+	g.after_draw_3d = after_draw_3d;
 
 	cubement(&cment, &g);
 	return 1;

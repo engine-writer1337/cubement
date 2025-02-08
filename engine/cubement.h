@@ -9,12 +9,10 @@ typedef unsigned short	word;
 typedef unsigned char	enum_t;
 typedef unsigned int	glbuf_t;
 typedef unsigned int	glpic_t;
-typedef unsigned int	hash_t;
 typedef float			vec4_t[4];
 typedef char			name_t[64];
 typedef char			constr_t[96];
-typedef char			bigstr_t[1024];
-typedef char			string_t[MAX_PATH];
+typedef char			string_t[1024];
 
 #include "util.h"
 #include "console.h"
@@ -34,7 +32,7 @@ typedef struct
 
 	cvar_s* fps;
 
-	bool_t load_as_temp;
+	bool_t load_as_temp;//TODO: придумай что-нибудь получше
 	bool_t load_is_allow;
 }host_s;
 
@@ -50,6 +48,7 @@ void host_shutdown();
 #include "image.h"
 #include "font.h"
 
+#include "entity.h"
 #include "bru_load.h"
 #include "world.h"
 

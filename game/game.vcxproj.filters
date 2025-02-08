@@ -20,6 +20,9 @@
     <ClCompile Include="ent_brush.c">
       <Filter>Source Code</Filter>
     </ClCompile>
+    <ClCompile Include="player.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.h">
@@ -35,6 +38,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\shared.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

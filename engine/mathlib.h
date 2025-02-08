@@ -56,6 +56,16 @@ inline float math_rsqrt(float number)
 	return y;
 }
 
+inline int vec_signbits(const vec3_t normal)
+{
+	int bits = 0;
+
+	if (normal[0] < 0) bits |= 1 << 0;
+	if (normal[1] < 0) bits |= 1 << 1;
+	if (normal[2] < 0) bits |= 1 << 2;
+	return bits;
+}
+
 inline float vec3_normalize(vec3_t v)
 {
 	float length;
@@ -72,6 +82,84 @@ inline float vec3_normalize(vec3_t v)
 	}
 
 	return length;
+}
+
+inline void vec_from_angles(const vec3_t angles, vec3_t forward, vec3_t right, vec3_t up)
+{
+	float angle, sr, sp, sy, cr, cp, cy;
+
+	if (angles[YAW])
+	{
+		angle = deg2rad(angles[YAW]);
+		sy = sinf(angle);
+		cy = cosf(angle);
+	}
+	else
+		sy = 0, cy = 1;
+
+	if (angles[PITCH])
+	{
+		angle = deg2rad(angles[PITCH]);
+		sp = sinf(angle);
+		cp = cosf(angle);
+	}
+	else
+		sp = 0, cp = 1;
+
+	if (angles[ROLL])
+	{
+		angle = deg2rad(angles[ROLL]);
+		sr = sinf(angle);
+		cr = cosf(angle);
+	}
+	else
+		sr = 0, cr = 1;
+
+	if (forward)
+	{
+		forward[0] = cp * cy;
+		forward[1] = cp * sy;
+		forward[2] = -sp;
+	}
+
+	if (right)
+	{
+		right[0] = -sr * sp * cy + cr * sy;
+		right[1] = -sr * sp * sy - cr * cy;
+		right[2] = -sr * cp;
+	}
+
+	if (up)
+	{
+		up[0] = cr * sp * cy + sr * sy;
+		up[1] = cr * sp * sy - sr * cy;
+		up[2] = cr * cp;
+	}
+}
+
+inline void vec_to_angles(const vec3_t forward, vec3_t angles)
+{
+	float tmp, yaw, pitch;
+
+	if (forward[0] == 0 && forward[1] == 0)
+	{
+		yaw = 0;
+		if (forward[2] > 0)
+			pitch = 90.0f;
+		else 
+			pitch = 270.0f;
+	}
+	else
+	{
+		yaw = (atan2f(forward[1], forward[0]) * 180 / MATH_PI);
+		if (yaw < 0) yaw += 360;
+
+		tmp = sqrtf(forward[0] * forward[0] + forward[1] * forward[1]);
+		pitch = (atan2f(forward[2], tmp) * 180 / MATH_PI);
+		if (pitch < 0) pitch += 360;
+	}
+
+	vec_set(angles, -pitch, yaw, 0);//TODO: check stupid quake bug
 }
 
 #endif

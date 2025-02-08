@@ -3,22 +3,17 @@
 
 typedef struct
 {
-	struct entity_t* owner;
-}ent_base_s;
+	entbase_s base;
+}func_wall_s;
 
 typedef struct
 {
-	ent_base_s base;
-}ent_func_wall_s;
+	entbase_s base;
+}worldspawn_s;
 
 typedef struct
 {
-	ent_base_s base;
-}ent_worldspawn_s;
-
-typedef struct
-{
-	ent_base_s base;
-}ent_player_s;
+	entbase_s base;
+}player_s;
 
 #endif

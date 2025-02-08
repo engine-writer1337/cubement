@@ -50,6 +50,10 @@ void vid_setup2d()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+
+	glDisable(GL_DEPTH_TEST);
+	vid_rendermode(RENDER_NORMAL);
+	glColor4ub(255, 255, 255, 255);
 }
 
 static void vid_glinit()

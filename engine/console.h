@@ -45,7 +45,7 @@ typedef struct
 
 extern console_s gcon;
 
-cvar_s* con_create_cvar(const char* name, float initial, bool_t save);
+void con_create_cvar2(const char* name, float initial, bool_t save);
 void con_create_cmd(const char* name, conact_t action);
 
 void con_print(color_e color, const char* text);

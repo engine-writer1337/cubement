@@ -30,7 +30,7 @@ static cvar_s* con_find_cvar(const char* name)
 	return NULL;
 }
 
-cvar_s* con_create_cvar(const char* name, float initial, bool_t save)
+static cvar_s* con_create_cvar(const char* name, float initial, bool_t save)
 {
 	cvar_s* cvar;
 
@@ -50,6 +50,11 @@ cvar_s* con_create_cvar(const char* name, float initial, bool_t save)
 	cvar->should_save = save;
 	cvar->hash = util_hash_str(cvar->name);
 	return cvar;
+}
+
+void con_create_cvar2(const char* name, float initial, bool_t save)
+{
+	con_create_cvar(name, initial, save);
 }
 
 void con_create_cmd(const char* name, conact_t action)
@@ -89,7 +94,7 @@ void con_print(color_e color, const char* text)
 
 void con_printf(color_e color, const char* text, ...)
 {
-	bigstr_t str;
+	string_t str;
 	va_list argptr;
 
 	if (strnull(text))
@@ -523,11 +528,10 @@ void con_init()
 	gvid.mode = con_create_cvar("vid_mode", 0, TRUE);
 	gvid.fullscreen = con_create_cvar("vid_fullscreen", FALSE, TRUE);
 
-	//gworld.vbo = con_create_cvar("r_vbo", TRUE, TRUE);
-	//grdr.showfps = con_create_cvar("r_showfps", 1, TRUE);
-	//grdr.fov = con_create_cvar("r_fov", RDR_DEF_FOV, TRUE);
 	gimg.aniso = con_create_cvar("r_aniso", TRUE, TRUE);
 	gimg.nofilter = con_create_cvar("r_nearest", FALSE, TRUE);
+	gsky.nofilter = con_create_cvar("r_nearest_sky", FALSE, TRUE);
+	gworld.vbo = con_create_cvar("r_vbo", TRUE, TRUE);
 
 	//grdr.sens = con_create_cvar("m_sens", RDR_DEF_SENS, TRUE);
 

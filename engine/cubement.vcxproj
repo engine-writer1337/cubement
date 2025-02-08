@@ -11,9 +11,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\game\ent_shared.h" />
     <ClInclude Include="bru_load.h" />
     <ClInclude Include="console.h" />
     <ClInclude Include="cubement.h" />
+    <ClInclude Include="entity.h" />
     <ClInclude Include="font.h" />
     <ClInclude Include="image.h" />
     <ClInclude Include="input.h" />
@@ -28,6 +30,7 @@
     <ClCompile Include="bru_load.c" />
     <ClCompile Include="console.c" />
     <ClCompile Include="cubement.c" />
+    <ClCompile Include="entity.c" />
     <ClCompile Include="font.c" />
     <ClCompile Include="image.c" />
     <ClCompile Include="input.c" />

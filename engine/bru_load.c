@@ -16,8 +16,8 @@ static void bru_load_ent(const byte* data, const bru_lump_s* l)
 		longjmp(gbru_jump, TRUE);
 	}
 
-	gbru.entstring = util_malloc(l->len);
-	memcpy(gbru.entstring, data + l->ofs, l->len);
+	if (!ent_parse(data + l->ofs))
+		longjmp(gbru_jump, TRUE);
 }
 
 static void bru_load_brushareas(const byte* data, const bru_lump_s* l)
@@ -352,7 +352,6 @@ bool_t bru_load(const char* name)
 		return FALSE;
 	}
 
-	bru_load_ent(data, &header->lumps[BRU_LUMP_ENTITIES]);
 	bru_load_textures(data, &header->lumps[BRU_LUMP_TEXTURES]);
 	bru_load_texinfos(data, &header->lumps[BRU_LUMP_TEXINFOS]);
 	bru_load_brushareas(data, &header->lumps[BRU_LUMP_BRUSHAREAS]);
@@ -361,6 +360,7 @@ bool_t bru_load(const char* name)
 	bru_load_brushes(data, &header->lumps[BRU_LUMP_BRUSHES]);
 	bru_load_models(data, &header->lumps[BRU_LUMP_MODELS]);
 	bru_load_areas(data, &header->lumps[BRU_LUMP_AREAS]);
+	bru_load_ent(data, &header->lumps[BRU_LUMP_ENTITIES]);
 
 	util_free(data);
 	util_free(gtexinfo);
@@ -373,6 +373,8 @@ void bru_free()
 {
 	int i;
 
+	for (i = 0; i < gnuments; i++)
+		util_free(gents[i].pev);
 	for (i = 0; i < gbru.num_textures; i++)
 		util_tex_free(gbru.textures[i].t);
 
@@ -383,10 +385,11 @@ void bru_free()
 	util_free(gbru.box_mins);
 	util_free(gbru.box_maxs);
 	util_free(gbru.brushareas);
-	util_free(gbru.entstring);
 	util_free(gbru.areas);
 	util_free(gvertbuf.st);
 	util_free(gvertbuf.xyz);
+	util_buf_free(gvertbuf.buffer);
 	memzero(&gbru, sizeof(gbru));
 	memzero(&gvertbuf, sizeof(gvertbuf));
+	memzero(gents, sizeof(gents));
 }

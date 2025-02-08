@@ -26,8 +26,6 @@ typedef struct
 	int out_width;
 	int out_height;
 
-	byte* rgba;
-
 	bool_t clamp;
 	bool_t mipmap;
 	bool_t nearest;
@@ -38,11 +36,10 @@ typedef struct
 
 extern image_s gimg;
 
-void img_start();
-void img_end();
 void img_bind(glpic_t t);
 
-glpic_t img_upload(int width, int height, int format);
+void img_set_filter(glpic_t pic);
+glpic_t img_upload(byte* data, int width, int height, int format);
 
 glpic_t img_load(const char* filename);
 ihandle_t img_precache_pic(const char* filename, int flags);

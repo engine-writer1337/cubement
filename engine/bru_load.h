@@ -17,11 +17,14 @@ typedef struct
 	int count;
 	vec2_t* st;
 	vec3_t* xyz;
+
+	glbuf_t buffer;
 }vertbuf_s;
 
 typedef struct
 {
-	char name[20];
+	char name[19];
+	bool_t active;
 
 	int num_boxes;
 	vec2_t* mins;
@@ -29,25 +32,32 @@ typedef struct
 
 	int num_brushareas;
 	word* brushareas;
+
+	int visframe;
 }area_s;
+
+typedef struct _surf_s
+{
+	int type;
+	int offset;
+	int texture;
+	byte color[4];
+
+	struct _surf_s* next;
+}surf_s;
 
 typedef struct
 {
 	glpic_t t;
 	char name[32];
 	int width, height;
+
+	surf_s* chain;
 }btexture_s;
 
 typedef struct
 {
-	int type;
-	int offset;
-	int texture;
-	byte color[4];
-}surf_s;
-
-typedef struct
-{
+	int visframe;
 	int framecount;
 
 	int num_surfes;
@@ -86,7 +96,6 @@ typedef struct
 	area_s* areas;
 
 	word* brushareas;
-	char* entstring;
 
 	vec2_t* box_maxs;
 	vec2_t* box_mins;

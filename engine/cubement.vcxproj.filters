@@ -47,6 +47,12 @@
     <ClInclude Include="world.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\game\ent_shared.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="entity.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cubement.c">
@@ -74,6 +80,9 @@
       <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="world.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="entity.c">
       <Filter>Source Code</Filter>
     </ClCompile>
   </ItemGroup>

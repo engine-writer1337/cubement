@@ -15,6 +15,13 @@ typedef enum
 	ENTID_WORLDSPAWN,
 	ENTID_PLAYER,
 	ENTID_WALL,
+
+	MAX_ENTMAP = 256
 }entid_e;
+
+typedef struct
+{
+	struct entity_t* owner;
+}entbase_s;
 
 #endif

@@ -193,8 +193,8 @@ static char* font_adjust_res(const char* name)
 static void font_load(const char* name, font_s* out)
 {
 	byte table[3][4];
-	byte* file, * src;
 	const char* fullname;
+	byte* file, * src, * data;
 	int len, color, count, sz, val, * p, add, i, j;
 
 	fullname = font_adjust_res(name);
@@ -242,8 +242,9 @@ static void font_load(const char* name, font_s* out)
 	}
 
 	len = sz * sz;
-	p = (int*)gimg.rgba;
+	data = util_malloc(len << 2);
 	file += FONT_LETTERS << 1;
+	p = (int*)data;
 
 	vec4_set(table[0], 0, 0, 0, 0);
 	vec4_set(table[1], 255, 255, 255, 255);
@@ -265,7 +266,7 @@ static void font_load(const char* name, font_s* out)
 	gimg.clamp = TRUE;
 	gimg.nearest = TRUE;
 	gimg.mipmap = FALSE;
-	out->texture = img_upload(sz, sz, GL_RGBA);
+	out->texture = img_upload(data, sz, sz, GL_RGBA);
 	util_free(src);
 }
 
@@ -303,7 +304,6 @@ ihandle_t font_precache(const char* fontname)
 
 void font_init()
 {
-	img_start();
 	ghost.load_as_temp = FALSE;
 	ghost.load_is_allow = TRUE;
 
@@ -311,7 +311,6 @@ void font_init()
 	ggame.font_init();
 
 	ghost.load_is_allow = FALSE;
-	img_end();
 }
 
 void font_free_all()

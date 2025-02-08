@@ -362,6 +362,25 @@ void in_reset_cursor_pos()
 	SetCursorPos(gvid.centr_x, gvid.centr_y);
 }
 
+void in_set_cursor_pos(int x, int y)
+{
+	SetCursorPos(x, y);
+}
+
+void in_get_cursor_pos(int* x, int* y, bool_t client)
+{
+	POINT current_pos;
+
+	GetCursorPos(&current_pos);
+	if (client)
+		ScreenToClient(gvid.hwnd, &current_pos);
+
+	if (x)
+		*x = current_pos.x;
+	if (y)
+		*y = current_pos.y;
+}
+
 void in_show_cursor(bool_t show)
 {
 	if (show)

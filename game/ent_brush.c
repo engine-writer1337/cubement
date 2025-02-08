@@ -20,6 +20,6 @@ SAVEFUNC void SaveMe()
 
 }
 
-static void saverestore_func_wall(ent_func_wall_s* pev) {}
+static void saverestore_func_wall(func_wall_s* pev) {}
 
-LINK_ENTITY(func_wall, ENTID_WALL, sizeof(ent_func_wall_s))
+LINK_ENTITY(func_wall, ENTID_WALL, sizeof(func_wall_s))

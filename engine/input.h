@@ -33,8 +33,10 @@ void in_unding_all_cmd(const char* arg1, const char* arg2);
 void in_bindlist_cmd(const char* arg1, const char* arg2);
 
 void in_reset_cursor_pos();
+void in_set_cursor_pos(int x, int y);
+void in_get_cursor_pos(int* x, int* y, bool_t client);
 void in_show_cursor(bool_t show);
-void in_mouse_move();
+
 LRESULT in_keys(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
 void in_gather();
 

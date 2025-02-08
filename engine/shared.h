@@ -26,6 +26,7 @@
 #define FL_INVISIBLE	(1 << 0)
 #define FL_BEAM			(1 << 1)
 #define FL_UPRIGHT		(1 << 2)
+#define FL_MODULATE		(1 << 3)
 
 #define IMG_NEAREST		(1 << 0)
 #define IMG_CLAMP		(1 << 1)
@@ -37,6 +38,7 @@ typedef float ftime_t;
 typedef float vec2_t[2];
 typedef float vec3_t[3];
 typedef unsigned char byte;
+typedef unsigned int hash_t;
 typedef unsigned char bool_t;
 typedef void (*conact_t)(const char* arg1, const char* arg2);
 
@@ -95,6 +97,7 @@ typedef struct entity_t
 
 	vec3_t origin;
 	vec3_t angles;
+	vec3_t velocity;
 	vec3_t endorigin;
 
 	vec3_t mins;
@@ -115,7 +118,7 @@ typedef struct entity_t
 
 	vec2_t scroll;
 	
-	void* pev;
+	entbase_s* pev;
 }entity_s;
 
 typedef struct
@@ -173,6 +176,8 @@ typedef struct
 	void (*precache)(entity_s* self);
 	void (*keyvalue)(entity_s* self, keyvalue_s* kv);
 	void (*saverestore)(void* pev);
+
+	hash_t hash;
 }entmap_s;
 
 typedef struct
@@ -180,6 +185,8 @@ typedef struct
 	entid_e id;
 	const char* name;
 	void (*spawn)(temp_entity_s* self);
+
+	hash_t hash;
 }temp_entmap_s;
 
 typedef struct
@@ -217,6 +224,7 @@ typedef struct
 	bool_t console_active;
 
 	void (*quit)();
+	void (*disconnect)();
 	char* (*alloc_string)(const char* string);
 	void (*execute_cmd)(const char* command);
 	void (*changelevel)(const char* nextmap);
@@ -235,10 +243,10 @@ typedef struct
 	float (*get_cvar_value)(const char* name);
 	void (*set_cvar_value)(const char* name, float value);
 
-	void (*hide_cursor)();
-	void (*draw_cursor)();
+	void (*reset_cursor_pos)();
+	void (*show_cursor)(bool_t show);
 	void (*set_cursor_pos)(int x, int y);
-	void (*set_mouse_pos)(int* x, int* y);
+	void (*get_cursor_pos)(int* x, int* y, bool_t client);
 
 	void (*saverestore)(void* data, int count, field_e type);
 
@@ -262,17 +270,20 @@ typedef struct
 
 	void (*particle_draw)(ihandle_t pic, const vec3_t org, float size, render_e render, byte r, byte g, byte b, byte a);
 
+	void (*sky_load)(const char* name);
+	void (*sky_visible)(bool_t is_visible);
+
 	void (*set_numframes)(entity_s* ent);
 	void (*set_sequence)(entity_s* ent, const char* name);
 	void (*set_bodygroup)(entity_s* ent, int group, int body);
 	void (*get_bonepos)(const entity_s* ent, const char* name, vec3_t pos);
 
+	void (*music_play)(const char* filename);
 	void (*ambient_play)(ihandle_t idx, vec3_t org, float volume, float distance);
 	void (*sound_play)(ihandle_t idx, const entity_s* ent, channel_e chan, float volume, float distance);
 	void (*sound_play_local)(ihandle_t idx, float volume);
 	void (*sound_stop)(const entity_s* ent, channel_e chan);
 
-	void (*set_view_far)(float far);
 	void (*set_view_fov)(float fov);
 	void (*set_view_ang)(const vec3_t ang);
 	void (*set_view_org)(const vec3_t org);
@@ -280,6 +291,9 @@ typedef struct
 
 	void (*trace)(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents, trace_s* tr);
 	bool_t(*bbox_is_stuck)(const vec3_t org, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents);
+
+	void (*area_active)(const char* name, bool_t is_active);
+	int (*get_areas)(const vec3_t org, const vec3_t mins, const vec3_t maxs, int* indicies, int count);
 }engine_s;
 
 typedef struct
@@ -307,6 +321,8 @@ typedef struct
 
 	void (*window_active)();
 	void (*window_inactive)();
+
+	bool_t(*draw_world)();
 
 	bool_t(*char_events)(int ch);
 	bool_t(*key_events)(int key, bool_t down);

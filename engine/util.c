@@ -39,6 +39,7 @@ void util_musage()
 		con_print(COLOR_WHITE, "MEMORY");
 		con_print(COLOR_WHITE, "Using / Peak");
 		con_printf(COLOR_WHITE, "%5i /%5i MB", pmc.WorkingSetSize >> 20, pmc.PeakWorkingSetSize >> 20);
+		con_print(COLOR_WHITE, " ");
 	}
 
 	con_print(COLOR_WHITE, "CHECK SUMS");
@@ -381,15 +382,6 @@ void util_adjust_fov(float* fov_x, float* fov_y, float width, float height)
 		*fov_x = x;
 	else
 		*fov_y = y;
-}
-
-hash_t util_gethash(const char* string, hash_t hashsize)
-{
-	hash_t i, hashkey = 0;
-
-	for (i = 0; string[i]; i++)
-		hashkey = (hashkey + i) * 37 + tolower(string[i]);
-	return hashkey % hashsize;
 }
 
 hash_t util_hash_str(const char* string)

@@ -2,7 +2,6 @@
 #include "libs/turbojpeg.h"
 
 image_s gimg;
-static pic_s gpics[IMG_MAX_PICS];
 extern const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int* has_alpha);
 extern const char* minipng_size(const byte* buffer, int filesize, int* out_width, int* out_height);
 
@@ -16,53 +15,6 @@ void img_bind(glpic_t t)
 		glBindTexture(GL_TEXTURE_2D, t);
 	else
 		glBindTexture(GL_TEXTURE_2D, gimg.null);
-}
-
-static ihandle_t img_alloc_pic()
-{
-	int i;
-	pic_s* p;
-
-	for (i = 0; i < IMG_MAX_PICS; i++)
-	{
-		p = gpics + i;
-		if (!p->name[0])
-			return i;
-	}
-
-	con_print(COLOR_RED, "IMG_MAX_PICS");
-	return BAD_HANDLE;
-}
-
-static void img_free_pic(ihandle_t idx)
-{
-	pic_s* p = gpics + idx;
-	if (!p->name[0])
-		return;
-
-	util_tex_free(p->t);
-	p->name[0] = '\0';
-	p->t = 0;
-}
-
-static ihandle_t img_find_pic(const char* name)
-{
-	int i;
-	pic_s* p;
-	hash_t hash;
-
-	hash = util_hash_str(name);
-	for (i = 0; i < IMG_MAX_PICS; i++)
-	{
-		p = gpics + i;
-		if (!p->name[0] || p->hash != hash)
-			continue;
-
-		if (strcmpi(p->name, name))
-			return i;
-	}
-
-	return BAD_HANDLE;
 }
 
 void img_set_filter(glpic_t pic)
@@ -292,45 +244,6 @@ glpic_t img_load(const char* filename)
 	return 0;
 }
 
-ihandle_t img_precache_pic(const char* filename, int flags)
-{
-	pic_s* p;
-	ihandle_t idx;
-
-	if (!ghost.load_is_allow)
-	{
-		con_printf(COLOR_RED, "%s - precache is not allowed");
-		return BAD_HANDLE;
-	}
-
-	if (strnull(filename))
-		return BAD_HANDLE;
-
-	idx = img_find_pic(filename);
-	if (idx != BAD_HANDLE)
-		return idx;
-
-	idx = img_alloc_pic();
-	if (idx == BAD_HANDLE)
-		return BAD_HANDLE;
-
-	gimg.mipmap = FALSE;
-	gimg.clamp = (flags & IMG_CLAMP);
-	gimg.nearest = (flags & IMG_NEAREST);
-	
-	p = gpics + idx;
-	p->t = img_load(filename);
-	if (!p->t)
-		return BAD_HANDLE;
-
-	p->width = gimg.out_width;
-	p->height = gimg.out_height;
-	strcpyn(p->name, filename);
-	p->hash = util_hash_str(p->name);
-	p->is_temp = ghost.load_as_temp;
-	return idx;
-}
-
 void img_scrshot_cmd(const char* arg1, const char* arg2)
 {
 	FILE* fp;
@@ -373,10 +286,10 @@ void img_pic_draw(ihandle_t idx, int x, int y, render_e render, byte r, byte g, 
 	vec2_t verts[4];
 	vec2_t texcoords[4];
 
-	if ((unsigned)idx >= IMG_MAX_PICS)
+	if (res_notvalid(idx, RES_PIC))
 		return;
 
-	p = gpics + idx;
+	p = &gres[idx].data.pic;
 	if (!p->t)
 		return;
 
@@ -425,29 +338,24 @@ void img_init()
 	gimg.null = img_upload((byte*)data, 16, 16, GL_RGB);
 }
 
-void img_free_all()
+void img_free()
 {
-	int i;
-
 	util_tex_free(gimg.null);
-	for (i = 0; i < IMG_MAX_PICS; i++)
-		util_tex_free(gpics[i].t);
-}
-
-void img_free_temp()
-{
-	int i;
-
-	for (i = 0; i < IMG_MAX_PICS; i++)
-	{
-		if (gpics[i].is_temp)
-			img_free_pic(i);
-	}
 }
 
 void img_set_param()
 {
-	sky_set_param();
+	int i;
+
+	if (gimg.nofilter->is_change && gsky.pics[0])
+	{
+		gimg.clamp = TRUE;
+		gimg.mipmap = FALSE;
+		gimg.nearest = gimg.nofilter->value;
+
+		for (i = 0; i < 6; i++)
+			img_set_filter(gsky.pics[i]);
+	}
 
 	if (gimg.nofilter->is_change || gimg.aniso->is_change)
 	{
@@ -455,10 +363,9 @@ void img_set_param()
 		gimg.clamp = FALSE;
 		gimg.nearest = gimg.nofilter->value;
 
+		img_set_filter(gimg.null);
 		if (gworld.is_load)
 		{
-			int i;
-
 			for (i = 0; i < gbru.num_textures; i++)
 			{
 				if (gbru.textures[i].t)

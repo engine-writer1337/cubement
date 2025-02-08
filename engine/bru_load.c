@@ -271,8 +271,8 @@ static void bru_load_brushes(const byte* data, const bru_lump_s* l)
 static void bru_load_models(const byte* data, const bru_lump_s* l)
 {
 	int i;
-	model_s* out;
 	bru_model_s* in;
+	brushmodel_s* out;
 
 	if (l->len < 1 || (l->len % sizeof(*in)))
 	{
@@ -378,6 +378,7 @@ void bru_free()
 	for (i = 0; i < gbru.num_textures; i++)
 		util_tex_free(gbru.textures[i].t);
 
+	sky_free();
 	util_free(gbru.brushes);
 	util_free(gbru.models);
 	util_free(gbru.textures);

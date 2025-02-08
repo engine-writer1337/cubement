@@ -52,6 +52,7 @@ void vid_rendermode(render_e mode);
 void vid_setup2d();
 
 void vid_fullscreen();
+void vid_init();
 void vid_set_params();
 void vid_dispose(bool_t dispose_hrc);
 

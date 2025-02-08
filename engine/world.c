@@ -139,7 +139,7 @@ static void sky_draw()
 	vec3_t mins, maxs, verts[4];
 	static vec2_t texcoords[4] = { {0, 0}, {0, 1}, {1, 1}, {1, 0} };
 
-	if (!gsky.visible || !gsky.name[0])
+	if (!gsky.visible || !gsky.pics[0])
 		return;
 
 	glDisable(GL_DEPTH_TEST);
@@ -232,32 +232,20 @@ static void sky_draw()
 
 void sky_load(const char* name)
 {
-	int i, len;
-	string_t path = SKY_FOLDER;
+	int i;
+	string_t path;
 	static const char* sides[6] = { "bk", "ft", "lf", "rt", "up", "dn" };
 
-	if (!name[0])
-	{
-		sky_free();
-		return;
-	}
-
-	if (strcmpi(gsky.name, name))
-		return;
-
 	sky_free();
-	strcpy(gsky.name, name);
-	len = (int)strlen(gsky.name);
-
 	gimg.clamp = TRUE;
 	gimg.mipmap = FALSE;
-	gimg.nearest = gsky.nofilter->value;
+	gimg.nearest = gimg.nofilter->value;
 
 	for (i = 0; i < 6; i++)
 	{
-		strcpy(path + 4, gsky.name);
-		strcpy(path + len + 4, sides[i]);
+		sprintf(path, SKY_FOLDER"%s%s", name, sides[i]);
 		gsky.pics[i] = img_load(path);
+
 		if (!gsky.pics[i])
 		{
 			sky_free();
@@ -266,29 +254,9 @@ void sky_load(const char* name)
 	}
 }
 
-void sky_set_param()
-{
-	int i;
-
-	if (!gsky.name[0])
-		return;
-
-	if (gsky.nofilter->is_change)
-	{
-		gimg.clamp = TRUE;
-		gimg.mipmap = FALSE;
-		gimg.nearest = gsky.nofilter->value;
-
-		for (i = 0; i < 6; i++)
-			img_set_filter(gsky.pics[i]);
-
-		gsky.nofilter->is_change = FALSE;
-	}
-}
-
 void sky_free()
 {
-	if (!gsky.name[0])
+	if (!gsky.pics[0])
 		return;
 
 	util_tex_free(gsky.pics[0]);
@@ -297,7 +265,7 @@ void sky_free()
 	util_tex_free(gsky.pics[3]);
 	util_tex_free(gsky.pics[4]);
 	util_tex_free(gsky.pics[5]);
-	gsky.name[0] = '\0';
+	gsky.pics[0] = 0;
 }
 
 //==========================================================================//
@@ -569,30 +537,22 @@ void world_load_map()
 	if (gworld.is_load)
 	{
 		bru_free();
-		ggame.game_disconnect();
 		gworld.is_load = FALSE;
 	}
 
 	ent_string_flush();
-	ghost.load_is_allow = TRUE;
-
-	ghost.load_as_temp = FALSE;
-	ggame.game_once_precache();
-	ghost.load_as_temp = TRUE;
-	ggame.game_before_init();
-
+	ghost.precache = PRE_TEMP;
+	
 	if (!bru_load(ghost.newmap))
 	{
 		ghost.newmap[0] = '\0';
-		ghost.load_is_allow = FALSE;
+		ghost.precache = PRE_NOT;
 		return;
 	}
 
+	ghost.gametime = 0;
 	gworld.is_load = TRUE;
 	ghost.newmap[0] = '\0';
-	ggame.game_after_init();
-	//ggame.after_chanelevel();//TODO: changelvel flag
-
-	ghost.load_is_allow = FALSE;
+	ghost.precache = PRE_NOT;
 	con_printf(COLOR_WHITE, "Level Load Time: %ims", (int)(1000 * (util_time() - timer)));
 }

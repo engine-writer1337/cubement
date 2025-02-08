@@ -530,7 +530,6 @@ void con_init()
 
 	gimg.aniso = con_create_cvar("r_aniso", TRUE, TRUE);
 	gimg.nofilter = con_create_cvar("r_nearest", FALSE, TRUE);
-	gsky.nofilter = con_create_cvar("r_nearest_sky", FALSE, TRUE);
 	gworld.vbo = con_create_cvar("r_vbo", TRUE, TRUE);
 
 	//grdr.sens = con_create_cvar("m_sens", RDR_DEF_SENS, TRUE);
@@ -548,9 +547,5 @@ void con_init()
 	//gsec.draw = con_create_cvar("dbg_sector", FALSE, FALSE);
 	//gplr.noclip = con_create_cvar("dbg_noclip", FALSE, FALSE);
 
-	ggame.cvar_init();
-
 	con_cfg_read();
-	gvid.mode->is_change = TRUE;
-	//gsnd.volume->is_change = TRUE;
 }

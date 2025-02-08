@@ -1,7 +1,6 @@
 #include "cubement.h"
 
 ihandle_t gconfont;
-static font_s gfonts[MAX_FONTS];
 static const vec4_t gfontmap[FONT_LETTERS] =
 {
 	{0, 0, 0.0625, 0.0625}, {0.0625, 0, 0.125, 0.0625}, {0.125, 0, 0.1875, 0.0625}, {0.1875, 0, 0.25, 0.0625}, {0.25, 0, 0.3125, 0.0625}, {0.3125, 0, 0.375, 0.0625}, {0.375, 0, 0.4375, 0.0625}, {0.4375, 0, 0.5, 0.0625}, {0.5, 0, 0.5625, 0.0625}, {0.5625, 0, 0.625, 0.0625}, {0.625, 0, 0.6875, 0.0625}, {0.6875, 0, 0.75, 0.0625}, {0.75, 0, 0.8125, 0.0625}, {0.8125, 0, 0.875, 0.0625}, {0.875, 0, 0.9375, 0.0625}, {0.9375, 0, 1, 0.0625},
@@ -27,53 +26,11 @@ static const int gfontres[] =
 	640, 800, 1024, 1152, 1280, 1600, 1920
 };
 
-static ihandle_t font_alloc()
-{
-	int i;
-	font_s* fnt;
-
-	for (i = 0; i < MAX_FONTS; i++)
-	{
-		fnt = gfonts + i;
-		if (!fnt->name[0])
-			return i;
-	}
-
-	con_print(COLOR_RED, "MAX_FONTS");
-	return BAD_HANDLE;
-}
-
-static void font_free(ihandle_t idx)
-{
-	font_s* fnt = gfonts + idx;
-	if (!fnt->name[0])
-		return;
-
-	util_tex_free(fnt->texture);
-	fnt->name[0] = '\0';
-	fnt->texture = 0;
-}
-
-static ihandle_t font_find(const char* name)
-{
-	int i;
-	font_s* fnt;
-
-	for (i = 0; i < MAX_FONTS; i++)
-	{
-		fnt = gfonts + i;
-		if (fnt->name[0] && strcmpi(fnt->name, name))
-			return i;
-	}
-
-	return BAD_HANDLE;
-}
-
 int font_height(ihandle_t idx)
 {
-	if ((unsigned)idx >= MAX_FONTS)
+	if (res_notvalid(idx, RES_FONT))
 		return 0;
-	return gfonts[idx].height;
+	return gres[idx].data.font.height;
 }
 
 int font_len(ihandle_t idx, const char* text)
@@ -81,11 +38,11 @@ int font_len(ihandle_t idx, const char* text)
 	font_s* f;
 	int len, k, space;
 
-	if ((unsigned)idx >= MAX_FONTS)
+	if (res_notvalid(idx, RES_FONT))
 		return 0;
 
-	f = gfonts + idx;
-	if (!f || !f->name[0])
+	f = &gres[idx].data.font;
+	if (!f->texture)
 		return 0;
 
 	len = 0;
@@ -110,11 +67,11 @@ int font_print(ihandle_t idx, const char* text, int x, int y, render_e render, b
 	static vec2_t verts[FONT_VERTS];
 	static vec2_t texcoords[FONT_VERTS];
 
-	if ((unsigned)idx >= MAX_FONTS || strnull(text))
+	if (res_notvalid(idx, RES_FONT) || strnull(text))
 		return x;
 
-	f = gfonts + idx;
-	if (!f || !f->name[0])
+	f = &gres[idx].data.font;
+	if (!f->texture)
 		return x;
 
 	space = f->height >> 1;
@@ -178,7 +135,7 @@ static char* font_adjust_res(const char* name)
 
 	while (TRUE)
 	{
-		sprintf(ghost.string, FONT_FOLDER"%i_%s.fnt", gfontres[num], name);
+		sprintf(ghost.string, FONT_FOLDER"%i_%s", gfontres[num], name);
 		if (util_exist(ghost.string))
 			break;
 
@@ -190,7 +147,7 @@ static char* font_adjust_res(const char* name)
 	return ghost.string;
 }
 
-static void font_load(const char* name, font_s* out)
+void font_load(const char* name, font_s* out)
 {
 	byte table[3][4];
 	const char* fullname;
@@ -268,66 +225,4 @@ static void font_load(const char* name, font_s* out)
 	gimg.mipmap = FALSE;
 	out->texture = img_upload(data, sz, sz, GL_RGBA);
 	util_free(src);
-}
-
-ihandle_t font_precache(const char* fontname)
-{
-	font_s* fnt;
-	ihandle_t idx;
-
-	if (!ghost.load_is_allow)
-	{
-		con_printf(COLOR_RED, "%s - precache is not allowed");
-		return BAD_HANDLE;
-	}
-
-	if (strnull(fontname))
-		return BAD_HANDLE;
-
-	idx = font_find(fontname);
-	if (idx != BAD_HANDLE)
-		return idx;
-
-	idx = font_alloc();
-	if (idx == BAD_HANDLE)
-		return BAD_HANDLE;
-
-	fnt = gfonts + idx;
-	font_load(fontname, fnt);
-	if (!fnt->texture)
-		return BAD_HANDLE;
-
-	strcpyn(fnt->name, fontname);
-	fnt->is_temp = ghost.load_as_temp;
-	return idx;
-}
-
-void font_init()
-{
-	ghost.load_as_temp = FALSE;
-	ghost.load_is_allow = TRUE;
-
-	gconfont = font_precache("console");
-	ggame.font_init();
-
-	ghost.load_is_allow = FALSE;
-}
-
-void font_free_all()
-{
-	int i;
-
-	for (i = 0; i < MAX_FONTS; i++)
-		font_free(i);
-}
-
-void font_free_temp()
-{
-	int i;
-
-	for (i = 0; i < MAX_FONTS; i++)
-	{
-		if (gfonts[i].is_temp)
-			font_free(i);
-	}
 }

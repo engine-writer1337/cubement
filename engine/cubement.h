@@ -17,6 +17,13 @@ typedef char			string_t[1024];
 #include "util.h"
 #include "console.h"
 
+typedef enum
+{
+	PRE_NOT,
+	PRE_PERS,
+	PRE_TEMP,
+}pretype_e;
+
 typedef struct
 {
 	int files;
@@ -26,14 +33,14 @@ typedef struct
 
 	ftime_t time;
 	ftime_t frametime;
+	ftime_t gametime;
 
 	name_t newmap;
 	string_t string;
 
 	cvar_s* fps;
 
-	bool_t load_as_temp;//TODO: придумай что-нибудь получше
-	bool_t load_is_allow;
+	pretype_e precache;
 }host_s;
 
 extern host_s ghost;
@@ -51,5 +58,7 @@ void host_shutdown();
 #include "entity.h"
 #include "bru_load.h"
 #include "world.h"
+
+#include "resource.h"
 
 #endif

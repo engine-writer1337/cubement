@@ -1,7 +1,6 @@
 #ifndef _IMAGE_H_
 #define _IMAGE_H_
 
-#define IMG_MAX_PICS		512
 #define IMG_MAX_SIZE		1024 * 1024
 
 typedef struct
@@ -10,11 +9,6 @@ typedef struct
 
 	int width;
 	int height;
-
-	hash_t hash;
-	name_t name;
-
-	bool_t is_temp;
 }pic_s;
 
 typedef struct
@@ -42,12 +36,11 @@ void img_set_filter(glpic_t pic);
 glpic_t img_upload(byte* data, int width, int height, int format);
 
 glpic_t img_load(const char* filename);
-ihandle_t img_precache_pic(const char* filename, int flags);
 void img_scrshot_cmd(const char* arg1, const char* arg2);
 void img_pic_draw(ihandle_t idx, int x, int y, render_e render, byte r, byte g, byte b, byte a, const prect_s* rect);
 
 void img_init();
-void img_free_all();
+void img_free();
 void img_set_param();
 
 #endif

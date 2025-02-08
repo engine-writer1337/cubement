@@ -21,6 +21,7 @@
     <ClInclude Include="input.h" />
     <ClInclude Include="keys.h" />
     <ClInclude Include="mathlib.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="shared.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vidinit.h" />
@@ -34,6 +35,7 @@
     <ClCompile Include="font.c" />
     <ClCompile Include="image.c" />
     <ClCompile Include="input.c" />
+    <ClCompile Include="resource.c" />
     <ClCompile Include="util.c" />
     <ClCompile Include="vidinit.c" />
     <ClCompile Include="world.c" />

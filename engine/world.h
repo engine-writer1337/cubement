@@ -43,10 +43,8 @@ typedef struct
 
 typedef struct
 {
-	name_t name;
 	bool_t visible;
 	glpic_t pics[6];
-	cvar_s* nofilter;
 }sky_s;
 
 extern sky_s gsky;
@@ -54,7 +52,6 @@ extern world_s gworld;
 extern entity_s* gentworld;
 
 void sky_load(const char* name);
-void sky_set_param();
 void sky_free();
 
 void world_draw();

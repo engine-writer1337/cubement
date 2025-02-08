@@ -83,8 +83,9 @@ static void engine_int()
 	gengine.set_cursor_pos = in_set_cursor_pos;
 	gengine.get_cursor_pos = in_get_cursor_pos;
 
-	gengine.precache_pic = img_precache_pic;
-	gengine.precache_font = font_precache;
+	gengine.precache_resource = res_precache;
+	gengine.precache_resource_ex = res_precache_ex;
+	gengine.get_resource_handle = res_find;
 
 	gengine.font_height = font_height;
 	gengine.font_len = font_len;
@@ -104,6 +105,7 @@ static void engine_update()
 
 	gengine.time = ghost.time;
 	gengine.frametime = ghost.frametime;
+	gengine.gametime = ghost.gametime;
 
 	gengine.console_active = gcon.is_active;
 
@@ -137,16 +139,14 @@ SAVEFUNC void cubement(engine_s** e, game_s* g)
 	con_init();
 	SetUnhandledExceptionFilter(host_crash);
 
-	ggame.entity_register();
-	vid_set_params();
+	vid_init();
+	ghost.precache = PRE_PERS;
 
-	ghost.load_as_temp = FALSE;
-	ghost.load_is_allow = TRUE;
 	img_init();
+	gconfont = res_precache("console.fnt");
+	ggame.engine_init();
 
-	ggame.after_engine_init();
-	ghost.load_is_allow = FALSE;
-
+	ghost.precache = PRE_NOT;
 	con_printf(COLOR_WHITE, "Game Load Time: %ims", (int)(1000 * (util_time() - newtime)));
 	oldtime = util_time() - 0.01f;
 
@@ -162,7 +162,6 @@ SAVEFUNC void cubement(engine_s** e, game_s* g)
 
 		oldtime = newtime;
 		ghost.time += ghost.frametime;
-		engine_update();
 
 		if (ghost.newmap[0])
 			world_load_map();
@@ -172,13 +171,16 @@ SAVEFUNC void cubement(engine_s** e, game_s* g)
 		img_set_param();
 		//snd_set_param();
 
+		engine_update();
 		if (gworld.is_load && ggame.draw_world())
 		{
-			ggame.before_draw_3d();
+			ghost.gametime += ghost.frametime;
+
+			ent_think();
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			world_setup3d();
 			world_draw();
-			ggame.after_draw_3d();
+			ggame.draw_3d();
 		}
 		else
 			glClear(GL_COLOR_BUFFER_BIT);
@@ -198,12 +200,10 @@ void host_shutdown()
 	con_cfg_save();
 	//snd_shutdown();
 
-	//world_clip_free();
 	bru_free();
-	//sky_free();
 
-	img_free_all();
-	font_free_all();
+	img_free();
+	res_free_all();
 	vid_dispose(TRUE);
 
 	util_checksum();

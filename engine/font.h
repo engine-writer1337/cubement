@@ -8,18 +8,13 @@
 #define FONT_MAGIC		'TNOF'
 #define FONT_FOLDER		"fonts/"
 
-#define MAX_FONTS		10
-
 typedef struct
 {
-	name_t name;
 	glpic_t texture;
 
 	int height;
-	int starts[FONT_LETTERS];
-	int widths[FONT_LETTERS];
-
-	bool_t is_temp;
+	byte starts[FONT_LETTERS];
+	byte widths[FONT_LETTERS];
 }font_s;
 
 extern ihandle_t gconfont;
@@ -28,10 +23,6 @@ int font_height(ihandle_t idx);
 int font_len(ihandle_t idx, const char* text);
 int font_print(ihandle_t idx, const char* text, int x, int y, render_e render, byte r, byte g, byte b, byte a);
 
-ihandle_t font_precache(const char* fontname);
-
-void font_init();
-void font_free_all();
-void font_free_temp();
+void font_load(const char* name, font_s* out);
 
 #endif

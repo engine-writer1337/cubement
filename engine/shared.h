@@ -117,6 +117,8 @@ typedef struct entity_t
 	int numframes;
 
 	vec2_t scroll;
+
+	ftime_t nextthink;
 	
 	entbase_s* pev;
 }entity_s;
@@ -144,6 +146,8 @@ typedef struct
 	float fps;
 	int sequence;
 	int numframes;
+
+	ftime_t nextthink;
 
 	int iuser1;
 	int iuser2;
@@ -176,6 +180,7 @@ typedef struct
 	void (*precache)(entity_s* self);
 	void (*keyvalue)(entity_s* self, keyvalue_s* kv);
 	void (*saverestore)(void* pev);
+	void (*think)(entity_s* self);
 
 	hash_t hash;
 }entmap_s;
@@ -185,6 +190,7 @@ typedef struct
 	entid_e id;
 	const char* name;
 	void (*spawn)(temp_entity_s* self);
+	void (*think)(entity_s* self);
 
 	hash_t hash;
 }temp_entmap_s;
@@ -217,6 +223,7 @@ typedef struct
 
 	ftime_t time;
 	ftime_t frametime;
+	ftime_t gametime;
 
 	int width;
 	int height;
@@ -227,7 +234,6 @@ typedef struct
 	void (*disconnect)();
 	char* (*alloc_string)(const char* string);
 	void (*execute_cmd)(const char* command);
-	void (*changelevel)(const char* nextmap);
 	void (*console_printf)(color_e color, const char* text, ...);
 
 	void (*register_entity)(const entmap_s* ent);
@@ -250,11 +256,9 @@ typedef struct
 
 	void (*saverestore)(void* data, int count, field_e type);
 
-	ihandle_t(*precache_model)(const char* filename);
-	ihandle_t(*precache_sound)(const char* filename);
-	ihandle_t(*precache_sprite)(const char* filename);
-	ihandle_t(*precache_font)(const char* filename);
-	ihandle_t(*precache_pic)(const char* filename, int flags);
+	ihandle_t(*precache_resource)(const char* filename);
+	ihandle_t(*precache_resource_ex)(const char* filename, int flags);
+	ihandle_t(*get_resource_handle)(const char* filename);
 
 	int (*font_height)(ihandle_t idx);
 	int (*font_len)(ihandle_t idx, const char* text);
@@ -279,6 +283,9 @@ typedef struct
 	void (*get_bonepos)(const entity_s* ent, const char* name, vec3_t pos);
 
 	void (*music_play)(const char* filename);
+	void (*music_pause)(bool_t pause);
+	void (*music_stop)();
+
 	void (*ambient_play)(ihandle_t idx, vec3_t org, float volume, float distance);
 	void (*sound_play)(ihandle_t idx, const entity_s* ent, channel_e chan, float volume, float distance);
 	void (*sound_play_local)(ihandle_t idx, float volume);
@@ -300,24 +307,14 @@ typedef struct
 {
 	const char* windowname;
 
-	void (*cvar_init)();
-	void (*font_init)();
-	void (*entity_register)();
-	void (*after_engine_init)();
-	void (*before_engine_free)();
+	void (*engine_init)();
+	void (*engine_free)();
 
-	void (*game_once_precache)();
-	void (*game_before_init)();
-	void (*game_after_init)();
-	void (*game_disconnect)();
-
-	void (*before_draw_3d)();
-	void (*after_draw_3d)();
+	void (*game_start)();
+	void (*game_end)();
 
 	void (*draw_2d)();
-
-	void (*before_chanelevel)();
-	void (*after_chanelevel)();
+	void (*draw_3d)();
 
 	void (*window_active)();
 	void (*window_inactive)();
@@ -339,6 +336,7 @@ void add_##ename() {\
 	ent.name = #ename;\
 	ent.pev_size = esize;\
 	ent.spawn = spawn_##ename;\
+	ent.think = think_##ename;\
 	ent.precache = precache_##ename;\
 	ent.keyvalue = keyvalue_##ename;\
 	ent.saverestore = saverestore_##ename;\
@@ -350,6 +348,7 @@ void add_temp_##ename() {\
 	temp_entmap_s ent; \
 	ent.id = eid;\
 	ent.name = #ename;\
+	ent.think = think_##ename;\
 	ent.spawn = spawn_##ename;\
 	cment->register_temp_entity(&ent);\
 }

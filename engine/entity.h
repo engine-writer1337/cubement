@@ -11,6 +11,8 @@ void ent_register(const entmap_s* ent);
 char* ent_string_alloc(const char* string);
 void ent_string_flush();
 
+void ent_think();
+
 bool_t ent_parse(const char* pfile);
 
 extern int gnuments;

@@ -38,13 +38,16 @@
 #define BRU_LUMP_BRUSHAREAS		9
 #define BRU_LUMP_NUMS			10
 
-#define SURF_TYPE_X		0
-#define SURF_TYPE_Y		1
-#define SURF_TYPE_Z		2
-#define SURF_TYPE_SX	3
-#define SURF_TYPE_SY	4
-#define SURF_TYPE_SZ	5
-#define SURF_TYPE_BAD	6
+typedef enum
+{
+	SURF_TYPE_X,
+	SURF_TYPE_Y,
+	SURF_TYPE_Z,
+	SURF_TYPE_SX,
+	SURF_TYPE_SY,
+	SURF_TYPE_SZ,
+	SURF_TYPE_BAD
+}surftype_e;
 
 typedef unsigned char byte;
 typedef unsigned short word;

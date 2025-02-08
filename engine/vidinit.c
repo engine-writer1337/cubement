@@ -216,25 +216,26 @@ static void vid_create()
 	vid_glinit();
 }
 
+void vid_init()
+{
+	gvid.mode->value = clamp(0, gvid.mode->value, gvid.num_modes - 1);
+
+	vid_create();
+
+	UpdateWindow(gvid.hwnd);
+	SetForegroundWindow(gvid.hwnd);
+	SetFocus(gvid.hwnd);
+	ShowWindow(gvid.hwnd, SW_NORMAL);
+}
+
 void vid_set_params()
 {
 	if (gvid.fullscreen->is_change || gvid.mode->is_change)
 	{
-		gvid.mode->value = clamp(0, gvid.mode->value, gvid.num_modes - 1);
-		if (gvid.hwnd)
-		{
-			font_free_all();
-			vid_dispose(FALSE);
-		}
-
-		vid_create();
-
-		UpdateWindow(gvid.hwnd);
-		SetForegroundWindow(gvid.hwnd);
-		SetFocus(gvid.hwnd);
-		ShowWindow(gvid.hwnd, SW_NORMAL);
-
-		font_init();
+		vid_dispose(FALSE);
+		vid_init();
+		
+		res_reload_font();
 	}
 }
 

@@ -76,6 +76,22 @@ void ent_string_flush()
 }
 
 //=============================================================//
+// THINK
+//=============================================================//
+void ent_think()
+{
+	int i;
+	entity_s* e;
+
+	for (i = 0; i < gnuments; i++)
+	{
+		e = gents + i;
+		if (e->id != ENTID_REMOVE && e->nextthink < ghost.gametime)
+			gentmap[e->id].think(e);
+	}
+}
+
+//=============================================================//
 // PARSE
 //=============================================================//
 static bool_t ent_parse_ent(const char** pfile, entity_s* ent)

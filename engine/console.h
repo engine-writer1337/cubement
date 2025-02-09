@@ -11,16 +11,16 @@
 
 typedef struct
 {
-	const char* name;
+	float value;
 	bool_t is_change;
 	bool_t should_save;
 
-	float value;
 	float initial;
 	conact_t action;
 
 	hash_t hash;
-}cvar_s;
+	const char* name;
+}convar_s;
 
 typedef struct
 {
@@ -40,12 +40,12 @@ typedef struct
 	bool_t underline;
 
 	int num_cvars;
-	cvar_s cvars[CON_MAX_CVARS];
+	convar_s cvars[CON_MAX_CVARS];
 }console_s;
 
 extern console_s gcon;
 
-void con_create_cvar2(const char* name, float initial, bool_t save);
+cvar_s* con_create_cvar2(const char* name, float initial, bool_t save);
 void con_create_cmd(const char* name, conact_t action);
 
 void con_print(color_e color, const char* text);

@@ -271,7 +271,7 @@ void sky_free()
 //==========================================================================//
 // WORLD DRAW
 //==========================================================================//
-#define APPEND_SURF(s)	s->next = gbru.textures[s->texture].chain, gbru.textures[s->texture].chain = s
+#define APPEND_SURF(s)	(s)->next = gbru.textures[(s)->texture].chain, gbru.textures[(s)->texture].chain = s
 
 static void world_area_visibles()
 {
@@ -334,27 +334,27 @@ static void world_area_visibles()
 					switch (s->type)
 					{
 					case SURF_TYPE_X:
-						if (gworld.vieworg[0] < b->mins[0])
-							APPEND_SURF(s);
-						break;
-					case SURF_TYPE_Y:
-						if (gworld.vieworg[1] < b->mins[1])
-							APPEND_SURF(s);
-						break;
-					case SURF_TYPE_Z:
-						if (gworld.vieworg[2] < b->mins[2])
-							APPEND_SURF(s);
-						break;
-					case SURF_TYPE_SX:
 						if (gworld.vieworg[0] > b->maxs[0])
 							APPEND_SURF(s);
 						break;
-					case SURF_TYPE_SY:
+					case SURF_TYPE_Y:
 						if (gworld.vieworg[1] > b->maxs[1])
 							APPEND_SURF(s);
 						break;
-					case SURF_TYPE_SZ:
+					case SURF_TYPE_Z:
 						if (gworld.vieworg[2] > b->maxs[2])
+							APPEND_SURF(s);
+						break;
+					case SURF_TYPE_SX:
+						if (gworld.vieworg[0] < b->mins[0])
+							APPEND_SURF(s);
+						break;
+					case SURF_TYPE_SY:
+						if (gworld.vieworg[1] < b->mins[1])
+							APPEND_SURF(s);
+						break;
+					case SURF_TYPE_SZ:
+						if (gworld.vieworg[2] < b->mins[2])
 							APPEND_SURF(s);
 						break;
 					}
@@ -406,6 +406,32 @@ static void world_draw_worldspawn()
 		img_bind(t->t);
 		while (s)
 		{
+			//shade faces from trenchbroom
+			/*float angleDim = 1;
+			float dimStrength = 0.25;
+			switch (s->type)
+			{
+			case SURF_TYPE_X:
+				angleDim = -gworld.v_forward[0] * dimStrength + (1.0 - dimStrength);
+				break;
+			case SURF_TYPE_Y:
+				angleDim = -gworld.v_forward[1] * dimStrength + (1.0 - dimStrength);
+				break;
+			case SURF_TYPE_Z:
+				angleDim = -gworld.v_forward[2] * dimStrength + (1.0 - dimStrength);
+				break;
+			case SURF_TYPE_SX:
+				angleDim = gworld.v_forward[0] * dimStrength + (1.0 - dimStrength);
+				break;
+			case SURF_TYPE_SY:
+				angleDim = gworld.v_forward[1] * dimStrength + (1.0 - dimStrength);
+				break;
+			case SURF_TYPE_SZ:
+				angleDim = gworld.v_forward[2] * dimStrength + (1.0 - dimStrength);
+				break;
+			}
+
+			glColor4ub(angleDim * s->color[0], angleDim * s->color[1], angleDim * s->color[2], 255);*/
 			glColor4ubv(s->color);
 			glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
 			s = s->next;

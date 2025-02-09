@@ -19,6 +19,17 @@ static void engine_init()
 
 static void draw_2d()
 {
+	if (gplayer)
+	{
+		char str[256];
+
+		sprintf(str, "org: %.2f %.2f %.2f", gplayer->origin[0], gplayer->origin[1], gplayer->origin[2]);
+		cment->font_print(glob.confont, str, 0, 64, RENDER_TRANSPARENT, 255, 255, 255, 255);
+
+		sprintf(str, "ang: %.2f %.2f %.2f", gplayer->angles[0], gplayer->angles[1], gplayer->angles[2]);
+		cment->font_print(glob.confont, str, 0, 96, RENDER_TRANSPARENT, 255, 255, 255, 255);
+	}
+
 	//cment->pic_draw(glob.cat1, 256, 256, RENDER_NORMAL, 255, 170, 30, 255, NULL);
 	//cment->pic_draw(glob.cat2, 128, 128, RENDER_ALPHA, 255, 255, 255, 127, NULL);
 }
@@ -31,6 +42,8 @@ static void window_inactive() {}
 
 static bool_t draw_world() { return TRUE; }
 
+static bool_t pause_world() { return FALSE; }
+
 void after_draw_3d() { }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -39,6 +52,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	g.windowname = WINDOW_NAME;
 
+	g.cvar_init = cvar_init;
 	g.engine_init = engine_init;
 
 	g.char_events = char_events;
@@ -50,6 +64,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	g.draw_2d = draw_2d;
 	g.draw_3d = after_draw_3d;
 	g.draw_world = draw_world;
+	g.pause_world = pause_world;
 
 	cubement(&cment, &g);
 	return 1;

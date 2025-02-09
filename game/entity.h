@@ -11,9 +11,4 @@ typedef struct
 	entbase_s base;
 }worldspawn_s;
 
-typedef struct
-{
-	entbase_s base;
-}player_s;
-
 #endif

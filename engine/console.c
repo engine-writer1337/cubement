@@ -10,10 +10,10 @@ const byte gcolors[COLOR_GREEN + 1][4] =
 	{64, 255, 64, 255},		//COLOR_GREEN
 };
 
-static cvar_s* con_find_cvar(const char* name)
+static convar_s* con_find_cvar(const char* name)
 {
 	int i;
-	cvar_s* c;
+	convar_s* c;
 	hash_t hash;
 
 	hash = util_hash_str(name);
@@ -30,9 +30,9 @@ static cvar_s* con_find_cvar(const char* name)
 	return NULL;
 }
 
-static cvar_s* con_create_cvar(const char* name, float initial, bool_t save)
+static convar_s* con_create_cvar(const char* name, float initial, bool_t save)
 {
-	cvar_s* cvar;
+	convar_s* cvar;
 
 	if (strnull(name))
 		return NULL;
@@ -52,14 +52,14 @@ static cvar_s* con_create_cvar(const char* name, float initial, bool_t save)
 	return cvar;
 }
 
-void con_create_cvar2(const char* name, float initial, bool_t save)
+cvar_s* con_create_cvar2(const char* name, float initial, bool_t save)
 {
-	con_create_cvar(name, initial, save);
+	return (cvar_s*)con_create_cvar(name, initial, save);
 }
 
 void con_create_cmd(const char* name, conact_t action)
 {
-	cvar_s* cvar;
+	convar_s* cvar;
 
 	if (strnull(name))
 		return;
@@ -110,7 +110,7 @@ void con_printf(color_e color, const char* text, ...)
 void con_line_execute(const char* line)
 {
 	int k, state;
-	cvar_s* cvar;
+	convar_s* cvar;
 	constr_t args[3];
 	bool_t space, quote;
 
@@ -413,7 +413,7 @@ void con_cfg_save()
 {
 	int i;
 	FILE* fp;
-	cvar_s* cvar;
+	convar_s* cvar;
 
 	fp = util_open(CON_FOLDER"config.cfg", "w");
 	if (!fp)
@@ -464,7 +464,7 @@ static void con_quit(const char* arg1, const char* arg2)
 static void con_list(const char* arg1, const char* arg2)
 {
 	int i;
-	cvar_s* cvar;
+	convar_s* cvar;
 
 	for (i = 0; i < gcon.num_cvars; i++)
 	{
@@ -547,5 +547,6 @@ void con_init()
 	//gsec.draw = con_create_cvar("dbg_sector", FALSE, FALSE);
 	//gplr.noclip = con_create_cvar("dbg_noclip", FALSE, FALSE);
 
+	ggame.cvar_init();
 	con_cfg_read();
 }

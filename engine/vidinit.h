@@ -34,8 +34,8 @@ typedef struct
 	int width, height;
 	int centr_x, centr_y;
 
-	cvar_s* mode;
-	cvar_s* fullscreen;
+	convar_s* mode;
+	convar_s* fullscreen;
 
 	render_e render;
 }vid_s;

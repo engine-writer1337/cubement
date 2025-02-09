@@ -38,7 +38,7 @@ typedef struct
 	vec3_t v_right;
 	vec3_t v_up;
 
-	cvar_s* vbo;
+	convar_s* vbo;
 }world_s;
 
 typedef struct

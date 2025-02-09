@@ -162,4 +162,10 @@ inline void vec_to_angles(const vec3_t forward, vec3_t angles)
 	vec_set(angles, -pitch, yaw, 0);//TODO: check stupid quake bug
 }
 
+inline float anglemod(float a)
+{
+	a = (360.0f / 65536) * ((int)(a * (65536.f / 360)) & 65535);
+	return a;
+}
+
 #endif

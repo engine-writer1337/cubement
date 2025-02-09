@@ -215,11 +215,14 @@ typedef struct
 
 typedef struct
 {
+	float value;
+	bool_t is_change;
+}cvar_s;
+
+typedef struct
+{
 	int num_entities;
 	entity_s* ent_base;
-
-	int num_temp_entities;
-	temp_entity_s* temp_ent_base;
 
 	ftime_t time;
 	ftime_t frametime;
@@ -228,7 +231,13 @@ typedef struct
 	int width;
 	int height;
 
+	int centr_x;
+	int centr_y;
+
+	bool_t world_load;
 	bool_t console_active;
+
+	void (*get_mapname)(char* name);
 
 	void (*quit)();
 	void (*disconnect)();
@@ -244,15 +253,13 @@ typedef struct
 	temp_entity_s* (*create_temp_entity)(const char* classname);
 	void (*remove_temp_entity)(temp_entity_s* ent);
 
-	void (*create_cvar)(const char* name, float value, bool_t save);
 	void (*create_cmd)(const char* name, conact_t action);
-	float (*get_cvar_value)(const char* name);
-	void (*set_cvar_value)(const char* name, float value);
+	cvar_s* (*create_cvar)(const char* name, float value, bool_t save);
 
-	void (*reset_cursor_pos)();
+	void (*reset_cursor_pos)();//TODO: no need?
 	void (*show_cursor)(bool_t show);
 	void (*set_cursor_pos)(int x, int y);
-	void (*get_cursor_pos)(int* x, int* y, bool_t client);
+	void (*get_cursor_pos)(int* x, int* y, bool_t client);//TODO: always client? (automatic when window is windowed)
 
 	void (*saverestore)(void* data, int count, field_e type);
 
@@ -307,6 +314,7 @@ typedef struct
 {
 	const char* windowname;
 
+	void (*cvar_init)();
 	void (*engine_init)();
 	void (*engine_free)();
 
@@ -319,6 +327,7 @@ typedef struct
 	void (*window_active)();
 	void (*window_inactive)();
 
+	bool_t(*pause_world)();
 	bool_t(*draw_world)();
 
 	bool_t(*char_events)(int ch);

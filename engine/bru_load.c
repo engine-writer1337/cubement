@@ -171,36 +171,6 @@ static void bru_create_face(int index, surf_s* out, const vec3_t mins, const vec
 		case SURF_TYPE_X:
 			switch (i)
 			{
-			case 0: vec_set(xyz, mins[0], mins[1], maxs[2]); break;
-			case 1: vec_set(xyz, mins[0], maxs[1], maxs[2]); break;
-			case 2: vec_set(xyz, mins[0], maxs[1], mins[2]); break;
-			case 3: vec_set(xyz, mins[0], mins[1], mins[2]); break;
-			}
-			break;
-
-		case SURF_TYPE_Y:
-			switch (i)
-			{
-			case 0: vec_set(xyz, maxs[0], mins[1], maxs[2]); break;
-			case 1: vec_set(xyz, mins[0], mins[1], maxs[2]); break;
-			case 2: vec_set(xyz, mins[0], mins[1], mins[2]); break;
-			case 3: vec_set(xyz, maxs[0], mins[1], mins[2]); break;
-			}
-			break;
-
-		case SURF_TYPE_Z:
-			switch (i)
-			{
-			case 0: vec_set(xyz, mins[0], maxs[1], mins[2]); break;
-			case 1: vec_set(xyz, maxs[0], maxs[1], mins[2]); break;
-			case 2: vec_set(xyz, maxs[0], mins[1], mins[2]); break;
-			case 3: vec_set(xyz, mins[0], mins[1], mins[2]); break;
-			}
-			break;
-
-		case SURF_TYPE_SX:
-			switch (i)
-			{
 			case 0: vec_set(xyz, maxs[0], mins[1], mins[2]); break;
 			case 1: vec_set(xyz, maxs[0], maxs[1], mins[2]); break;
 			case 2: vec_set(xyz, maxs[0], maxs[1], maxs[2]); break;
@@ -208,7 +178,7 @@ static void bru_create_face(int index, surf_s* out, const vec3_t mins, const vec
 			}
 			break;
 
-		case SURF_TYPE_SY:
+		case SURF_TYPE_Y:
 			switch (i)
 			{
 			case 0: vec_set(xyz, maxs[0], maxs[1], mins[2]); break;
@@ -218,13 +188,43 @@ static void bru_create_face(int index, surf_s* out, const vec3_t mins, const vec
 			}
 			break;
 
-		case SURF_TYPE_SZ:
+		case SURF_TYPE_Z:
 			switch (i)
 			{
 			case 0: vec_set(xyz, maxs[0], maxs[1], maxs[2]); break;
 			case 1: vec_set(xyz, mins[0], maxs[1], maxs[2]); break;
 			case 2: vec_set(xyz, mins[0], mins[1], maxs[2]); break;
 			case 3: vec_set(xyz, maxs[0], mins[1], maxs[2]); break;
+			}
+			break;
+
+		case SURF_TYPE_SX:
+			switch (i)
+			{
+			case 0: vec_set(xyz, mins[0], mins[1], maxs[2]); break;
+			case 1: vec_set(xyz, mins[0], maxs[1], maxs[2]); break;
+			case 2: vec_set(xyz, mins[0], maxs[1], mins[2]); break;
+			case 3: vec_set(xyz, mins[0], mins[1], mins[2]); break;
+			}
+			break;
+
+		case SURF_TYPE_SY:
+			switch (i)
+			{
+			case 0: vec_set(xyz, maxs[0], mins[1], maxs[2]); break;
+			case 1: vec_set(xyz, mins[0], mins[1], maxs[2]); break;
+			case 2: vec_set(xyz, mins[0], mins[1], mins[2]); break;
+			case 3: vec_set(xyz, maxs[0], mins[1], mins[2]); break;
+			}
+			break;
+
+		case SURF_TYPE_SZ:
+			switch (i)
+			{
+			case 0: vec_set(xyz, mins[0], maxs[1], mins[2]); break;
+			case 1: vec_set(xyz, maxs[0], maxs[1], mins[2]); break;
+			case 2: vec_set(xyz, maxs[0], mins[1], mins[2]); break;
+			case 3: vec_set(xyz, mins[0], mins[1], mins[2]); break;
 			}
 			break;
 		}

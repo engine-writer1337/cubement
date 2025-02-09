@@ -107,10 +107,13 @@ static void engine_update()
 	gengine.frametime = ghost.frametime;
 	gengine.gametime = ghost.gametime;
 
+	gengine.world_load = gworld.is_load;
 	gengine.console_active = gcon.is_active;
 
 	gengine.width = gvid.width;
 	gengine.height = gvid.height;
+	gengine.centr_x = gvid.centr_x;
+	gengine.centr_y = gvid.centr_y;
 }
 
 static void engine_fps()
@@ -174,9 +177,12 @@ SAVEFUNC void cubement(engine_s** e, game_s* g)
 		engine_update();
 		if (gworld.is_load && ggame.draw_world())
 		{
-			ghost.gametime += ghost.frametime;
+			if (!ggame.pause_world())
+			{
+				ghost.gametime += ghost.frametime;
+				ent_think();
+			}
 
-			ent_think();
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			world_setup3d();
 			world_draw();

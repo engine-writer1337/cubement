@@ -38,7 +38,7 @@ typedef struct
 	name_t newmap;
 	string_t string;
 
-	cvar_s* fps;
+	convar_s* fps;
 
 	pretype_e precache;
 }host_s;

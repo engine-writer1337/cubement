@@ -24,8 +24,8 @@ typedef struct
 	bool_t mipmap;
 	bool_t nearest;
 
-	cvar_s* aniso;
-	cvar_s* nofilter;
+	convar_s* aniso;
+	convar_s* nofilter;
 }image_s;
 
 extern image_s gimg;

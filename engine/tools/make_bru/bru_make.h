@@ -14,7 +14,7 @@
 #define TRUE	1
 #define FALSE	0
 
-#define EQUAL_EPSILON	0.001f
+#define EQUAL_EPSILON	0.01f
 
 #define TEX_NULL	-1
 #define TEX_CLIP	-2

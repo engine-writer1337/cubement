@@ -3,17 +3,19 @@
 
 #include "../engine/shared.h"
 
-#include "game.h"
-#include "entity.h"
-
 typedef struct
 {
 	ihandle_t confont;
 
 	ihandle_t cat1;
 	ihandle_t cat2;
+
+	cvar_s* sens;
 }global_s;
 
 extern global_s glob;
+
+#include "entity.h"
+#include "player.h"
 
 #endif

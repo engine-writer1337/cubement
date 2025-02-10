@@ -92,6 +92,8 @@ static void emit_entities()
 
 				vec2_copy(gareaboxes[gnum_areaboxes].mins, brush->mins);
 				vec2_copy(gareaboxes[gnum_areaboxes].maxs, brush->maxs);
+
+				brush = brush->next;
 				gnum_areaboxes++;
 			}
 
@@ -199,9 +201,9 @@ static void emit_areas()
 		area = gareas + 1;
 		area->start_brusharea = gnum_brushareas;
 		memset(alreadyadded, 0, sizeof(alreadyadded));
-		for (j = area->start_box; j < area->num_boxes; j++)
+		for (j = 0; j < area->num_boxes; j++)
 		{
-			abox = gareaboxes + j;
+			abox = gareaboxes + (area->start_box + j);
 			for (k = 0; k < gmodels[0].num_brushes; k++)
 			{
 				if (alreadyadded[k])

@@ -533,6 +533,8 @@ void con_init()
 	gimg.nofilter = con_create_cvar("r_nearest", FALSE, TRUE);
 	gworld.vbo = con_create_cvar("r_vbo", TRUE, TRUE);
 
+	gcon.test = con_create_cvar("test", FALSE, FALSE);
+
 	//gsnd.volume = con_create_cvar("s_volume", SND_DEF_VOL, TRUE);
 
 	ghost.fps = con_create_cvar("fps_max", 100, TRUE);

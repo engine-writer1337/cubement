@@ -2,7 +2,7 @@
 #include <stdarg.h>
 #include <conio.h>
 
-#define MAXTOKEN	512
+#define MAXTOKEN	1024
 #define MAXPAIRS	32768
 
 static bool_t unget;
@@ -560,6 +560,7 @@ int main(int argc, char* argv[])
 	if (!data)
 		fatal_error("%s - not found", argv[1]);
 
+	data[len - 1] = '\0';
 	start_token(data, len);
 	while (parse_ents());
 

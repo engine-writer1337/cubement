@@ -139,7 +139,7 @@ static void sky_draw()
 	vec3_t mins, maxs, verts[4];
 	static vec2_t texcoords[4] = { {0, 0}, {0, 1}, {1, 1}, {1, 0} };
 
-	if (!gsky.visible || !gsky.pics[0])
+	if (gsky.invisible || !gsky.pics[0])
 		return;
 
 	glDisable(GL_DEPTH_TEST);
@@ -454,7 +454,7 @@ void world_draw()
 	world_vbo();
 	frustum_adjust();
 	sky_draw();
-
+	
 	world_area_visibles();
 	//TODO: entity visible here
 

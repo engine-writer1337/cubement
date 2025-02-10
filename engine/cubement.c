@@ -97,6 +97,8 @@ static void engine_int()
 	gengine.set_view_fov = world_set_fov;
 	gengine.set_view_org = world_view_org;
 	gengine.set_view_ang = world_view_ang;
+
+	gengine.sky_load = sky_load;
 }
 
 static void engine_update()
@@ -208,6 +210,7 @@ void host_shutdown()
 	con_cfg_save();
 	//snd_shutdown();
 
+	sky_free();
 	bru_free();
 
 	img_free();

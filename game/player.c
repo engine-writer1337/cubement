@@ -171,10 +171,3 @@ static void think_player(player_s* pev)
 static void saverestore_player(player_s* pev) {}
 
 LINK_ENTITY(player, ENTID_PLAYER, sizeof(player_s))
-
-static bool_t spawn_worldspawn(entity_s* self) { gplayer = NULL; return TRUE; }
-static void precache_worldspawn(entity_s* self) { }
-static void keyvalue_worldspawn(entity_s* self, keyvalue_s* kv) { }
-static void saverestore_worldspawn(entity_s* pev) {}
-static void think_worldspawn(entity_s* self) { }
-LINK_ENTITY(worldspawn, ENTID_WORLDSPAWN, sizeof(entity_s))

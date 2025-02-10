@@ -41,6 +41,8 @@ typedef struct
 
 	int num_cvars;
 	convar_s cvars[CON_MAX_CVARS];
+
+	convar_s* test;
 }console_s;
 
 extern console_s gcon;

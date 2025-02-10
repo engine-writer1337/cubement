@@ -1,4 +1,7 @@
-@SolidClass = worldspawn : "World entity" []
+@SolidClass = worldspawn : "World entity" 
+[
+	skyname(string) : "Skybox name"
+]
 
 @baseclass size(-16 -16 -32, 16 16 32) color(0 255 0) = PlayerClass []
 

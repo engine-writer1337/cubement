@@ -44,7 +44,7 @@ typedef struct
 typedef struct
 {
 	name_t name;
-	bool_t visible;
+	bool_t invisible;
 	glpic_t pics[6];
 }sky_s;
 

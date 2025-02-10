@@ -23,6 +23,9 @@
     <ClCompile Include="player.c">
       <Filter>Source Code</Filter>
     </ClCompile>
+    <ClCompile Include="world.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.h">
@@ -41,6 +44,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="player.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="world.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

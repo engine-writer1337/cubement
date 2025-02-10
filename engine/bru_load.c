@@ -164,7 +164,7 @@ static void bru_create_face(int index, surf_s* out, const vec3_t mins, const vec
 	st = (float*)(gvertbuf.st + out->offset);
 	xyz = (float*)(gvertbuf.xyz + out->offset);
 
-	for (i = 0; i < 4; i++)
+	for (i = 3; i >= 0; i--)
 	{
 		switch (out->type)
 		{
@@ -377,7 +377,6 @@ void bru_free()
 	for (i = 0; i < gbru.num_textures; i++)
 		util_tex_free(gbru.textures[i].t);
 
-	sky_free();
 	util_free(gbru.brushes);
 	util_free(gbru.models);
 	util_free(gbru.textures);

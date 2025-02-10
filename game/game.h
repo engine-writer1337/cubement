@@ -17,5 +17,6 @@ extern global_s glob;
 
 #include "entity.h"
 #include "player.h"
+#include "world.h"
 
 #endif

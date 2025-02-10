@@ -14,14 +14,14 @@
 #define TRUE	1
 #define FALSE	0
 
+#define EXPORTFUNC		__declspec(dllexport)
+
 #define strnull(str)		(!str || !str[0])
 #define strcmpc(dst, src)	(!strcmp(dst, src))
 #define strcmpi(dst, src)	(!_stricmp(dst, src))
 #define strcpyn(dst, src)	(strncpy(dst, src, sizeof(dst) - 1), dst[sizeof(dst) - 1] = '\0')
 #define strcatn(dst, src)	(strncat(dst, src, sizeof(dst) - 1), dst[sizeof(dst) - 1] = '\0')
 #define memzero(mem, sz)	(memset(mem, 0, sz))
-
-#define SAVEFUNC		__declspec(dllexport)
 
 #define FL_INVISIBLE	(1 << 0)
 #define FL_BEAM			(1 << 1)
@@ -80,48 +80,11 @@ typedef enum
 	FIELD_INT,
 	FIELD_FLOAT,
 	FIELD_TIME,
-	FIELD_FUNC_OFFSET,
 	FIELD_STRING,
 	FIELD_ENTITY_POINTER,
 }field_e;
 
 #include "../game/ent_shared.h"
-
-typedef struct entity_t
-{
-	entid_e id;
-	ihandle_t model;
-
-	int flags;
-	int contents;
-
-	vec3_t origin;
-	vec3_t angles;
-	vec3_t velocity;
-	vec3_t endorigin;
-
-	vec3_t mins;
-	vec3_t maxs;
-
-	render_e render;
-	byte renderamt;
-	byte color[3];
-
-	int skin;
-	int body;
-	float scale;
-	float frame;
-
-	float fps;
-	int sequence;
-	int numframes;
-
-	vec2_t scroll;
-
-	ftime_t nextthink;
-	
-	entbase_s* pev;
-}entity_s;
 
 typedef struct
 {
@@ -176,11 +139,11 @@ typedef struct
 	entid_e id;
 	int pev_size;
 	const char* name;
-	bool_t(*spawn)(entity_s* self);
-	void (*precache)(entity_s* self);
-	void (*keyvalue)(entity_s* self, keyvalue_s* kv);
+	bool_t(*spawn)(void* pev);
+	void (*precache)(void* pev);
+	void (*keyvalue)(void* pev, keyvalue_s* kv);
 	void (*saverestore)(void* pev);
-	void (*think)(entity_s* self);
+	void (*think)(void* pev);
 
 	hash_t hash;
 }entmap_s;
@@ -189,8 +152,8 @@ typedef struct
 {
 	entid_e id;
 	const char* name;
-	void (*spawn)(temp_entity_s* self);
-	void (*think)(entity_s* self);
+	void (*spawn)(temp_entity_s* pev);
+	void (*think)(temp_entity_s* pev);
 
 	hash_t hash;
 }temp_entmap_s;
@@ -222,7 +185,7 @@ typedef struct
 typedef struct
 {
 	int num_entities;
-	entity_s* ent_base;
+	entity_s** entities;
 
 	ftime_t time;
 	ftime_t frametime;
@@ -259,7 +222,7 @@ typedef struct
 	void (*reset_cursor_pos)();//TODO: no need?
 	void (*show_cursor)(bool_t show);
 	void (*set_cursor_pos)(int x, int y);
-	void (*get_cursor_pos)(int* x, int* y, bool_t client);//TODO: always client? (automatic when window is windowed)
+	void (*get_cursor_pos)(int* x, int* y, bool_t client);
 
 	void (*saverestore)(void* data, int count, field_e type);
 
@@ -336,7 +299,7 @@ typedef struct
 
 extern engine_s* cment;
 
-SAVEFUNC void cubement(engine_s** e, game_s* g);
+EXPORTFUNC void cubement(engine_s** e, game_s* g);
 
 #define LINK_ENTITY(ename, eid, esize) \
 void add_##ename() {\

@@ -77,9 +77,9 @@ static void bru_load_faces(const byte* data, const bru_lump_s* l)
 static void bru_load_textures(const byte* data, const bru_lump_s* l)
 {
 	int i;
+	string_t tmp;
 	btexture_s* out;
 	bru_texture_s* in;
-	string_t tmp = TEXTURE_FOLDER;
 
 	if (l->len < 1 || (l->len % sizeof(*in)))
 	{
@@ -97,9 +97,9 @@ static void bru_load_textures(const byte* data, const bru_lump_s* l)
 
 	for (i = 0; i < gbru.num_textures; i++)
 	{
-		strcpy(tmp + sizeof(TEXTURE_FOLDER) - 1, in[i].name);
-
+		sprintf(tmp, TEXTURE_FOLDER"%s", in[i].name);
 		strcpyn(out[i].name, in[i].name);
+
 		out[i].t = img_load(tmp);
 		out[i].width = gimg.out_width;
 		out[i].height = gimg.out_height;
@@ -323,11 +323,10 @@ static void bru_load_areas(const byte* data, const bru_lump_s* l)
 bool_t bru_load(const char* name)
 {
 	byte* data;
+	string_t mapname;
 	bru_header_s* header;
-	string_t mapname = BRU_FOLDER;
 
-	strcpy(mapname + sizeof(BRU_FOLDER) - 1, name);
-	strcat(mapname, ".bru");
+	sprintf(mapname, BRU_FOLDER"%s.bru", name);
 	data = util_full(mapname, NULL);
 	if (!data)
 	{
@@ -374,7 +373,7 @@ void bru_free()
 	int i;
 
 	for (i = 0; i < gnuments; i++)
-		util_free(gents[i].pev);
+		util_free(gents[i]);
 	for (i = 0; i < gbru.num_textures; i++)
 		util_tex_free(gbru.textures[i].t);
 
@@ -393,4 +392,33 @@ void bru_free()
 	memzero(&gbru, sizeof(gbru));
 	memzero(&gvertbuf, sizeof(gvertbuf));
 	memzero(gents, sizeof(gents));
+}
+
+void bru_unload()
+{
+	int i;
+
+	for (i = 0; i < gbru.num_textures; i++)
+	{
+		util_tex_free(gbru.textures[i].t);
+		gbru.textures[i].t = 0;
+	}
+
+	sky_free();
+	util_buf_free(gvertbuf.buffer);
+	gvertbuf.buffer = 0;
+}
+
+void bru_reload()
+{
+	int i;
+	string_t tmp;
+
+	for (i = 0; i < gbru.num_textures; i++)
+	{
+		sprintf(tmp, TEXTURE_FOLDER"%s", gbru.textures[i].name);
+		gbru.textures[i].t = img_load(tmp);
+	}
+
+	sky_load(gsky.name);
 }

@@ -14,14 +14,14 @@ typedef struct
 
 typedef struct
 {
-	entbase_s base;
+	entity_s base; //should be always first
 
 	int buttons;
 
 	vec3_t v_forward, v_right, v_up;
 }player_s;
 
-extern entity_s* gplayer;
+extern player_s* gplayer;
 
 void cvar_init();
 

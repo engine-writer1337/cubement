@@ -8,6 +8,7 @@ PFNGLDELETEBUFFERSPROC glDeleteBuffers;
 PFNGLBUFFERSUBDATAPROC glBufferSubData;
 PFNWGLSWAPBUFFERPROC wglSwapBuffers;
 static PFNWGLSWAPINTERVALEXTPROC wglSwapInterval;
+static PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormat;
 
 void vid_rendermode(render_e mode)
 {
@@ -56,19 +57,47 @@ void vid_setup2d()
 	glColor4ub(255, 255, 255, 255);
 }
 
+static void vid_msaa_init()
+{
+	glGetIntegerv(GL_MAX_SAMPLES, &gvid.max_msaa);
+	if (gvid.max_msaa > 4)
+		gvid.max_msaa = 4;
+
+	if (gvid.max_msaa > 1)
+		wglChoosePixelFormat = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
+}
+
 static void vid_glinit()
 {
-	int pixelformat;
+	int pixelformat = 0;
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
 
 	pfd.nVersion = 1;
 	pfd.cColorBits = 32;
-	pfd.cDepthBits = 32;
+	pfd.cDepthBits = 24;
+	pfd.cStencilBits = 8;
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 
 	gvid.hdc = GetDC(gvid.hwnd);
-	pixelformat = ChoosePixelFormat(gvid.hdc, &pfd);
+	if (gvid.msaa->value && wglChoosePixelFormat)
+	{
+		dword numPixelFormats;
+		int attribs[24] =
+		{
+			WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB, WGL_DRAW_TO_WINDOW_ARB, TRUE, WGL_SUPPORT_OPENGL_ARB, TRUE, WGL_DOUBLE_BUFFER_ARB,
+			TRUE, WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB, WGL_COLOR_BITS_ARB, 32, WGL_ALPHA_BITS_ARB, 8, WGL_DEPTH_BITS_ARB, 24,
+			WGL_STENCIL_BITS_ARB, 8, WGL_SAMPLE_BUFFERS_ARB, TRUE, WGL_SAMPLES_ARB, gvid.max_msaa, 0, 0
+		};
+
+		wglChoosePixelFormat(gvid.hdc, attribs, 0, 1, &pixelformat, &numPixelFormats);
+		if (pixelformat)
+			con_print(COLOR_GREEN, "MSAA x4 enabled");
+	}
+
+	if (!pixelformat)
+		pixelformat = ChoosePixelFormat(gvid.hdc, &pfd);
+
 	if (!pixelformat || !SetPixelFormat(gvid.hdc, pixelformat, &pfd))
 		util_fatal("OpenGL driver not installed");
 
@@ -105,11 +134,14 @@ static void vid_glinit()
 
 		if (!glGenBuffers)
 			util_fatal("VBO is not supported");
+
+		if (!wglChoosePixelFormat)
+			vid_msaa_init();
 	}
 
 	glViewport(0, 0, gvid.width, gvid.height);
 	if (wglSwapInterval)
-		wglSwapInterval(0);
+		wglSwapInterval(0);//TODO: cvar vsync
 }
 
 void vid_fullscreen()
@@ -230,12 +262,27 @@ void vid_init()
 
 void vid_set_params()
 {
-	if (gvid.fullscreen->is_change || gvid.mode->is_change)
+	if (gvid.fullscreen->is_change || gvid.mode->is_change || gvid.msaa->is_change)
 	{
-		vid_dispose(FALSE);
-		vid_init();
+		if (gvid.msaa->is_change)
+		{
+			bru_unload();
+			res_unload();
+			vid_dispose(TRUE);
+		}
+		else
+			vid_dispose(FALSE);
 		
-		res_reload_font();
+		vid_init();		
+		if (gvid.msaa->is_change)
+		{
+			bru_reload();
+			res_reload();
+		}
+		else
+			res_reload_font();
+
+		gvid.msaa->is_change = FALSE;
 	}
 }
 
@@ -337,4 +384,92 @@ void vid_gen_modes()
 			}
 		}
 	}
+}
+
+//==========================================================================//
+// FAKE WINDOW
+//==========================================================================//
+static struct
+{
+	HDC HDC;
+	HWND HWND;
+	HGLRC HGLRC;
+	WNDCLASSEX WND;
+}_fake;
+
+static void vid_fake_free()
+{
+	if (_fake.HGLRC)
+	{
+		wglMakeCurrent(NULL, NULL);
+		wglDeleteContext(_fake.HGLRC);
+	}
+
+	if (_fake.HDC)
+		ReleaseDC(_fake.HWND, _fake.HDC);
+
+	if (_fake.HWND)
+	{
+		DestroyWindow(_fake.HWND);
+		UnregisterClass("TestWindow", _fake.WND.hInstance);
+	}
+}
+
+static bool_t vid_fake()
+{
+	int pixelFormat;
+	PIXELFORMATDESCRIPTOR pfd =
+	{
+		sizeof(PIXELFORMATDESCRIPTOR), 1, PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER, PFD_TYPE_RGBA,
+		24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 8, 0, PFD_MAIN_PLANE, 0, 0, 0, 0
+	};
+
+	memset(&_fake.WND, 0, sizeof(WNDCLASSEX));
+	_fake.HGLRC = NULL; _fake.HWND = NULL; _fake.HDC = NULL;
+
+	_fake.WND.cbSize = sizeof(WNDCLASSEX);
+	_fake.WND.lpfnWndProc = DefWindowProc;
+	_fake.WND.hInstance = GetModuleHandle(NULL);
+	_fake.WND.lpszClassName = "TestWindow";
+
+	if (!RegisterClassEx(&_fake.WND))
+		return FALSE;
+
+	if (!(_fake.HWND = CreateWindowEx(0, "TestWindow", "FAKE", 0, 0, 0, 32, 32, 0, 0, _fake.WND.hInstance, 0)))
+	{
+		UnregisterClass("TestWindow", _fake.WND.hInstance);
+		return FALSE;
+	}
+
+	if (!(_fake.HDC = GetDC(_fake.HWND)))
+		return FALSE;
+
+	if (!(pixelFormat = ChoosePixelFormat(_fake.HDC, &pfd)))
+		return FALSE;
+
+	if (!SetPixelFormat(_fake.HDC, pixelFormat, &pfd))
+		return FALSE;
+
+	if (!(_fake.HGLRC = wglCreateContext(_fake.HDC)))
+		return FALSE;
+
+	if (!wglMakeCurrent(_fake.HDC, _fake.HGLRC))
+		return FALSE;
+
+	return TRUE;
+}
+
+void vid_msaa_func()
+{
+	if (!gvid.msaa->value)
+		return;
+
+	if (!vid_fake())
+	{
+		vid_fake_free();
+		return;
+	}
+
+	vid_msaa_init();
+	vid_fake_free();
 }

@@ -15,13 +15,8 @@ static void keyvalue_func_wall(entity_s* self, keyvalue_s* kv)
 
 }
 
-SAVEFUNC void SaveMe()
-{
-
-}
-
-static void saverestore_func_wall(func_wall_s* pev) {}
+static void saverestore_func_wall(entity_s* pev) {}
 
 static void think_func_wall(entity_s* self) { }
 
-LINK_ENTITY(func_wall, ENTID_WALL, sizeof(func_wall_s))
+LINK_ENTITY(func_wall, ENTID_WALL, sizeof(entity_s))

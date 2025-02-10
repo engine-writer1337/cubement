@@ -107,4 +107,7 @@ extern vertbuf_s gvertbuf;
 bool_t bru_load(const char* name);
 void bru_free();
 
+void bru_unload();
+void bru_reload();
+
 #endif

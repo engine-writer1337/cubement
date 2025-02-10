@@ -526,13 +526,12 @@ void con_init()
 	con_create_cmd("clear", con_clear);
 
 	gvid.mode = con_create_cvar("vid_mode", 0, TRUE);
+	gvid.msaa = con_create_cvar("vid_msaa", FALSE, TRUE);
 	gvid.fullscreen = con_create_cvar("vid_fullscreen", FALSE, TRUE);
 
 	gimg.aniso = con_create_cvar("r_aniso", TRUE, TRUE);
 	gimg.nofilter = con_create_cvar("r_nearest", FALSE, TRUE);
 	gworld.vbo = con_create_cvar("r_vbo", TRUE, TRUE);
-
-	//grdr.sens = con_create_cvar("m_sens", RDR_DEF_SENS, TRUE);
 
 	//gsnd.volume = con_create_cvar("s_volume", SND_DEF_VOL, TRUE);
 
@@ -549,4 +548,11 @@ void con_init()
 
 	ggame.cvar_init();
 	con_cfg_read();
+
+	gvid.mode->is_change = FALSE;
+	gvid.fullscreen->is_change = FALSE;
+	gvid.msaa->is_change = FALSE;
+	gimg.nofilter->is_change = FALSE;
+	gimg.aniso->is_change = FALSE;
+	//TODO: fix this is_change
 }

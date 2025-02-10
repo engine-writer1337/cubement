@@ -9,6 +9,7 @@ typedef struct
 
 	int width;
 	int height;
+	int flags;
 }pic_s;
 
 typedef struct
@@ -33,7 +34,7 @@ extern image_s gimg;
 void img_bind(glpic_t t);
 
 void img_set_filter(glpic_t pic);
-glpic_t img_upload(byte* data, int width, int height, int format);
+glpic_t img_upload(int width, int height, int format);
 
 glpic_t img_load(const char* filename);
 void img_scrshot_cmd(const char* arg1, const char* arg2);

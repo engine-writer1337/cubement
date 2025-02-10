@@ -1,6 +1,6 @@
 #include "game.h"
 
-entity_s* gplayer;
+player_s* gplayer;
 
 static kbutton_s in_left;
 static kbutton_s in_right;
@@ -105,26 +105,25 @@ void cvar_init()
 	glob.sens = cment->create_cvar("m_sens", 3, TRUE);
 }
 
-static bool_t spawn_player(entity_s* self)
+static bool_t spawn_player(player_s* pev)
 {
-	gplayer = self;
+	gplayer = pev;
 	return TRUE;
 }
 
-static void precache_player(entity_s* self)
+static void precache_player(player_s* pev)
 {
 
 }
 
-static void keyvalue_player(entity_s* self, keyvalue_s* kv)
+static void keyvalue_player(player_s* pev, keyvalue_s* kv)
 {
 
 }
 
-static void think_player(entity_s* self) 
+static void think_player(player_s* pev)
 {
 	float spd_side, spd_forward;
-	player_s* pev = (player_s*)self->pev;
 
 	if (cment->world_load && !cment->console_active)
 	{
@@ -135,16 +134,16 @@ static void think_player(entity_s* self)
 		my -= cment->centr_y;
 		if (mx || my)
 		{
-			self->angles[YAW] -= 0.01f * glob.sens->value * mx;
-			self->angles[YAW] = anglemod(self->angles[YAW]);
-			self->angles[PITCH] += 0.01f * glob.sens->value * my;
-			self->angles[PITCH] = clamp(-89, self->angles[PITCH], 89);
+			pev->base.angles[YAW] -= 0.01f * glob.sens->value * mx;
+			pev->base.angles[YAW] = anglemod(pev->base.angles[YAW]);
+			pev->base.angles[PITCH] += 0.01f * glob.sens->value * my;
+			pev->base.angles[PITCH] = clamp(-89, pev->base.angles[PITCH], 89);
 			cment->reset_cursor_pos();
 		}
 	}
 
 	pev->buttons = plr_key_bits();
-	vec_from_angles(self->angles, pev->v_forward, pev->v_right, pev->v_up);
+	vec_from_angles(pev->base.angles, pev->v_forward, pev->v_right, pev->v_up);
 
 	if (pev->buttons & IN_FORWARD)
 		spd_forward = 400;
@@ -160,12 +159,12 @@ static void think_player(entity_s* self)
 	else
 		spd_side = 0;
 
-	vec_scale(self->velocity, spd_forward, pev->v_forward);
-	vec_ma(self->velocity, self->velocity, spd_side, pev->v_right);
-	vec_ma(self->origin, self->origin, cment->frametime, self->velocity);
+	vec_scale(pev->base.velocity, spd_forward, pev->v_forward);
+	vec_ma(pev->base.velocity, pev->base.velocity, spd_side, pev->v_right);
+	vec_ma(pev->base.origin, pev->base.origin, cment->frametime, pev->base.velocity);
 
-	cment->set_view_org(self->origin);
-	cment->set_view_ang(self->angles);
+	cment->set_view_org(pev->base.origin);
+	cment->set_view_ang(pev->base.angles);
 	cment->set_view_fov(90);
 }
 
@@ -176,6 +175,6 @@ LINK_ENTITY(player, ENTID_PLAYER, sizeof(player_s))
 static bool_t spawn_worldspawn(entity_s* self) { gplayer = NULL; return TRUE; }
 static void precache_worldspawn(entity_s* self) { }
 static void keyvalue_worldspawn(entity_s* self, keyvalue_s* kv) { }
-static void saverestore_worldspawn(entbase_s* pev) {}
+static void saverestore_worldspawn(entity_s* pev) {}
 static void think_worldspawn(entity_s* self) { }
-LINK_ENTITY(worldspawn, ENTID_WORLDSPAWN, sizeof(entbase_s))
+LINK_ENTITY(worldspawn, ENTID_WORLDSPAWN, sizeof(entity_s))

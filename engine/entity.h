@@ -16,6 +16,6 @@ void ent_think();
 bool_t ent_parse(const char* pfile);
 
 extern int gnuments;
-extern entity_s gents[MAX_ENTITIES];
+extern entity_s* gents[MAX_ENTITIES];
 
 #endif

@@ -236,11 +236,15 @@ void sky_load(const char* name)
 	string_t path;
 	static const char* sides[6] = { "bk", "ft", "lf", "rt", "up", "dn" };
 
+	if (strnull(name) || strcmpi(gsky.name, name))
+		return;
+
 	sky_free();
 	gimg.clamp = TRUE;
 	gimg.mipmap = FALSE;
 	gimg.nearest = gimg.nofilter->value;
 
+	strcpyn(gsky.name, name);
 	for (i = 0; i < 6; i++)
 	{
 		sprintf(path, SKY_FOLDER"%s%s", name, sides[i]);

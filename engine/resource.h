@@ -39,4 +39,7 @@ void res_flush_temp();
 void res_free_all();
 void res_reload_font();
 
+void res_unload();
+void res_reload();
+
 #endif

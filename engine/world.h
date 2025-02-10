@@ -43,6 +43,7 @@ typedef struct
 
 typedef struct
 {
+	name_t name;
 	bool_t visible;
 	glpic_t pics[6];
 }sky_s;

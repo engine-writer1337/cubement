@@ -23,10 +23,10 @@ static void draw_2d()
 	{
 		char str[256];
 
-		sprintf(str, "org: %.2f %.2f %.2f", gplayer->origin[0], gplayer->origin[1], gplayer->origin[2]);
+		sprintf(str, "org: %.2f %.2f %.2f", gplayer->base.origin[0], gplayer->base.origin[1], gplayer->base.origin[2]);
 		cment->font_print(glob.confont, str, 0, 64, RENDER_TRANSPARENT, 255, 255, 255, 255);
 
-		sprintf(str, "ang: %.2f %.2f %.2f", gplayer->angles[0], gplayer->angles[1], gplayer->angles[2]);
+		sprintf(str, "ang: %.2f %.2f %.2f", gplayer->base.angles[0], gplayer->base.angles[1], gplayer->base.angles[2]);
 		cment->font_print(glob.confont, str, 0, 96, RENDER_TRANSPARENT, 255, 255, 255, 255);
 	}
 

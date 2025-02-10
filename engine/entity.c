@@ -7,7 +7,7 @@ static entmap_s gentmap[MAX_ENTMAP];
 
 int gnuments;
 static jmp_buf gent_jump;
-entity_s gents[MAX_ENTITIES];
+entity_s* gents[MAX_ENTITIES];
 
 static entity_s* gentplayer;
 
@@ -49,6 +49,49 @@ void ent_register(const entmap_s* ent)
 	gentmap[ent->id].hash = util_hash_str(gentmap[ent->id].name);
 }
 
+entity_s* ent_create(const char* classname)
+{
+	int i;
+	entmap_s* map;
+
+	map = ent_find_map(classname);
+	if (!map)
+	{
+		con_printf(COLOR_RED, "%s - not registered", classname);
+		return NULL;
+	}
+
+	for (i = 0; i < gnuments; i++)
+	{
+		if (!gents[i] || gents[i]->id == ENTID_FREE)
+			break;
+	}
+
+	if (i == MAX_ENTITIES)
+	{
+		con_print(COLOR_RED, "MAX_ENTITIES");
+		return NULL;
+	}
+
+	if (i == gnuments)
+		gnuments++;
+	else
+	{
+		if (gents[i])
+			util_free(gents[i]);
+	}
+
+	gents[i] = util_calloc(map->pev_size, sizeof(byte));
+	gents[i]->id = map->id;
+	return gents[i];
+}
+
+void ent_remove(entity_s* ent)
+{
+	if (ent)
+		ent->id = ENTID_FREE;
+}
+
 //=============================================================//
 // STRING POOL
 //=============================================================//
@@ -85,8 +128,8 @@ void ent_think()
 
 	for (i = 0; i < gnuments; i++)
 	{
-		e = gents + i;
-		if (e->id != ENTID_REMOVE && e->nextthink < ghost.gametime)
+		e = gents[i];
+		if (e && e->nextthink < ghost.gametime)
 			gentmap[e->id].think(e);
 	}
 }
@@ -94,17 +137,15 @@ void ent_think()
 //=============================================================//
 // PARSE
 //=============================================================//
-static bool_t ent_parse_ent(const char** pfile, entity_s* ent)
+static int ent_parse_ent(const char** pfile, keyvalue_s* kv, char* classname)
 {
-	bool_t found;
-	entmap_s* map;
+	int numpairs;
 	name_t keyname;
 	string_t token;
-	int i, numpairs;
-	keyvalue_s kv[MAX_KEYVALUES];
 
 	numpairs = 0;
-	found = FALSE;
+	classname[0] = '\0';
+
 	while (TRUE)
 	{
 		*pfile = util_parse(*pfile, token);
@@ -134,20 +175,8 @@ static bool_t ent_parse_ent(const char** pfile, entity_s* ent)
 		if (!keyname[0] || !token[0])
 			continue;
 
-		if (!found && strcmpc(keyname, "classname"))
-		{
-			map = ent_find_map(token);
-			if (!map)
-			{
-				con_printf(COLOR_RED, "%s - not registered", token);
-				continue;
-			}
-
-			found = TRUE;
-			ent->id = map->id;
-			if (map->pev_size)
-				ent->pev = util_calloc(map->pev_size, sizeof(byte));
-		}
+		if (strcmpc(keyname, "classname"))
+			strcpy(classname, token);
 		else
 		{
 			if (numpairs == MAX_KEYVALUES)
@@ -159,12 +188,7 @@ static bool_t ent_parse_ent(const char** pfile, entity_s* ent)
 		}
 	}
 
-	if (!found)
-		return FALSE;
-
-	for (i = 0; i < numpairs; i++)
-		gentmap[ent->id].keyvalue(ent, &kv[i]);
-	return TRUE;
+	return numpairs;
 }
 
 bool_t ent_parse(const char* pfile)
@@ -173,6 +197,9 @@ bool_t ent_parse(const char* pfile)
 	entity_s* ent;
 	bool_t isworld;
 	string_t token;
+	int i, numpairs;
+	char classname[256];
+	keyvalue_s kv[MAX_KEYVALUES];
 
 	if (setjmp(gent_jump))
 		return FALSE;
@@ -184,10 +211,10 @@ bool_t ent_parse(const char* pfile)
 	}
 
 	gnuments = 2;
-	gentworld = gents;
-	gentplayer = gents + 1;
-	vec_copy(gentworld->mins, gbru.models[0].mins);
-	vec_copy(gentworld->maxs, gbru.models[0].maxs);
+	gents[0] = util_calloc(gentmap[ENTID_WORLDSPAWN].pev_size, sizeof(byte));
+	gents[1] = util_calloc(gentmap[ENTID_PLAYER].pev_size, sizeof(byte));
+	gentworld = gents[0];
+	gentplayer = gents[1];
 	isworld = TRUE;
 
 	while ((pfile = util_parse(pfile, token)))
@@ -198,33 +225,36 @@ bool_t ent_parse(const char* pfile)
 			longjmp(gent_jump, TRUE);
 		}
 
-		if (gnuments == MAX_ENTITIES)
-		{
-			con_print(COLOR_RED, "MAX_ENTITIES");
-			break;
-		}
+		numpairs = ent_parse_ent(&pfile, kv, classname);
+		if (!numpairs || classname[0] == '\0')
+			continue;
 
 		if (isworld)
 		{
 			isworld = FALSE;
 			ent = gentworld;
+			ent->id = ENTID_WORLDSPAWN;
+			vec_copy(ent->mins, gbru.models[0].mins);
+			vec_copy(ent->maxs, gbru.models[0].maxs);
+			map = gentmap + ENTID_WORLDSPAWN;
 		}
 		else
-			ent = &gents[gnuments];
-
-		if (ent_parse_ent(&pfile, ent))
 		{
-			gentmap[ent->id].precache(ent);
-			if (gentmap[ent->id].spawn(ent))
-				gnuments++;
+			ent = ent_create(classname);
+			if (!ent)
+				continue;
 		}
+
+		for (i = 0; i < numpairs; i++)
+			map->keyvalue(ent, kv + i);
+
+		map->precache(ent);
+		if (!map->spawn(ent))
+			ent_remove(ent);
 	}
 
 	map = gentmap + ENTID_PLAYER;
-	if (map->pev_size)
-		gentplayer->pev = util_calloc(map->pev_size, sizeof(byte));
-
-	gentplayer->id = map->id;
+	gentplayer->id = ENTID_PLAYER;
 	map->precache(gentplayer);
 	map->spawn(gentplayer);
 	return TRUE;

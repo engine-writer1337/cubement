@@ -10,18 +10,53 @@
 
 typedef enum
 {
-	ENTID_REMOVE = -1,
-
+	ENTID_FREE = -1,
 	ENTID_WORLDSPAWN,
 	ENTID_PLAYER,
 	ENTID_WALL,
 
-	MAX_ENTMAP = 256
+	MAX_ENTMAP = 512
 }entid_e;
 
-typedef struct
+typedef struct entity_t
 {
-	struct entity_t* owner;
-}entbase_s;
+	//======================================================
+	// Here are engine fields, do not move them
+	//======================================================
+	entid_e id;
+	ihandle_t model;
+
+	int flags;
+	int contents;
+
+	vec3_t origin;
+	vec3_t angles;
+	vec3_t endorigin;
+
+	vec3_t mins;
+	vec3_t maxs;
+
+	render_e render;
+	byte renderamt;
+	byte color[3];
+
+	int skin;
+	int body;
+	float scale;
+	float frame;
+
+	float fps;
+	int sequence;
+	int numframes;
+
+	vec2_t scroll;
+
+	ftime_t nextthink;
+	//======================================================
+	// Here are custom fields, can be written in any order
+	//======================================================
+	vec3_t velocity;
+
+}entity_s;
 
 #endif

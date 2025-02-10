@@ -3,6 +3,7 @@
 game_s ggame;
 host_s ghost;
 static engine_s gengine;
+byte gbuffer[IMG_MAX_SIZE * 4];
 
 __declspec(dllexport) BOOL NvOptimusEnablement = TRUE;
 __declspec(dllexport) BOOL AmdPowerXpressRequestHighPerformance = TRUE;
@@ -100,7 +101,7 @@ static void engine_int()
 
 static void engine_update()
 {
-	gengine.ent_base = gents;
+	gengine.entities = gents;
 	gengine.num_entities = gnuments;
 
 	gengine.time = ghost.time;
@@ -125,7 +126,7 @@ static void engine_fps()
 	font_print(gconfont, str, gvid.width - w, 0, RENDER_TRANSPARENT, 255, 255, 255, 255);
 }
 
-SAVEFUNC void cubement(engine_s** e, game_s* g)
+EXPORTFUNC void cubement(engine_s** e, game_s* g)
 {
 	static ftime_t oldtime, newtime;
 
@@ -142,6 +143,7 @@ SAVEFUNC void cubement(engine_s** e, game_s* g)
 	con_init();
 	SetUnhandledExceptionFilter(host_crash);
 
+	vid_msaa_func();
 	vid_init();
 	ghost.precache = PRE_PERS;
 

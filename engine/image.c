@@ -23,8 +23,8 @@ void img_set_filter(glpic_t pic)
 	glBindTexture(GL_TEXTURE_2D, pic);
 	if (gimg.mipmap)
 	{
-		if (gimg.aniso->value && gimg.max_aniso > 1)
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gimg.max_aniso);
+		if (gimg.max_aniso > 1)
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gimg.aniso->value ? gimg.max_aniso : 1);
 
 		if (gimg.nearest)
 		{
@@ -98,7 +98,7 @@ static void img_mipmap(byte* in, int width, int height, int format)
 	}
 }
 
-glpic_t img_upload(byte* data, int width, int height, int format)
+glpic_t img_upload(int width, int height, int format)
 {
 	glpic_t retval;
 
@@ -107,14 +107,14 @@ glpic_t img_upload(byte* data, int width, int height, int format)
 
 	retval = util_tex_gen();
 	img_set_filter(retval);
-	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gbuffer);
 	if (gimg.mipmap)
 	{
 		int mipmap = 1;
 
 		while (width > 1 || height > 1)
 		{
-			img_mipmap(data, width, height, format);
+			img_mipmap(gbuffer, width, height, format);
 
 			width >>= 1;
 			height >>= 1;
@@ -122,18 +122,17 @@ glpic_t img_upload(byte* data, int width, int height, int format)
 			if (width < 1) width = 1;
 			if (height < 1) height = 1;
 
-			glTexImage2D(GL_TEXTURE_2D, mipmap++, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+			glTexImage2D(GL_TEXTURE_2D, mipmap++, format, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, gbuffer);
 		}
 	}
 
-	util_free(data);
 	return retval;
 }
 
 static glpic_t img_load_jpg(const char* filename)
 {
+	byte* file;
 	tjhandle jpeg;
-	byte* file, * data;
 	int len, w, h, samps;
 
 	file = util_full(filename, &len);
@@ -160,10 +159,8 @@ static glpic_t img_load_jpg(const char* filename)
 		return 0;
 	}
 
-	data = util_malloc((w * h) << 2);
-	if (tjDecompress2(jpeg, file, len, data, w, 0, h, TJPF_RGBX, TJFLAG_FASTDCT))
+	if (tjDecompress2(jpeg, file, len, gbuffer, w, 0, h, TJPF_RGBX, TJFLAG_FASTDCT))
 	{
-		util_free(data);
 		util_free(file);
 		tjDestroy(jpeg);
 		con_printf(COLOR_RED, "%s - couldn't decompress", filename);
@@ -172,13 +169,13 @@ static glpic_t img_load_jpg(const char* filename)
 
 	tjDestroy(jpeg);
 	util_free(file);
-	return img_upload(data, w, h, GL_RGB);
+	return img_upload(w, h, GL_RGB);
 }
 
 static glpic_t img_load_png(const char* filename)
 {
+	byte* file;
 	const char* error;
-	byte* file, * data;
 	int has_alpha, w, h, len;
 
 	file = util_full(filename, &len);
@@ -202,17 +199,15 @@ static glpic_t img_load_png(const char* filename)
 		return 0;
 	}
 
-	data = util_malloc((w * h) << 2);
-	if (error = minipng_load(file, len, data, &has_alpha))
+	if (error = minipng_load(file, len, gbuffer, &has_alpha))
 	{
-		util_free(data);
 		util_free(file);
 		con_printf(COLOR_RED, "%s - %s", filename, error);
 		return 0;
 	}
 
 	util_free(file);
-	return img_upload(data, w, h, has_alpha ? GL_RGBA : GL_RGB);
+	return img_upload(w, h, has_alpha ? GL_RGBA : GL_RGB);
 }
 
 glpic_t img_load(const char* filename)
@@ -320,7 +315,7 @@ void img_init()
 	if (gimg.max_aniso > 8)
 		gimg.max_aniso = 8;
 
-	data = util_malloc(16 * 16 * sizeof(int));
+	data = (int*)gbuffer;
 	for (y = 0; y < 16; y++)
 	{
 		for (x = 0; x < 16; x++)
@@ -335,7 +330,7 @@ void img_init()
 	gimg.mipmap = TRUE;
 	gimg.clamp = FALSE;
 	gimg.nearest = TRUE;
-	gimg.null = img_upload((byte*)data, 16, 16, GL_RGB);
+	gimg.null = img_upload(16, 16, GL_RGB);
 }
 
 void img_free()
@@ -359,6 +354,8 @@ void img_set_param()
 
 	if (gimg.nofilter->is_change || gimg.aniso->is_change)
 	{
+		//TODO: resource model, sprites
+
 		gimg.mipmap = TRUE;
 		gimg.clamp = FALSE;
 		gimg.nearest = gimg.nofilter->value;

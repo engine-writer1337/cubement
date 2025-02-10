@@ -38,7 +38,7 @@ static ihandle_t res_alloc()
 	return gnumres++;	
 }
 
-static void res_free(ihandle_t idx)
+static void res_free(ihandle_t idx, bool_t savename)
 {
 	resource_s* r = gres + idx;
 	if (!r->name[0])
@@ -48,13 +48,16 @@ static void res_free(ihandle_t idx)
 	{
 	case RES_PIC:
 		util_tex_free(r->data.pic.t);
+		r->data.pic.t = 0;
 		break;
 	case RES_FONT:
 		util_tex_free(r->data.font.texture);
+		r->data.font.texture = 0;
 		break;
 	}
 
-	r->name[0] = '\0';
+	if (!savename)
+		r->name[0] = '\0';
 }
 
 bool_t res_notvalid(ihandle_t handle, restype_e type)
@@ -88,6 +91,34 @@ ihandle_t res_find(const char* name)
 	return BAD_HANDLE;
 }
 
+static bool_t res_load(resource_s* r, const char* filename, restype_e type, int flags)
+{
+	switch (type)
+	{
+	case RES_PIC:
+		gimg.mipmap = FALSE;
+		gimg.clamp = (flags & IMG_CLAMP);
+		gimg.nearest = (flags & IMG_NEAREST);
+
+		r->data.pic.t = img_load(filename);
+		if (!r->data.pic.t)
+			return FALSE;
+
+		r->data.pic.flags = flags;
+		r->data.pic.width = gimg.out_width;
+		r->data.pic.height = gimg.out_height;
+		break;
+
+	case RES_FONT:
+		font_load(filename, &r->data.font);
+		if (!r->data.font.texture)
+			return FALSE;
+		break;
+	}
+
+	return TRUE;
+}
+
 ihandle_t res_precache_ex(const char* filename, int flags)
 {
 	resource_s* r;
@@ -119,27 +150,8 @@ ihandle_t res_precache_ex(const char* filename, int flags)
 		return BAD_HANDLE;
 
 	r = gres + idx;
-	switch (type)
-	{
-	case RES_PIC:
-		gimg.mipmap = FALSE;
-		gimg.clamp = (flags & IMG_CLAMP);
-		gimg.nearest = (flags & IMG_NEAREST);
-
-		r->data.pic.t = img_load(filename);
-		if (!r->data.pic.t)
-			return BAD_HANDLE;
-
-		r->data.pic.width = gimg.out_width;
-		r->data.pic.height = gimg.out_height;
-		break;
-
-	case RES_FONT:
-		font_load(filename, &r->data.font);
-		if (!r->data.font.texture)
-			return BAD_HANDLE;
-		break;
-	}
+	if (!res_load(r, filename, type, flags))
+		return BAD_HANDLE;
 
 	r->type = type;
 	strcpyn(r->name, filename);
@@ -162,7 +174,7 @@ void res_flush_temp()
 	{
 		r = gres + i;
 		if (r->name[0] && r->is_temp)
-			res_free(i);
+			res_free(i, FALSE);
 	}
 }
 
@@ -171,7 +183,7 @@ void res_free_all()
 	int i;
 
 	for (i = 0; i < gnumres; i++)
-		res_free(i);
+		res_free(i, FALSE);
 }
 
 void res_reload_font()
@@ -190,6 +202,37 @@ void res_reload_font()
 
 		font_load(r->name, &r->data.font);
 		if (!r->data.font.texture)
+			r->name[0] = '\0';
+	}
+}
+
+void res_unload()
+{
+	int i;
+	resource_s* r;
+
+	for (i = 0; i < gnumres; i++)
+	{
+		r = gres + i;
+		if (!r->name[0] || r->type < RES_PIC || r->type > RES_MODEL)
+			continue;
+
+		res_free(i, TRUE);
+	}
+}
+
+void res_reload()
+{
+	int i;
+	resource_s* r;
+
+	for (i = 0; i < gnumres; i++)
+	{
+		r = gres + i;
+		if (!r->name[0] || r->type < RES_PIC || r->type > RES_MODEL)
+			continue;
+
+		if (!res_load(r, r->name, r->type, (r->type == RES_PIC) ? r->data.pic.flags : 0))
 			r->name[0] = '\0';
 	}
 }

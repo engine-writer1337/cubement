@@ -7,6 +7,7 @@
 
 typedef unsigned short	word;
 typedef unsigned char	enum_t;
+typedef unsigned int	dword;
 typedef unsigned int	glbuf_t;
 typedef unsigned int	glpic_t;
 typedef float			vec4_t[4];
@@ -45,7 +46,6 @@ typedef struct
 
 extern host_s ghost;
 extern game_s ggame;
-extern engine_s gengine;
 
 void host_shutdown();
 
@@ -60,5 +60,7 @@ void host_shutdown();
 #include "world.h"
 
 #include "resource.h"
+
+extern byte gbuffer[IMG_MAX_SIZE * 4];
 
 #endif

@@ -63,9 +63,8 @@ int font_len(ihandle_t idx, const char* text)
 int font_print(ihandle_t idx, const char* text, int x, int y, render_e render, byte r, byte g, byte b, byte a)
 {
 	font_s* f;
+	vec2_t* verts, * texcoords;
 	int dh, numdraw, size, k, space;
-	static vec2_t verts[FONT_VERTS];
-	static vec2_t texcoords[FONT_VERTS];
 
 	if (res_notvalid(idx, RES_FONT) || strnull(text))
 		return x;
@@ -73,6 +72,9 @@ int font_print(ihandle_t idx, const char* text, int x, int y, render_e render, b
 	f = &gres[idx].data.font;
 	if (!f->texture)
 		return x;
+
+	verts = (vec2_t*)gbuffer;
+	texcoords = verts + FONT_VERTS;
 
 	space = f->height >> 1;
 	size = f->height;
@@ -149,9 +151,8 @@ static char* font_adjust_res(const char* name)
 
 void font_load(const char* name, font_s* out)
 {
-	byte table[3][4];
 	const char* fullname;
-	byte* file, * src, * data;
+	byte* file, * src, table[3][4];
 	int len, color, count, sz, val, * p, add, i, j;
 
 	fullname = font_adjust_res(name);
@@ -199,9 +200,8 @@ void font_load(const char* name, font_s* out)
 	}
 
 	len = sz * sz;
-	data = util_malloc(len << 2);
 	file += FONT_LETTERS << 1;
-	p = (int*)data;
+	p = (int*)gbuffer;
 
 	vec4_set(table[0], 0, 0, 0, 0);
 	vec4_set(table[1], 255, 255, 255, 255);
@@ -223,6 +223,6 @@ void font_load(const char* name, font_s* out)
 	gimg.clamp = TRUE;
 	gimg.nearest = TRUE;
 	gimg.mipmap = FALSE;
-	out->texture = img_upload(data, sz, sz, GL_RGBA);
+	out->texture = img_upload(sz, sz, GL_RGBA);
 	util_free(src);
 }

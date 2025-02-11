@@ -34,6 +34,12 @@ static convar_s* con_create_cvar(const char* name, float initial, bool_t save)
 {
 	convar_s* cvar;
 
+	if (!gcon.can_register)
+	{
+		con_printf(COLOR_RED, "%s - registration is not allowed", name);
+		return NULL;
+	}
+
 	if (strnull(name))
 		return NULL;
 
@@ -60,6 +66,12 @@ cvar_s* con_create_cvar2(const char* name, float initial, bool_t save)
 void con_create_cmd(const char* name, conact_t action)
 {
 	convar_s* cvar;
+
+	if (!gcon.can_register)
+	{
+		con_printf(COLOR_RED, "%s - registration is not allowed", name);
+		return;
+	}
 
 	if (strnull(name))
 		return;
@@ -178,7 +190,7 @@ void con_line_execute(const char* line)
 		if (value != cvar->value)
 		{
 			con_printf(COLOR_GREEN, "%s set %g to %g", cvar->name, cvar->value, value);
-			cvar->is_change = TRUE;
+			cvar->is_change = !gcon.can_register;
 			cvar->value = value;
 		}
 	}
@@ -508,7 +520,8 @@ static void con_clear(const char* arg1, const char* arg2)
 }
 
 void con_init()
-{
+{//TODO: open command, disconnect command
+	gcon.can_register = TRUE;
 	util_create_folder("misc");
 
 	con_create_cmd("map", world_map_cmd);
@@ -528,6 +541,7 @@ void con_init()
 	gvid.mode = con_create_cvar("vid_mode", 0, TRUE);
 	gvid.msaa = con_create_cvar("vid_msaa", FALSE, TRUE);
 	gvid.fullscreen = con_create_cvar("vid_fullscreen", FALSE, TRUE);
+	gvid.vsync = con_create_cvar("vid_vsync", FALSE, TRUE);
 
 	gimg.aniso = con_create_cvar("r_aniso", TRUE, TRUE);
 	gimg.nofilter = con_create_cvar("r_nearest", FALSE, TRUE);
@@ -550,11 +564,5 @@ void con_init()
 
 	ggame.cvar_init();
 	con_cfg_read();
-
-	gvid.mode->is_change = FALSE;
-	gvid.fullscreen->is_change = FALSE;
-	gvid.msaa->is_change = FALSE;
-	gimg.nofilter->is_change = FALSE;
-	gimg.aniso->is_change = FALSE;
-	//TODO: fix this is_change
+	gcon.can_register = FALSE;
 }

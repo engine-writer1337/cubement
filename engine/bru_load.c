@@ -146,16 +146,10 @@ static void bru_create_face(int index, surf_s* out, const vec3_t mins, const vec
 	tmp_texinfo_s* texinfo = NULL;
 
 	in = gsurfs + index;
-	out->type = in->encode >> 12;
-	if (in->texinfo == TEXINFO_CLIP)
-	{
-		out->texture = BAD_HANDLE;
-		return;
-	}
-
 	texinfo = gtexinfo + in->texinfo;
 
 	out->offset = index << 2;
+	out->type = in->encode >> 12;
 	out->texture = texinfo->texture;
 	vec4_set(out->color, gcolrow[in->encode & 15], gcolrow[(in->encode >> 4) & 15], gcolrow[(in->encode >> 8) & 15], 255);
 

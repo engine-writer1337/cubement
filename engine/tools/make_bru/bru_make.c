@@ -229,8 +229,6 @@ static int get_texture(const char* name)
 
 	if (!_stricmp(name, "null"))
 		return TEX_NULL;
-	if (!_stricmp(name, "clip"))
-		return TEX_CLIP;
 	if (!_stricmp(name, "trigger"))
 		return TEX_TRIGGER;
 	if (!_stricmp(name, "area"))
@@ -473,21 +471,15 @@ static void parse_brush(entity_s* mapent)
 			get_token(FALSE); //value = atoi(token);
 		}
 
-		if (t != TEX_NULL && t != TEX_TRIGGER && t != TEX_AREA)
+		if (t >= 0)
 		{
 			surf->type = plane_frompoints(points[0], points[1], points[2]);
 			if (surf->type == SURF_TYPE_BAD)
 				printf("Ignore surf: surf for brush %i is bad\n", gnum_brushes);
 			else
 			{
-				if (t < 0)
-					surf->texinfo = TEXINFO_CLIP;
-				else
-				{
-					surf->texinfo = get_texinfo(t, UVaxis, scale, shift);
-					surf->color = get_colors(flags);
-				}
-
+				surf->texinfo = get_texinfo(t, UVaxis, scale, shift);
+				surf->color = get_colors(flags);
 				surf->next = brush->esurfes;
 				brush->esurfes = surf;
 				gnum_surfaces++;

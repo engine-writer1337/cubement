@@ -7,6 +7,9 @@ static restype_e res_type(const char* name)
 {
 	int len;
 
+	if (name[0] == '*' && name[1] >= '0' && name[1] <= '9')
+		return RES_BRUSH;
+
 	len = (int)strlen(name);
 	if ((*(int*)(name + len - 4) == 'gpj.') || (*(int*)(name + len - 4) == 'gnp.'))
 		return RES_PIC;
@@ -38,7 +41,7 @@ static ihandle_t res_alloc()
 	return gnumres++;	
 }
 
-static void res_free(ihandle_t idx, bool_t savename)
+static void res_free(ihandle_t idx)
 {
 	resource_s* r = gres + idx;
 	if (!r->name[0])
@@ -46,6 +49,9 @@ static void res_free(ihandle_t idx, bool_t savename)
 
 	switch (r->type)
 	{
+	case RES_BRUSH:
+		r->data.brush = NULL;
+		break;
 	case RES_PIC:
 		util_tex_free(r->data.pic.t);
 		r->data.pic.t = 0;
@@ -56,8 +62,7 @@ static void res_free(ihandle_t idx, bool_t savename)
 		break;
 	}
 
-	if (!savename)
-		r->name[0] = '\0';
+	r->name[0] = '\0';
 }
 
 bool_t res_notvalid(ihandle_t handle, restype_e type)
@@ -93,10 +98,20 @@ ihandle_t res_find(const char* name)
 
 static bool_t res_load(resource_s* r, const char* filename, restype_e type, int flags)
 {
+	int ofs;
+
 	switch (type)
 	{
+	case RES_BRUSH:
+		ofs = atoi(filename + 1);
+		if ((unsigned)ofs >= (unsigned)gbru.num_models)
+			return FALSE;
+
+		r->data.brush = gbru.models + ofs;
+		break;
+
 	case RES_PIC:
-		gimg.mipmap = FALSE;
+		gimg.mipmap = (flags & IMG_MIPMAP);
 		gimg.clamp = (flags & IMG_CLAMP);
 		gimg.nearest = (flags & IMG_NEAREST);
 
@@ -174,7 +189,7 @@ void res_flush_temp()
 	{
 		r = gres + i;
 		if (r->name[0] && r->is_temp)
-			res_free(i, FALSE);
+			res_free(i);
 	}
 }
 
@@ -183,7 +198,7 @@ void res_free_all()
 	int i;
 
 	for (i = 0; i < gnumres; i++)
-		res_free(i, FALSE);
+		res_free(i);
 }
 
 void res_reload_font()
@@ -214,10 +229,20 @@ void res_unload()
 	for (i = 0; i < gnumres; i++)
 	{
 		r = gres + i;
-		if (!r->name[0] || r->type < RES_PIC || r->type > RES_MODEL)
+		if (!r->name[0])
 			continue;
 
-		res_free(i, TRUE);
+		switch (r->type)
+		{
+		case RES_PIC:
+			util_tex_free(r->data.pic.t);
+			r->data.pic.t = 0;
+			break;
+		case RES_FONT:
+			util_tex_free(r->data.font.texture);
+			r->data.font.texture = 0;
+			break;
+		}
 	}
 }
 

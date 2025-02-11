@@ -1,5 +1,5 @@
 #include "cubement.h"
-//TODO: add MSAA x4
+
 vid_s gvid;
 PFNGLGENBUFFERSPROC glGenBuffers;
 PFNGLBINDBUFFERPROC glBindBuffer;
@@ -141,7 +141,7 @@ static void vid_glinit()
 
 	glViewport(0, 0, gvid.width, gvid.height);
 	if (wglSwapInterval)
-		wglSwapInterval(0);//TODO: cvar vsync
+		wglSwapInterval(gvid.vsync->value ? 1 : 0);
 }
 
 void vid_fullscreen()
@@ -283,6 +283,13 @@ void vid_set_params()
 			res_reload_font();
 
 		gvid.msaa->is_change = FALSE;
+	}
+
+	if (gvid.vsync->is_change)
+	{
+		gvid.vsync->is_change = FALSE;
+		if (wglSwapInterval)
+			wglSwapInterval(gvid.vsync->value ? 1 : 0);
 	}
 }
 

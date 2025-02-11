@@ -17,9 +17,8 @@
 #define EQUAL_EPSILON	0.01f
 
 #define TEX_NULL	-1
-#define TEX_CLIP	-2
-#define TEX_TRIGGER	-3
-#define TEX_AREA	-4
+#define TEX_TRIGGER	-2
+#define TEX_AREA	-3
 
 #define vec2_copy(dst, src)			(dst[0] = src[0], dst[1] = src[1])
 

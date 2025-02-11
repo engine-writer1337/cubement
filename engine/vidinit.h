@@ -57,6 +57,7 @@ typedef struct
 	convar_s* msaa;
 	convar_s* mode;
 	convar_s* fullscreen;
+	convar_s* vsync;
 
 	render_e render;
 }vid_s;

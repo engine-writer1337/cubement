@@ -99,6 +99,7 @@ static void engine_int()
 	gengine.set_view_ang = world_view_ang;
 
 	gengine.sky_load = sky_load;
+	gengine.sky_rotate = sky_rotate;
 }
 
 static void engine_update()

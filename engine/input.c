@@ -339,9 +339,8 @@ static void in_events(int key, bool_t down)
 
 	if (gcon.is_active)
 		con_keys(key, down);
-
-	if (gworld.is_load)
-		in_game(key, down);//TODO: придумай что нибудь еще
+	else if (gworld.is_load && !ggame.pause_world())
+		in_game(key, down);
 }
 
 static void in_mouse_event(int flags)

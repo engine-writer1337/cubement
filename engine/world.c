@@ -136,6 +136,7 @@ static bool_t frustum_clip2d(const vec2_t mins, const vec2_t maxs)
 static void sky_draw()
 {
 	vec2_t st[4];
+	bool_t rotate;
 	vec3_t mins, maxs, verts[4];
 	static vec2_t texcoords[4] = { {0, 0}, {0, 1}, {1, 1}, {1, 0} };
 
@@ -143,8 +144,23 @@ static void sky_draw()
 		return;
 
 	glDisable(GL_DEPTH_TEST);
-	vec_set(mins, gworld.vieworg[0] - 256, gworld.vieworg[1] - 256, gworld.vieworg[2] - 256);
-	vec_set(maxs, gworld.vieworg[0] + 256, gworld.vieworg[1] + 256, gworld.vieworg[2] + 256);
+	rotate = (fabsf(gsky.ang[0]) > 0.01f) || (fabsf(gsky.ang[1]) > 0.01f) || (fabsf(gsky.ang[2]) > 0.01f);
+	if (rotate)
+	{
+		glPushMatrix();
+		glTranslatef(gworld.vieworg[0], gworld.vieworg[1], gworld.vieworg[2]);
+		glRotatef(gsky.ang[YAW], 0, 0, 1);
+		glRotatef(gsky.ang[PITCH], 0, 1, 0);
+		glRotatef(gsky.ang[ROLL], 1, 0, 0);
+		
+		vec_init(mins, -256);
+		vec_init(maxs, 256);
+	}
+	else
+	{
+		vec_set(mins, gworld.vieworg[0] - 256, gworld.vieworg[1] - 256, gworld.vieworg[2] - 256);
+		vec_set(maxs, gworld.vieworg[0] + 256, gworld.vieworg[1] + 256, gworld.vieworg[2] + 256);
+	}
 
 	//==========================================================================//
 	vec2_copy(st[0], texcoords[2]);
@@ -228,6 +244,13 @@ static void sky_draw()
 	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
 	glEnable(GL_DEPTH_TEST);
+	if (rotate)
+		glPopMatrix();
+}
+
+void sky_rotate(const vec3_t ang)
+{
+	vec_copy(gsky.ang, ang);
 }
 
 void sky_load(const char* name)
@@ -235,6 +258,12 @@ void sky_load(const char* name)
 	int i;
 	string_t path;
 	static const char* sides[6] = { "bk", "ft", "lf", "rt", "up", "dn" };
+
+	if (!ghost.precache)
+	{
+		con_printf(COLOR_RED, "%s - skybox loading not allowed");
+		return;
+	}
 
 	if (strnull(name) || strcmpi(gsky.name, name))
 		return;
@@ -332,9 +361,6 @@ static void world_area_visibles()
 				for (m = 0; m < b->num_surfes; m++)
 				{
 					s = b->surfes + m;
-					if (s->texture == BAD_HANDLE)
-						continue;//CLIP texture
-
 					switch (s->type)
 					{
 					case SURF_TYPE_X:
@@ -366,6 +392,16 @@ static void world_area_visibles()
 			}
 			break;
 		}
+
+		//TODO: move it out if any area box is intersect
+		/*for (j = 0; j < gnuments; j++)
+		{
+			if (!gedicts[j].areas[i])
+				continue;
+
+			gedicts[j].next = gworld.solid_chain;
+			gworld.solid_chain = &gedicts[j];
+		}*/
 	}
 }
 
@@ -570,10 +606,11 @@ void world_load_map()
 		gworld.is_load = FALSE;
 	}
 
+	res_flush_temp();
 	ent_string_flush();
 	ghost.precache = PRE_TEMP;
 	
-	if (!bru_load(ghost.newmap))
+	if (!bru_load(ghost.newmap))//TODO: reload only ent if map same
 	{
 		ghost.newmap[0] = '\0';
 		ghost.precache = PRE_NOT;

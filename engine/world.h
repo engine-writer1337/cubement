@@ -39,10 +39,13 @@ typedef struct
 	vec3_t v_up;
 
 	convar_s* vbo;
+
+	edict_s* solid_chain;
 }world_s;
 
 typedef struct
 {
+	vec3_t ang;
 	name_t name;
 	bool_t invisible;
 	glpic_t pics[6];
@@ -52,6 +55,7 @@ extern sky_s gsky;
 extern world_s gworld;
 extern entity_s* gentworld;
 
+void sky_rotate(const vec3_t ang);
 void sky_load(const char* name);
 void sky_free();
 

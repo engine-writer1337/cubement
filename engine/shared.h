@@ -27,9 +27,17 @@
 #define FL_BEAM			(1 << 1)
 #define FL_UPRIGHT		(1 << 2)
 #define FL_MODULATE		(1 << 3)
+#define FL_NOFOG		(1 << 4)
+#define FL_SHADOW		(1 << 5)
+#define FL_NODISSIP		(1 << 6)
 
 #define IMG_NEAREST		(1 << 0)
 #define IMG_CLAMP		(1 << 1)
+#define IMG_MIPMAP		(1 << 2)
+
+#define ANIM_REVERSE	(1 << 0)
+#define ANIM_GAIT		(1 << 1)
+#define ANIM_LOOP		(1 << 2)
 
 #define BAD_HANDLE	-1
 
@@ -104,11 +112,6 @@ typedef struct
 	int skin;
 	int body;
 	float scale;
-	float frame;
-
-	float fps;
-	int sequence;
-	int numframes;
 
 	ftime_t nextthink;
 
@@ -130,7 +133,7 @@ typedef struct
 
 typedef struct
 {
-	char name[32];
+	char key[32];
 	char value[256];
 }keyvalue_s;
 
@@ -167,9 +170,26 @@ typedef struct
 	float dist;
 	vec3_t normal;
 
+	int hitbox;
+
 	byte color[3];
 	char texturename[33];
 }trace_s;
+
+typedef struct
+{
+	int frame;
+	void (*func)(void* pev);
+}event_s;
+
+typedef struct
+{
+	float framerate;
+	const char* sequence;
+
+	int num_events;
+	event_s* events;
+}anim_s;
 
 typedef struct
 {
@@ -246,9 +266,9 @@ typedef struct
 
 	void (*sky_load)(const char* name);
 	void (*sky_visible)(bool_t is_visible);
+	void (*sky_rotate)(const vec3_t ang);
 
-	void (*set_numframes)(entity_s* ent);
-	void (*set_sequence)(entity_s* ent, const char* name);
+	void (*anim_play)(anim_s* anim, int flags);
 	void (*set_bodygroup)(entity_s* ent, int group, int body);
 	void (*get_bonepos)(const entity_s* ent, const char* name, vec3_t pos);
 

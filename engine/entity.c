@@ -8,6 +8,7 @@ static entmap_s gentmap[MAX_ENTMAP];
 int gnuments;
 static jmp_buf gent_jump;
 entity_s* gents[MAX_ENTITIES];
+edict_s gedicts[MAX_ENTITIES];
 
 static entity_s* gentplayer;
 
@@ -82,14 +83,22 @@ entity_s* ent_create(const char* classname)
 	}
 
 	gents[i] = util_calloc(map->pev_size, sizeof(byte));
+	memzero(&gedicts[i], sizeof(gedicts[i]));
+	gedicts[i].e = gents[i];
 	gents[i]->id = map->id;
 	return gents[i];
 }
 
 void ent_remove(entity_s* ent)
 {
-	if (ent)
-		ent->id = ENTID_FREE;
+	int ofs;
+
+	if (!ent || ent->id == ENTID_FREE || ent->id == ENTID_WORLDSPAWN || ent->id == ENTID_PLAYER)
+		return;
+
+	ent->id = ENTID_FREE;
+	ofs = (ent - gents[0]) / sizeof(gents[0]);
+	gedicts[ofs].e = NULL;
 }
 
 //=============================================================//
@@ -125,12 +134,59 @@ void ent_think()
 {
 	int i;
 	entity_s* e;
+	edict_s* ed;
 
 	for (i = 0; i < gnuments; i++)
 	{
-		e = gents[i];
-		if (e && e->nextthink < ghost.gametime)
+		ed = gedicts + i;
+		if (!ed->e)
+			continue;
+
+		e = ed->e;
+		if (e->nextthink < ghost.gametime)
 			gentmap[e->id].think(e);
+	}
+}
+
+static void ent_fill_areas(edict_s* ent)
+{
+	int i, j;
+	area_s* a;
+	bool_t anyintersect = FALSE;
+
+	for (i = 1; i < gbru.num_areas; i++)
+	{
+		a = gbru.areas + i;
+		for (j = 0; j < a->num_boxes; j++)
+		{//TODO: absmins absmaxs
+			//if (gworld.vieworg[0] > a->maxs[j][0] || gworld.vieworg[1] > a->maxs[j][1] ||
+			//	gworld.vieworg[0] < a->mins[j][0] || gworld.vieworg[1] < a->mins[j][1])
+			//	continue;
+
+			ent->areas[i] = TRUE;
+			anyintersect = TRUE;
+			break;
+		}
+	}
+
+	if (!anyintersect)
+		ent->areas[0] = TRUE;
+}
+
+static void ent_post_init()
+{
+	int i;
+	entity_s* e;
+	edict_s* ed;
+
+	for (i = 0; i < gnuments; i++)
+	{
+		ed = gedicts + i;
+		if (!ed->e)
+			continue;
+
+		e = ed->e;
+		ent_fill_areas(ed);
 	}
 }
 
@@ -182,7 +238,7 @@ static int ent_parse_ent(const char** pfile, keyvalue_s* kv, char* classname)
 			if (numpairs == MAX_KEYVALUES)
 				continue;
 
-			strcpyn(kv[numpairs].name, keyname);
+			strcpyn(kv[numpairs].key, keyname);
 			strcpyn(kv[numpairs].value, token);
 			numpairs++;
 		}
@@ -213,6 +269,8 @@ bool_t ent_parse(const char* pfile)
 	gnuments = 2;
 	gents[0] = util_calloc(gentmap[ENTID_WORLDSPAWN].pev_size, sizeof(byte));
 	gents[1] = util_calloc(gentmap[ENTID_PLAYER].pev_size, sizeof(byte));
+	gedicts[0].e = gents[0];
+	gedicts[1].e = gents[1];
 	gentworld = gents[0];
 	gentplayer = gents[1];
 	isworld = TRUE;
@@ -236,7 +294,6 @@ bool_t ent_parse(const char* pfile)
 			ent->id = ENTID_WORLDSPAWN;
 			vec_copy(ent->mins, gbru.models[0].mins);
 			vec_copy(ent->maxs, gbru.models[0].maxs);
-			map = gentmap + ENTID_WORLDSPAWN;
 		}
 		else
 		{
@@ -245,6 +302,7 @@ bool_t ent_parse(const char* pfile)
 				continue;
 		}
 
+		map = gentmap + ent->id;
 		for (i = 0; i < numpairs; i++)
 			map->keyvalue(ent, kv + i);
 
@@ -257,5 +315,6 @@ bool_t ent_parse(const char* pfile)
 	gentplayer->id = ENTID_PLAYER;
 	map->precache(gentplayer);
 	map->spawn(gentplayer);
+	ent_post_init();
 	return TRUE;
 }

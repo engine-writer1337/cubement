@@ -25,6 +25,7 @@ typedef struct
 typedef struct
 {
 	bool_t is_active;
+	bool_t can_register;
 
 	int num_lines, top_line;
 	enum_t colors[CON_MAX_STRINGS];

@@ -55,8 +55,8 @@ void host_shutdown();
 #include "image.h"
 #include "font.h"
 
-#include "entity.h"
 #include "bru_load.h"
+#include "entity.h"
 #include "world.h"
 
 #include "resource.h"

@@ -43,11 +43,6 @@ typedef struct entity_t
 	int skin;
 	int body;
 	float scale;
-	float frame;
-
-	float fps;
-	int sequence;
-	int numframes;
 
 	vec2_t scroll;
 

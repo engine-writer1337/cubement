@@ -30,6 +30,8 @@
 #define FL_NOFOG		(1 << 4)
 #define FL_SHADOW		(1 << 5)
 #define FL_NODISSIP		(1 << 6)
+#define FL_SAVE			(1 << 7)
+#define FL_TEMP			(1 << 8)
 
 #define IMG_NEAREST		(1 << 0)
 #define IMG_CLAMP		(1 << 1)
@@ -87,49 +89,15 @@ typedef enum
 	FIELD_SHORT,
 	FIELD_INT,
 	FIELD_FLOAT,
+	FIELD_VECTOR2,
+	FIELD_VECTOR3,
 	FIELD_TIME,
 	FIELD_STRING,
+	FIELD_RESOURCE,
 	FIELD_ENTITY_POINTER,
 }field_e;
 
 #include "../game/ent_shared.h"
-
-typedef struct
-{
-	entid_e id;
-	ihandle_t model;
-
-	int flags;
-	vec3_t origin;
-	vec3_t angles;
-	vec3_t velocity;
-	vec3_t endorigin;
-
-	render_e render;
-	byte renderamt;
-	byte color[3];
-
-	int skin;
-	int body;
-	float scale;
-
-	ftime_t nextthink;
-
-	int iuser1;
-	int iuser2;
-	int iuser3;
-	int iuser4;
-
-	float fuser1;
-	float fuser2;
-	float fuser3;
-	float fuser4;
-
-	vec3_t vuser1;
-	vec3_t vuser2;
-	vec3_t vuser3;
-	vec3_t vuser4;
-}temp_entity_s;
 
 typedef struct
 {
@@ -150,16 +118,6 @@ typedef struct
 
 	hash_t hash;
 }entmap_s;
-
-typedef struct
-{
-	entid_e id;
-	const char* name;
-	void (*spawn)(temp_entity_s* pev);
-	void (*think)(temp_entity_s* pev);
-
-	hash_t hash;
-}temp_entmap_s;
 
 typedef struct
 {
@@ -185,16 +143,13 @@ typedef struct
 typedef struct
 {
 	float framerate;
-	const char* sequence;
+
+	int sequence_num;
+	const char* sequence_name;
 
 	int num_events;
 	event_s* events;
 }anim_s;
-
-typedef struct
-{
-	int x, y, w, h;
-}prect_s;
 
 typedef struct
 {
@@ -204,87 +159,125 @@ typedef struct
 
 typedef struct
 {
-	int num_entities;
-	entity_s** entities;
-
+	//======================================================
+	// Global variables that are updated every frame
+	//======================================================
 	ftime_t time;
-	ftime_t frametime;
 	ftime_t gametime;
+	ftime_t frametime;
 
 	int width;
 	int height;
-
 	int centr_x;
 	int centr_y;
 
 	bool_t world_load;
 	bool_t console_active;
 
-	void (*get_mapname)(char* name);
+	//======================================================
+	// Entity
+	//======================================================
+	int entities_max;
+	entity_s** entities;
 
-	void (*quit)();
-	void (*disconnect)();
-	char* (*alloc_string)(const char* string);
-	void (*execute_cmd)(const char* command);
-	void (*console_printf)(color_e color, const char* text, ...);
+	void (*ent_register)(const entmap_s* ent);
+	entity_s* (*ent_create)(const char* classname);
+	void (*ent_remove)(entity_s* ent);
 
-	void (*register_entity)(const entmap_s* ent);
-	entity_s* (*create_entity)(const char* classname);
-	void (*remove_entity)(entity_s* ent);
+	void (*ent_saverestore)(void* data, int count, field_e type);
+	void (*ent_play_anim)(anim_s* anim, int flags);
+	void (*ent_set_body)(entity_s* ent, int group, int body);
+	void (*ent_get_bonepos)(const entity_s* ent, const char* name, vec3_t pos);
+	void (*ent_add_boneang)(const entity_s* ent, const char* name, const vec3_t ang);
 
-	void (*register_temp_entity)(const temp_entmap_s* ent);
-	temp_entity_s* (*create_temp_entity)(const char* classname);
-	void (*remove_temp_entity)(temp_entity_s* ent);
+	//======================================================
+	// Resources
+	//======================================================
+	ihandle_t(*resource_precache)(const char* filename);
+	ihandle_t(*resource_precache_ex)(const char* filename, int flags);
+	ihandle_t(*resource_get_handle)(const char* filename);
 
-	void (*create_cmd)(const char* name, conact_t action);
-	cvar_s* (*create_cvar)(const char* name, float value, bool_t save);
-
-	void (*reset_cursor_pos)();//TODO: no need?
-	void (*show_cursor)(bool_t show);
-	void (*set_cursor_pos)(int x, int y);
-	void (*get_cursor_pos)(int* x, int* y, bool_t client);
-
-	void (*saverestore)(void* data, int count, field_e type);
-
-	ihandle_t(*precache_resource)(const char* filename);
-	ihandle_t(*precache_resource_ex)(const char* filename, int flags);
-	ihandle_t(*get_resource_handle)(const char* filename);
-
+	//======================================================
+	// Font
+	//======================================================
 	int (*font_height)(ihandle_t idx);
 	int (*font_len)(ihandle_t idx, const char* text);
 	int (*font_print)(ihandle_t idx, const char* text, int x, int y, render_e render, byte r, byte g, byte b, byte a);
 
-	void (*pic_size)(ihandle_t idx, int* w, int* h);
-	void (*pic_draw)(ihandle_t idx, int x, int y, render_e render, byte r, byte g, byte b, byte a, const prect_s* rect);
-	void (*pic_draw_stretch)(ihandle_t idx, int x, int y, int w, int h, render_e render, byte r, byte g, byte b, byte a, const prect_s* rect);
+	//======================================================
+	// Skybox
+	//======================================================
+	void (*sky_load)(const char* name);
+	void (*sky_visible)(bool_t is_visible);
+	void (*sky_rotate)(const vec3_t ang);
+
+	//======================================================
+	// Cursor
+	//======================================================
+	void (*cursor_reset_pos)();
+	void (*cursor_show)(bool_t show);
+	void (*cursor_set_pos)(int x, int y);
+	void (*cursor_get_pos)(int* x, int* y, bool_t client);
+
+	//======================================================
+	// Custom 2d drawing
+	//======================================================
+	int (*pic_get_numframes)(ihandle_t idx);
+	void (*pic_get_size)(ihandle_t idx, int frame, int* w, int* h);
+	void (*pic_draw)(ihandle_t idx, int frame, int x, int y, render_e render, byte r, byte g, byte b, byte a);
+	void (*pic_draw_stretch)(ihandle_t idx, int frame, int x, int y, int w, int h, render_e render, byte r, byte g, byte b, byte a);
 
 	void (*world_to_screen)(const vec3_t org, int* x, int* y);
 
 	void (*rect_draw)(int x, int y, int w, int h, render_e render, byte r, byte g, byte b, byte a);
 
-	void (*particle_draw)(ihandle_t pic, const vec3_t org, float size, render_e render, byte r, byte g, byte b, byte a);
-
-	void (*sky_load)(const char* name);
-	void (*sky_visible)(bool_t is_visible);
-	void (*sky_rotate)(const vec3_t ang);
-
-	void (*anim_play)(anim_s* anim, int flags);
-	void (*set_bodygroup)(entity_s* ent, int group, int body);
-	void (*get_bonepos)(const entity_s* ent, const char* name, vec3_t pos);
-
+	//======================================================
+	// Sound
+	//======================================================
 	void (*music_play)(const char* filename);
 	void (*music_pause)(bool_t pause);
 	void (*music_stop)();
 
-	void (*ambient_play)(ihandle_t idx, vec3_t org, float volume, float distance);
 	void (*sound_play)(ihandle_t idx, const entity_s* ent, channel_e chan, float volume, float distance);
+	void (*sound_play_ambient)(ihandle_t idx, const entity_s* ent, vec3_t org, float volume, float distance);//TODO:
 	void (*sound_play_local)(ihandle_t idx, float volume);
 	void (*sound_stop)(const entity_s* ent, channel_e chan);
 
+	//======================================================
+	// Render settings
+	//======================================================
 	void (*set_view_fov)(float fov);
 	void (*set_view_ang)(const vec3_t ang);
 	void (*set_view_org)(const vec3_t org);
 	void (*set_fog)(float distance, byte r, byte g, byte b);
+
+	//======================================================
+	// Console
+	//======================================================
+	void (*con_execute)(const char* command);
+	void (*con_printf)(color_e color, const char* text, ...);
+
+	void (*con_create_cmd)(const char* name, conact_t action);
+	cvar_s* (*con_create_cvar)(const char* name, float value, bool_t save);
+
+	//======================================================
+	// Custom 3d drawing
+	//======================================================
+	void (*custom_model)(ihandle_t idx, const vec3_t org, const vec3_t ang, render_e render, byte r, byte g, byte b, byte a);
+	void (*custom_sprite)(ihandle_t idx, int frame, const vec3_t org, float scale, render_e render, byte r, byte g, byte b, byte a);
+
+	void (*custom_bind)(ihandle_t idx, int frame);
+	void (*custom_color)(byte r, byte g, byte b, byte a);
+	void (*custom_rendermode)(render_e render);
+	void (*custom_color_pointer)(const byte* colors);
+	void (*custom_texcoord_pointer)(const vec2_t* texcoords);
+	void (*custom_verts_pointer)(const vec3_t* verts);
+	void (*custom_draw_arrays)(bool_t quads, int first, int count);
+
+	//======================================================
+	// Uncategorized
+	//======================================================
+	void (*get_mapname)(char* name);
 
 	void (*trace)(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents, trace_s* tr);
 	bool_t(*bbox_is_stuck)(const vec3_t org, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents);
@@ -301,6 +294,7 @@ typedef struct
 	void (*engine_init)();
 	void (*engine_free)();
 
+	void (*game_precache)();
 	void (*game_start)();
 	void (*game_end)();
 
@@ -332,20 +326,9 @@ void add_##ename() {\
 	ent.precache = precache_##ename;\
 	ent.keyvalue = keyvalue_##ename;\
 	ent.saverestore = saverestore_##ename;\
-	cment->register_entity(&ent);\
-}
-
-#define LINK_TEMP_ENTITY(ename, eid) \
-void add_temp_##ename() {\
-	temp_entmap_s ent; \
-	ent.id = eid;\
-	ent.name = #ename;\
-	ent.think = think_##ename;\
-	ent.spawn = spawn_##ename;\
-	cment->register_temp_entity(&ent);\
+	cment->ent_register(&ent);\
 }
 
 #define REGISTER_ENTITY(ename) extern void add_##ename(); add_##ename()
-#define REGISTER_TEMP_ENTITY(ename) extern void add_temp_##ename(); add_temp_##ename()
 
 #endif

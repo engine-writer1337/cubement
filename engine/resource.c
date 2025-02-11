@@ -7,7 +7,7 @@ static restype_e res_type(const char* name)
 {
 	int len;
 
-	if (name[0] == '*' && name[1] >= '0' && name[1] <= '9')
+	if (name[0] == '*' && name[1] >= '1' && name[1] <= '9')
 		return RES_BRUSH;
 
 	len = (int)strlen(name);

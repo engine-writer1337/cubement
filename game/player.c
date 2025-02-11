@@ -93,16 +93,16 @@ cmd_key_down(right_down, &in_right);
 
 void cvar_init()
 {
-	cment->create_cmd("+forward", forward_down);
-	cment->create_cmd("-forward", forward_up);
-	cment->create_cmd("+back", back_down);
-	cment->create_cmd("-back", back_up);
-	cment->create_cmd("+left", left_down);
-	cment->create_cmd("-left", left_up);
-	cment->create_cmd("+right", right_down);
-	cment->create_cmd("-right", right_up);
+	cment->con_create_cmd("+forward", forward_down);
+	cment->con_create_cmd("-forward", forward_up);
+	cment->con_create_cmd("+back", back_down);
+	cment->con_create_cmd("-back", back_up);
+	cment->con_create_cmd("+left", left_down);
+	cment->con_create_cmd("-left", left_up);
+	cment->con_create_cmd("+right", right_down);
+	cment->con_create_cmd("-right", right_up);
 
-	glob.sens = cment->create_cvar("m_sens", 3, TRUE);
+	glob.sens = cment->con_create_cvar("m_sens", 3, TRUE);
 }
 
 static bool_t spawn_player(player_s* pev)
@@ -129,7 +129,7 @@ static void think_player(player_s* pev)
 	{
 		int mx, my;
 
-		cment->get_cursor_pos(&mx, &my, FALSE);
+		cment->cursor_get_pos(&mx, &my, FALSE);
 		mx -= cment->centr_x;
 		my -= cment->centr_y;
 		if (mx || my)
@@ -138,7 +138,7 @@ static void think_player(player_s* pev)
 			pev->base.angles[YAW] = anglemod(pev->base.angles[YAW]);
 			pev->base.angles[PITCH] += 0.01f * glob.sens->value * my;
 			pev->base.angles[PITCH] = clamp(-89, pev->base.angles[PITCH], 89);
-			cment->reset_cursor_pos();
+			cment->cursor_reset_pos();
 		}
 	}
 

@@ -1,8 +1,6 @@
 #include "cubement.h"
 #include <setjmp.h>
 
-static int gstringpos;
-static char gstringpool[STRINGPOOL];
 static entmap_s gentmap[MAX_ENTMAP];
 
 int gnuments;
@@ -86,6 +84,7 @@ entity_s* ent_create(const char* classname)
 	memzero(&gedicts[i], sizeof(gedicts[i]));
 	gedicts[i].e = gents[i];
 	gents[i]->id = map->id;
+	gents[i]->model = BAD_HANDLE;
 	return gents[i];
 }
 
@@ -99,32 +98,6 @@ void ent_remove(entity_s* ent)
 	ent->id = ENTID_FREE;
 	ofs = (ent - gents[0]) / sizeof(gents[0]);
 	gedicts[ofs].e = NULL;
-}
-
-//=============================================================//
-// STRING POOL
-//=============================================================//
-char* ent_string_alloc(const char* string)
-{
-	char* p;
-	int len;
-
-	len = (int)strlen(string) + 1;
-	if (gstringpos + len >= STRINGPOOL)
-	{
-		con_print(COLOR_RED, "Failed to allocate string");
-		return NULL;
-	}
-
-	p = gstringpool + gstringpos;
-	gstringpos += (len + 3) & ~3;
-	strcpy(p, string);
-	return p;
-}
-
-void ent_string_flush()
-{
-	gstringpos = 0;
 }
 
 //=============================================================//
@@ -148,29 +121,34 @@ void ent_think()
 	}
 }
 
-static void ent_fill_areas(edict_s* ent)
+static void ent_fill_areas(edict_s* ed)
 {
 	int i, j;
 	area_s* a;
+	vec3_t absmin, absmax;
 	bool_t anyintersect = FALSE;
+
+	ed->num_areas = 0;
+	vec_add(absmax, ed->e->origin, ed->e->maxs);
+	vec_add(absmin, ed->e->origin, ed->e->mins);
 
 	for (i = 1; i < gbru.num_areas; i++)
 	{
 		a = gbru.areas + i;
 		for (j = 0; j < a->num_boxes; j++)
-		{//TODO: absmins absmaxs
-			//if (gworld.vieworg[0] > a->maxs[j][0] || gworld.vieworg[1] > a->maxs[j][1] ||
-			//	gworld.vieworg[0] < a->mins[j][0] || gworld.vieworg[1] < a->mins[j][1])
-			//	continue;
+		{
+			if (absmin[0] > a->maxs[j][0] || absmin[1] > a->maxs[j][1] ||
+				absmax[0] < a->mins[j][0] || absmax[1] < a->mins[j][1])
+				continue;
 
-			ent->areas[i] = TRUE;
+			ed->areas[ed->num_areas++] = i;
 			anyintersect = TRUE;
 			break;
 		}
 	}
 
 	if (!anyintersect)
-		ent->areas[0] = TRUE;
+		ed->areas[ed->num_areas++] = 0;
 }
 
 static void ent_post_init()
@@ -178,6 +156,8 @@ static void ent_post_init()
 	int i;
 	entity_s* e;
 	edict_s* ed;
+	resource_s* res;
+	brushmodel_s* bm;
 
 	for (i = 0; i < gnuments; i++)
 	{
@@ -186,7 +166,22 @@ static void ent_post_init()
 			continue;
 
 		e = ed->e;
-		ent_fill_areas(ed);
+		if (e->model != BAD_HANDLE)
+		{
+			res = gres + e->model;
+			if (res->type == RES_BRUSH)
+			{
+				bm = res->data.brush;
+				vec_set(e->origin, (bm->maxs[0] + bm->mins[0]) * 0.5f, (bm->maxs[1] + bm->mins[1]) * 0.5f, (bm->maxs[2] + bm->mins[2]) * 0.5f);
+				vec_sub(e->maxs, bm->maxs, e->origin);
+				vec_sub(e->mins, bm->mins, e->origin);
+			}
+
+			if (e->flags & FL_TEMP)
+				ed->areas[ed->num_areas++] = 0;
+			else
+				ent_fill_areas(ed);
+		}		
 	}
 }
 

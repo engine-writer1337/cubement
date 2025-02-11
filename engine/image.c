@@ -1,6 +1,6 @@
 #include "cubement.h"
 #include "libs/turbojpeg.h"
-
+//TODO: drawp spirite frame with div numframes
 image_s gimg;
 extern const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int* has_alpha);
 extern const char* minipng_size(const byte* buffer, int filesize, int* out_width, int* out_height);
@@ -275,8 +275,8 @@ void img_scrshot_cmd(const char* arg1, const char* arg2)
 	tjFree(output);
 }
 
-void img_pic_draw(ihandle_t idx, int x, int y, render_e render, byte r, byte g, byte b, byte a, const prect_s* rect)
-{//TODO: rect
+void img_pic_draw(ihandle_t idx, int frame, int x, int y, render_e render, byte r, byte g, byte b, byte a)
+{//TODO: sprite case
 	pic_s* p;
 	vec2_t verts[4];
 	vec2_t texcoords[4];

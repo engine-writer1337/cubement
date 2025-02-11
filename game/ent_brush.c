@@ -13,7 +13,7 @@ static void precache_func_wall(entity_s* pev)
 static void keyvalue_func_wall(entity_s* pev, keyvalue_s* kv)
 {
 	if (strcmpi(kv->key, "model"))
-		pev->model = cment->precache_resource(kv->value);
+		pev->model = cment->resource_precache(kv->value);
 }
 
 static void saverestore_func_wall(entity_s* pev) {}

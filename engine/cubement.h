@@ -42,6 +42,7 @@ typedef struct
 	convar_s* fps;
 
 	pretype_e precache;
+	bool_t precache_once;
 }host_s;
 
 extern host_s ghost;

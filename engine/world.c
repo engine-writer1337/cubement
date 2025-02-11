@@ -311,7 +311,11 @@ static void world_area_visibles()
 	area_s* a;
 	surf_s* s;
 	brush_s* b;
+	entity_s* e;
+	edict_s* ed;
 	int i, j, k, m;
+	resource_s* res;
+	vec3_t absmin, absmax;
 	bool_t anyintersect = FALSE;
 
 	gbru.areas[0].visframe = gworld.framecount;
@@ -342,12 +346,13 @@ static void world_area_visibles()
 		if (a->visframe != gworld.framecount && !a->active)
 			continue;
 
-		a->visframe = gworld.framecount;
+		anyintersect = FALSE;
 		for (j = 0; j < a->num_boxes; j++)
 		{
 			if (frustum_clip2d(a->mins[j], a->maxs[j]))
 				continue;
 
+			anyintersect = TRUE;
 			for (k = 0; k < a->num_brushareas; k++)
 			{
 				b = gbru.brushes + a->brushareas[k];
@@ -393,15 +398,46 @@ static void world_area_visibles()
 			break;
 		}
 
-		//TODO: move it out if any area box is intersect
-		/*for (j = 0; j < gnuments; j++)
+		if (anyintersect)
+			a->visframe = gworld.framecount;
+	}
+
+	for (i = 0; i < gnuments; i++)
+	{
+		ed = gedicts + i;
+		if (!ed->e)
+			continue;
+
+		e = ed->e;
+		if (e->model == BAD_HANDLE)
+			continue;
+
+		anyintersect = FALSE;
+		for (j = 0; j < ed->num_areas; j++)
 		{
-			if (!gedicts[j].areas[i])
+			if (gbru.areas[ed->areas[j]].visframe != gworld.framecount)
 				continue;
 
-			gedicts[j].next = gworld.solid_chain;
-			gworld.solid_chain = &gedicts[j];
-		}*/
+			anyintersect = TRUE;
+			break;
+		}
+
+		if (!anyintersect)
+			continue;
+
+		vec_add(absmax, e->origin, e->maxs);
+		vec_add(absmin, e->origin, e->mins);
+		if (frustum_clip(absmin, absmax))
+			continue;
+
+		res = gres + e->model;
+		switch (res->type)
+		{
+		case RES_BRUSH:
+			ed->next = gworld.solid_chain;
+			gworld.solid_chain = ed;
+			break;
+		}
 	}
 }
 
@@ -479,11 +515,116 @@ static void world_draw_worldspawn()
 	}
 }
 
+static void world_draw_solid()
+{
+	int i, m;
+	surf_s* s;
+	brush_s* b;
+	edict_s* ed;
+	entity_s* e;
+	resource_s* res;
+	brushmodel_s* bm;
+	vec3_t origin, offset, absmax, absmin;
+
+	ed = gworld.solid_chain;
+	while (ed)
+	{
+		vid_rendermode(RENDER_NORMAL);//TODO: grab rendermode from game.exe
+
+		e = ed->e;
+		if (e->model == BAD_HANDLE)
+			continue;
+
+		res = gres + e->model;
+		switch (res->type)
+		{
+		case RES_BRUSH:
+			bm = res->data.brush;
+			vec_set(origin, (bm->maxs[0] + bm->mins[0]) * 0.5f, (bm->maxs[1] + bm->mins[1]) * 0.5f, (bm->maxs[2] + bm->mins[2]) * 0.5f);
+			vec_sub(offset, e->origin, origin);
+
+			glPushMatrix();
+			glTranslatef(offset[0], offset[1], offset[2]);
+
+			for (i = 0; i < bm->num_brushes; i++)
+			{
+				b = bm->brushes + i;
+				vec_add(absmax, offset, b->maxs);
+				vec_add(absmin, offset, b->mins);
+				if (frustum_clip(absmin, absmax))
+					continue;
+
+				for (m = 0; m < b->num_surfes; m++)
+				{//ужасный код
+					s = b->surfes + m;
+					switch (s->type)
+					{
+					case SURF_TYPE_X:
+						if (gworld.vieworg[0] > b->maxs[0])
+						{
+							img_bind(gbru.textures[s->texture].t);
+							glColor4ubv(s->color);
+							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+						}
+						break;
+					case SURF_TYPE_Y:
+						if (gworld.vieworg[1] > b->maxs[1])
+						{
+							img_bind(gbru.textures[s->texture].t);
+							glColor4ubv(s->color);
+							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+						}
+						break;
+					case SURF_TYPE_Z:
+						if (gworld.vieworg[2] > b->maxs[2])
+						{
+							img_bind(gbru.textures[s->texture].t);
+							glColor4ubv(s->color);
+							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+						}
+						break;
+					case SURF_TYPE_SX:
+						if (gworld.vieworg[0] < b->mins[0])
+						{
+							img_bind(gbru.textures[s->texture].t);
+							glColor4ubv(s->color);
+							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+						}
+						break;
+					case SURF_TYPE_SY:
+						if (gworld.vieworg[1] < b->mins[1])
+						{
+							img_bind(gbru.textures[s->texture].t);
+							glColor4ubv(s->color);
+							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+						}
+						break;
+					case SURF_TYPE_SZ:
+						if (gworld.vieworg[2] < b->mins[2])
+						{
+							img_bind(gbru.textures[s->texture].t);
+							glColor4ubv(s->color);
+							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+						}
+						break;
+					}
+				}
+			}
+
+			glPopMatrix();
+			break;
+		}
+
+		ed = ed->next;
+	}
+}
+
 void world_draw()
 {
 	int i;
 
 	gworld.framecount++;
+	gworld.solid_chain = NULL;
 	for (i = 0; i < gbru.num_textures; i++)
 		gbru.textures[i].chain = NULL;
 
@@ -492,7 +633,6 @@ void world_draw()
 	sky_draw();
 	
 	world_area_visibles();
-	//TODO: entity visible here
 
 	//========== DRAW BRUSHES ==========//
 	if (gvertbuf.buffer)
@@ -508,6 +648,7 @@ void world_draw()
 	}
 
 	world_draw_worldspawn();
+	world_draw_solid();
 	if (gvertbuf.buffer)
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -607,9 +748,14 @@ void world_load_map()
 	}
 
 	res_flush_temp();
-	ent_string_flush();
-	ghost.precache = PRE_TEMP;
-	
+	if (!ghost.precache_once)
+	{
+		ghost.precache = PRE_PERS;
+		ghost.precache_once = TRUE;
+		ggame.game_precache();
+	}
+
+	ghost.precache = PRE_TEMP;	
 	if (!bru_load(ghost.newmap))//TODO: reload only ent if map same
 	{
 		ghost.newmap[0] = '\0';

@@ -1,7 +1,7 @@
 #ifndef _RESOURCE_H_
 #define _RESOURCE_H_
 
-#define MAX_RESOURCES	5000
+#define MAX_RESOURCES	5120
 
 typedef enum
 {

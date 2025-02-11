@@ -520,7 +520,7 @@ static void con_clear(const char* arg1, const char* arg2)
 }
 
 void con_init()
-{//TODO: open command, disconnect command
+{//TODO: open command, endgame command
 	gcon.can_register = TRUE;
 	util_create_folder("misc");
 

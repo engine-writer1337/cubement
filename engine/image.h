@@ -38,7 +38,7 @@ glpic_t img_upload(int width, int height, int format);
 
 glpic_t img_load(const char* filename);
 void img_scrshot_cmd(const char* arg1, const char* arg2);
-void img_pic_draw(ihandle_t idx, int x, int y, render_e render, byte r, byte g, byte b, byte a, const prect_s* rect);
+void img_pic_draw(ihandle_t idx, int frame, int x, int y, render_e render, byte r, byte g, byte b, byte a);
 
 void img_init();
 void img_free();

@@ -31,7 +31,6 @@ typedef struct entity_t
 
 	vec3_t origin;
 	vec3_t angles;
-	vec3_t endorigin;
 
 	vec3_t mins;
 	vec3_t maxs;

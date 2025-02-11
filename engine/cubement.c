@@ -74,19 +74,19 @@ static void host_command(LPSTR lpCmdLine)
 
 static void engine_int()
 {
-	gengine.register_entity = ent_register;
+	gengine.ent_register = ent_register;
 
-	gengine.create_cmd = con_create_cmd;
-	gengine.create_cvar = con_create_cvar2;
+	gengine.con_create_cmd = con_create_cmd;
+	gengine.con_create_cvar = con_create_cvar2;
 
-	gengine.reset_cursor_pos = in_reset_cursor_pos;
-	gengine.show_cursor = in_show_cursor;
-	gengine.set_cursor_pos = in_set_cursor_pos;
-	gengine.get_cursor_pos = in_get_cursor_pos;
+	gengine.cursor_reset_pos = in_reset_cursor_pos;
+	gengine.cursor_show = in_show_cursor;
+	gengine.cursor_set_pos = in_set_cursor_pos;
+	gengine.cursor_get_pos = in_get_cursor_pos;
 
-	gengine.precache_resource = res_precache;
-	gengine.precache_resource_ex = res_precache_ex;
-	gengine.get_resource_handle = res_find;
+	gengine.resource_precache = res_precache;
+	gengine.resource_precache_ex = res_precache_ex;
+	gengine.resource_get_handle = res_find;
 
 	gengine.font_height = font_height;
 	gengine.font_len = font_len;
@@ -105,7 +105,7 @@ static void engine_int()
 static void engine_update()
 {
 	gengine.entities = gents;
-	gengine.num_entities = gnuments;
+	gengine.entities_max = gnuments;
 
 	gengine.time = ghost.time;
 	gengine.frametime = ghost.frametime;

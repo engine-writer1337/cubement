@@ -14,6 +14,8 @@ static void keyvalue_func_wall(entity_s* pev, keyvalue_s* kv)
 {
 	if (strcmpi(kv->key, "model"))
 		pev->model = cment->resource_precache(kv->value);
+	else if (strcmpi(kv->key, "rendermode"))
+		pev->render = atoi(kv->value);
 }
 
 static void saverestore_func_wall(entity_s* pev) {}

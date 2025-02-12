@@ -42,7 +42,6 @@ typedef struct _surf_s
 	int texture;
 	byte color[4];
 	surftype_e type;
-
 	struct _surf_s* next;
 }surf_s;
 

@@ -1,9 +1,20 @@
+@BaseClass size(-16 -16 -32, 16 16 32) color(0 255 0) = PlayerClass []
+
+@BaseClass = RenderClass
+[
+	rendermode(choices) : "Render Mode" : 0 =
+	[
+		0: "Normal"
+		1: "Transparent"
+		2: "Alpha"
+		3: "Additive"
+	]
+]
+
 @SolidClass = worldspawn : "World entity" 
 [
 	skyname(string) : "Skybox name"
 ]
-
-@baseclass size(-16 -16 -32, 16 16 32) color(0 255 0) = PlayerClass []
 
 @PointClass base(PlayerClass) = info_player_start : "Player 1 start" []
 
@@ -11,3 +22,10 @@
 [
 	name(string) : "Area name"
 ]
+
+@SolidClass base(RenderClass) = func_wall : "Wall" 
+[
+
+]
+
+

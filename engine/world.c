@@ -304,7 +304,7 @@ void sky_free()
 //==========================================================================//
 // WORLD DRAW
 //==========================================================================//
-#define APPEND_SURF(s)	(s)->next = gbru.textures[(s)->texture].chain, gbru.textures[(s)->texture].chain = s
+#define APPEND_SURF(s)	
 
 static void world_area_visibles()
 {
@@ -366,32 +366,11 @@ static void world_area_visibles()
 				for (m = 0; m < b->num_surfes; m++)
 				{
 					s = b->surfes + m;
-					switch (s->type)
+					if (((s->type < SURF_TYPE_SX) && (gworld.vieworg[s->type] > b->maxs[s->type])) || 
+						((s->type >= SURF_TYPE_SX) && (gworld.vieworg[s->type - SURF_TYPE_SX] < b->mins[s->type - SURF_TYPE_SX])))
 					{
-					case SURF_TYPE_X:
-						if (gworld.vieworg[0] > b->maxs[0])
-							APPEND_SURF(s);
-						break;
-					case SURF_TYPE_Y:
-						if (gworld.vieworg[1] > b->maxs[1])
-							APPEND_SURF(s);
-						break;
-					case SURF_TYPE_Z:
-						if (gworld.vieworg[2] > b->maxs[2])
-							APPEND_SURF(s);
-						break;
-					case SURF_TYPE_SX:
-						if (gworld.vieworg[0] < b->mins[0])
-							APPEND_SURF(s);
-						break;
-					case SURF_TYPE_SY:
-						if (gworld.vieworg[1] < b->mins[1])
-							APPEND_SURF(s);
-						break;
-					case SURF_TYPE_SZ:
-						if (gworld.vieworg[2] < b->mins[2])
-							APPEND_SURF(s);
-						break;
+						s->next = gbru.textures[s->texture].chain;
+						gbru.textures[s->texture].chain = s;
 					}
 				}
 			}
@@ -482,31 +461,13 @@ static void world_draw_worldspawn()
 		img_bind(t->t);
 		while (s)
 		{
-			//shade faces from trenchbroom
 			/*float angleDim = 1;
-			float dimStrength = 0.25;
-			switch (s->type)
-			{
-			case SURF_TYPE_X:
-				angleDim = -gworld.v_forward[0] * dimStrength + (1.0 - dimStrength);
-				break;
-			case SURF_TYPE_Y:
-				angleDim = -gworld.v_forward[1] * dimStrength + (1.0 - dimStrength);
-				break;
-			case SURF_TYPE_Z:
-				angleDim = -gworld.v_forward[2] * dimStrength + (1.0 - dimStrength);
-				break;
-			case SURF_TYPE_SX:
-				angleDim = gworld.v_forward[0] * dimStrength + (1.0 - dimStrength);
-				break;
-			case SURF_TYPE_SY:
-				angleDim = gworld.v_forward[1] * dimStrength + (1.0 - dimStrength);
-				break;
-			case SURF_TYPE_SZ:
-				angleDim = gworld.v_forward[2] * dimStrength + (1.0 - dimStrength);
-				break;
-			}
-
+			float dimStrength = 0.25f;
+			if (s->type < SURF_TYPE_SX)
+				angleDim = -gworld.v_forward[s->type] * dimStrength + (1.0 - dimStrength);
+			else
+				angleDim = gworld.v_forward[s->type - SURF_TYPE_SX] * dimStrength + (1.0 - dimStrength);
+			
 			glColor4ub(angleDim * s->color[0], angleDim * s->color[1], angleDim * s->color[2], 255);*/
 			glColor4ubv(s->color);
 			glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
@@ -529,12 +490,11 @@ static void world_draw_solid()
 	ed = gworld.solid_chain;
 	while (ed)
 	{
-		vid_rendermode(RENDER_NORMAL);//TODO: grab rendermode from game.exe
-
 		e = ed->e;
 		if (e->model == BAD_HANDLE)
 			continue;
 
+		vid_rendermode(e->render);
 		res = gres + e->model;
 		switch (res->type)
 		{
@@ -555,58 +515,14 @@ static void world_draw_solid()
 					continue;
 
 				for (m = 0; m < b->num_surfes; m++)
-				{//ужасный код
+				{
 					s = b->surfes + m;
-					switch (s->type)
+					if (((s->type < SURF_TYPE_SX) && (gworld.vieworg[s->type] > b->maxs[s->type])) || 
+						((s->type >= SURF_TYPE_SX) && (gworld.vieworg[s->type - SURF_TYPE_SX] < b->mins[s->type - SURF_TYPE_SX])))
 					{
-					case SURF_TYPE_X:
-						if (gworld.vieworg[0] > b->maxs[0])
-						{
-							img_bind(gbru.textures[s->texture].t);
-							glColor4ubv(s->color);
-							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
-						}
-						break;
-					case SURF_TYPE_Y:
-						if (gworld.vieworg[1] > b->maxs[1])
-						{
-							img_bind(gbru.textures[s->texture].t);
-							glColor4ubv(s->color);
-							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
-						}
-						break;
-					case SURF_TYPE_Z:
-						if (gworld.vieworg[2] > b->maxs[2])
-						{
-							img_bind(gbru.textures[s->texture].t);
-							glColor4ubv(s->color);
-							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
-						}
-						break;
-					case SURF_TYPE_SX:
-						if (gworld.vieworg[0] < b->mins[0])
-						{
-							img_bind(gbru.textures[s->texture].t);
-							glColor4ubv(s->color);
-							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
-						}
-						break;
-					case SURF_TYPE_SY:
-						if (gworld.vieworg[1] < b->mins[1])
-						{
-							img_bind(gbru.textures[s->texture].t);
-							glColor4ubv(s->color);
-							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
-						}
-						break;
-					case SURF_TYPE_SZ:
-						if (gworld.vieworg[2] < b->mins[2])
-						{
-							img_bind(gbru.textures[s->texture].t);
-							glColor4ubv(s->color);
-							glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
-						}
-						break;
+						img_bind(gbru.textures[s->texture].t);
+						glColor4ubv(s->color);
+						glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
 					}
 				}
 			}
@@ -622,6 +538,8 @@ static void world_draw_solid()
 void world_draw()
 {
 	int i;
+	vec4_t oncs = { 1, 1, 1, 1 };
+	vec4_t pos = { gworld.vieworg[0], gworld.vieworg[1], gworld.vieworg[2], 1 };
 
 	gworld.framecount++;
 	gworld.solid_chain = NULL;
@@ -651,7 +569,6 @@ void world_draw()
 	world_draw_solid();
 	if (gvertbuf.buffer)
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 	//========== DRAW MODELS ==========//
 
 	//========== DRAW BEAMS ==========//

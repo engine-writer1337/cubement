@@ -252,8 +252,9 @@ static int get_texture(const char* name)
 	return i;
 }
 
-static byte plane_frompoints(vec3_t p0, vec3_t p1, vec3_t p2)
+static byte plane_frompoints(const vec3_t p0, const vec3_t p1, const vec3_t p2, double* dist)
 {
+	surftype_e t;
 	vec3_t t1, t2, normal;
 
 	vec_sub(t1, p0, p1);
@@ -262,25 +263,48 @@ static byte plane_frompoints(vec3_t p0, vec3_t p1, vec3_t p2)
 	vec_normalize(normal);
 
 	if (normal[0] > 1.0f - EQUAL_EPSILON)
-		return SURF_TYPE_X;
+	{
+		normal[0] = 1;
+		t = SURF_TYPE_X;
+	}
 	else if (normal[0] < -1.0f + EQUAL_EPSILON)
-		return SURF_TYPE_SX;
+	{
+		normal[0] = -1;
+		t = SURF_TYPE_SX;
+	}
 	else if (normal[1] > 1.0f - EQUAL_EPSILON)
-		return SURF_TYPE_Y;
+	{
+		normal[1] = 1;
+		t = SURF_TYPE_Y;
+	}
 	else if (normal[1] < -1.0f + EQUAL_EPSILON)
-		return SURF_TYPE_SY;
+	{
+		normal[1] = -1;
+		t = SURF_TYPE_SY;
+	}
 	else if (normal[2] > 1.0f - EQUAL_EPSILON)
-		return SURF_TYPE_Z;
+	{
+		normal[2] = 1;
+		t = SURF_TYPE_Z;
+	}
 	else if (normal[2] < -1.0f + EQUAL_EPSILON)
-		return SURF_TYPE_SZ;
+	{
+		normal[2] = -1;
+		t = SURF_TYPE_SZ;
+	}
+	else
+		return SURF_TYPE_BAD;
 
-	return SURF_TYPE_BAD;
+	*dist = vec_dot(p0, normal);
+	if (t >= SURF_TYPE_SX)
+		*dist = -(*dist);
+	return t;
 }
 
-static int get_texinfo(int texture, float* UVaxis, float* scale, float* shift)
+static int get_texinfo(int texture, double* UVaxis, double* scale, double* shift)
 {
 	int i, j, k;
-	float vecs[2][4];
+	double vecs[2][4];
 	short ivecs[2][4];
 	bru_texinfo_s* tex;
 
@@ -366,7 +390,7 @@ static void parse_brush(entity_s* mapent)
 	int i, t, flags;
 	ebrush_s* brush;
 	vec3_t points[3];
-	float val, UVaxis[6], shift[2], scale[2];
+	double val, UVaxis[6], shift[2], scale[2];
 
 	if (gnum_brushes == MAX_MAP_BRUSHES)
 		fatal_error("num_brushes == MAX_MAP_BRUSHES");
@@ -398,27 +422,15 @@ static void parse_brush(entity_s* mapent)
 
 			get_token(FALSE);
 			val = atof(token);
-			val = clamp(-MAX_MAP_RANGE, val, MAX_MAP_RANGE);
-
-			points[i][0] = val;
-			if (brush->mins[0] > val) brush->mins[0] = val;
-			if (brush->maxs[0] < val) brush->maxs[0] = val;
+			points[i][0] = clamp(-MAX_MAP_RANGE, val, MAX_MAP_RANGE);
 
 			get_token(FALSE);
 			val = atof(token);
-			val = clamp(-MAX_MAP_RANGE, val, MAX_MAP_RANGE);
-
-			points[i][1] = val;
-			if (brush->mins[1] > val) brush->mins[1] = val;
-			if (brush->maxs[1] < val) brush->maxs[1] = val;
+			points[i][1] = clamp(-MAX_MAP_RANGE, val, MAX_MAP_RANGE);
 
 			get_token(FALSE);
 			val = atof(token);
-			val = clamp(-MAX_MAP_RANGE, val, MAX_MAP_RANGE);
-
-			points[i][2] = val;
-			if (brush->mins[2] > val) brush->mins[2] = val;
-			if (brush->maxs[2] < val) brush->maxs[2] = val;
+			points[i][2] = clamp(-MAX_MAP_RANGE, val, MAX_MAP_RANGE);
 			
 			get_token(FALSE);
 			if (strcmp(token, ")"))
@@ -471,19 +483,31 @@ static void parse_brush(entity_s* mapent)
 			get_token(FALSE); //value = atoi(token);
 		}
 
+		surf->type = plane_frompoints(points[0], points[1], points[2], &val);
+		if (surf->type == SURF_TYPE_BAD)
+		{
+			printf("Ignore surf: surf for brush %i is bad\n", gnum_brushes);
+			continue;
+		}
+
+		if (surf->type < SURF_TYPE_SX)
+		{
+			if (val > brush->maxs[surf->type])
+				brush->maxs[surf->type] = val;
+		}
+		else
+		{
+			if (val < brush->mins[surf->type - SURF_TYPE_SX])
+				brush->mins[surf->type - SURF_TYPE_SX] = val;
+		}
+
 		if (t >= 0)
 		{
-			surf->type = plane_frompoints(points[0], points[1], points[2]);
-			if (surf->type == SURF_TYPE_BAD)
-				printf("Ignore surf: surf for brush %i is bad\n", gnum_brushes);
-			else
-			{
-				surf->texinfo = get_texinfo(t, UVaxis, scale, shift);
-				surf->color = get_colors(flags);
-				surf->next = brush->esurfes;
-				brush->esurfes = surf;
-				gnum_surfaces++;
-			}
+			surf->texinfo = get_texinfo(t, UVaxis, scale, shift);
+			surf->color = get_colors(flags);
+			surf->next = brush->esurfes;
+			brush->esurfes = surf;
+			gnum_surfaces++;
 		}
 	} while (1);
 

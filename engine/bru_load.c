@@ -223,11 +223,8 @@ static void bru_create_face(int index, surf_s* out, const vec3_t mins, const vec
 			break;
 		}
 
-		if (texinfo)
-		{
-			st[0] = (vec_dot(xyz, texinfo->vecs[0]) + texinfo->vecs[0][3]) / w;
-			st[1] = (vec_dot(xyz, texinfo->vecs[1]) + texinfo->vecs[1][3]) / h;
-		}
+		st[0] = (vec_dot(xyz, texinfo->vecs[0]) + texinfo->vecs[0][3]) / w;
+		st[1] = (vec_dot(xyz, texinfo->vecs[1]) + texinfo->vecs[1][3]) / h;
 
 		st += 2;
 		xyz += 3;

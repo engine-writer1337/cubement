@@ -17,9 +17,9 @@ static void keyvalue_worldspawn(entity_s* pev, keyvalue_s* kv)
 static void saverestore_worldspawn(entity_s* pev) {}
 static void think_worldspawn(entity_s* pev) 
 {
-	//pev->velocity[0] += cment->frametime;
-	//pev->velocity[1] += cment->frametime;
-	//pev->velocity[2] += cment->frametime;
+	//pev->velocity[0] += cment->frametime * 3;
+	//pev->velocity[1] += cment->frametime * 3;
+	//pev->velocity[2] += cment->frametime * 3;
 	//cment->sky_rotate(pev->velocity);
 }
 

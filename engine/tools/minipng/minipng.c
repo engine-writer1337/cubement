@@ -334,14 +334,15 @@ const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int* has_
 
 		for (y = 0; y < pixel_count; y++, raw += pixel_size, pixbuf += 4)
 		{
-			pixbuf[0] = raw[0];
-			pixbuf[1] = raw[1];
-			pixbuf[2] = raw[2];
-
 			if (trns && r_alpha == raw[0] && g_alpha == raw[1] && b_alpha == raw[2])
-				pixbuf[3] = 0;
+				pixbuf[0] = pixbuf[1] = pixbuf[2] = pixbuf[3] = 0;
 			else
+			{
+				pixbuf[0] = raw[0];
+				pixbuf[1] = raw[1];
+				pixbuf[2] = raw[2];
 				pixbuf[3] = 0xFF;
+			}
 		}
 		break;
 	case PNG_CT_GREY:
@@ -350,23 +351,29 @@ const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int* has_
 
 		for (y = 0; y < pixel_count; y++, raw += pixel_size, pixbuf += 4)
 		{
-			pixbuf[0] = raw[0];
-			pixbuf[1] = raw[0];
-			pixbuf[2] = raw[0];
-
 			if (trns && r_alpha == raw[0])
-				pixbuf[3] = 0;
+				pixbuf[0] = pixbuf[1] = pixbuf[2] = pixbuf[3] = 0;
 			else
+			{
+				pixbuf[0] = raw[0];
+				pixbuf[1] = raw[0];
+				pixbuf[2] = raw[0];
 				pixbuf[3] = 0xFF;
+			}
 		}
 		break;
 	case PNG_CT_ALPHA:
 		for (y = 0; y < pixel_count; y++, raw += pixel_size, pixbuf += 4)
 		{
-			pixbuf[0] = raw[0];
-			pixbuf[1] = raw[0];
-			pixbuf[2] = raw[0];
-			pixbuf[3] = raw[1];
+			if (!raw[1])
+				pixbuf[0] = pixbuf[1] = pixbuf[2] = pixbuf[3] = 0;
+			else
+			{
+				pixbuf[0] = raw[0];
+				pixbuf[1] = raw[0];
+				pixbuf[2] = raw[0];
+				pixbuf[3] = raw[1];
+			}
 		}
 		break;
 	case PNG_CT_PALLETE:
@@ -382,6 +389,9 @@ const char* minipng_load(const byte* buffer, int filesize, byte* rgba, int* has_
 					pixbuf[3] = trns[raw[0]];
 				else
 					pixbuf[3] = 0xFF;
+
+				if (!pixbuf[3])
+					pixbuf[0] = pixbuf[1] = pixbuf[2] = 0;
 			}
 			else
 			{

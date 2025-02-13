@@ -23,6 +23,7 @@
     <ClInclude Include="mathlib.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="shared.h" />
+    <ClInclude Include="sound.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vidinit.h" />
     <ClInclude Include="world.h" />
@@ -36,6 +37,7 @@
     <ClCompile Include="image.c" />
     <ClCompile Include="input.c" />
     <ClCompile Include="resource.c" />
+    <ClCompile Include="sound.c" />
     <ClCompile Include="util.c" />
     <ClCompile Include="vidinit.c" />
     <ClCompile Include="world.c" />
@@ -92,7 +94,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;dsound.lib;libs/libmpg.lib;libs/minipng.lib;libs/turbojpeg-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;dsound.lib;libs/minipng.lib;libs/turbojpeg-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCMT</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
@@ -115,7 +117,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;dsound.lib;libs/libmpg.lib;libs/minipng.lib;libs/turbojpeg-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;dsound.lib;libs/minipng.lib;libs/turbojpeg-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCMT</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>

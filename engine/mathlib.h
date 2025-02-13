@@ -66,7 +66,7 @@ inline int vec_signbits(const vec3_t normal)
 	return bits;
 }
 
-inline float vec3_normalize(vec3_t v)
+inline float vec_normalize(vec3_t v)
 {
 	float length;
 

@@ -5,6 +5,9 @@ host_s ghost;
 static engine_s gengine;
 byte gbuffer[IMG_MAX_SIZE * 4];
 
+wave_s test1;
+wave_s test2;
+
 __declspec(dllexport) BOOL NvOptimusEnablement = TRUE;
 __declspec(dllexport) BOOL AmdPowerXpressRequestHighPerformance = TRUE;
 
@@ -148,11 +151,17 @@ EXPORTFUNC void cubement(engine_s** e, game_s* g)
 
 	vid_msaa_func();
 	vid_init();
+	snd_init();
 	ghost.precache = PRE_PERS;
 
 	img_init();
 	gconfont = res_precache("console.fnt");
 	ggame.engine_init();
+
+	snd_load("ui/latchunlocked2.wav", &test1);
+	snd_load("ui/lever4.ogg", &test2);
+
+	snd_music("music/Half-Life10.ogg");
 
 	ghost.precache = PRE_NOT;
 	con_printf(COLOR_WHITE, "Game Load Time: %ims", (int)(1000 * (util_time() - newtime)));
@@ -177,7 +186,7 @@ EXPORTFUNC void cubement(engine_s** e, game_s* g)
 		in_gather();
 		vid_set_params();
 		img_set_param();
-		//snd_set_param();
+		snd_set_param();
 
 		engine_update();
 		if (gworld.is_load && ggame.draw_world())
@@ -202,14 +211,17 @@ EXPORTFUNC void cubement(engine_s** e, game_s* g)
 
 		engine_fps();
 		wglSwapBuffers(gvid.hdc);
-		//snd_update();
+		snd_update();
 	}
 }
 
 void host_shutdown()
 {
 	con_cfg_save();
-	//snd_shutdown();
+
+	snd_shutdown();
+	snd_free(&test1);
+	snd_free(&test2);
 
 	sky_free();
 	bru_free();

@@ -56,6 +56,9 @@
     <ClInclude Include="resource.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="sound.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cubement.c">
@@ -89,6 +92,9 @@
       <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="resource.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="sound.c">
       <Filter>Source Code</Filter>
     </ClCompile>
   </ItemGroup>

@@ -328,9 +328,13 @@ static void in_events(int key, bool_t down)
 		{
 			gcon.cur_hist = gcon.num_hist - 1;
 			gcon.is_active = FALSE;
+			snd_play_wav(&test2, NULL, 1, 1, 0, 0, FALSE);
 		}
 		else
+		{
 			gcon.is_active = TRUE;
+			snd_play_wav(&test1, NULL, 1, 1, 0, 0, FALSE);
+		}
 		return;
 	}
 
@@ -410,7 +414,7 @@ LRESULT in_keys(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 	case WM_ACTIVATE:
 		if (wparam == WA_INACTIVE && !gvid.inactive)
 		{
-			//snd_stop_all();
+			snd_stop_all();//TODO: no need?
 			ggame.window_inactive();
 
 			gvid.inactive = TRUE;

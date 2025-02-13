@@ -55,6 +55,7 @@ void host_shutdown();
 
 #include "image.h"
 #include "font.h"
+#include "sound.h"
 
 #include "bru_load.h"
 #include "entity.h"
@@ -63,5 +64,8 @@ void host_shutdown();
 #include "resource.h"
 
 extern byte gbuffer[IMG_MAX_SIZE * 4];
+
+extern wave_s test1;
+extern wave_s test2;
 
 #endif

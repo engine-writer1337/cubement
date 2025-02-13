@@ -549,7 +549,7 @@ void con_init()
 
 	gcon.test = con_create_cvar("test", FALSE, FALSE);
 
-	//gsnd.volume = con_create_cvar("s_volume", SND_DEF_VOL, TRUE);
+	gsnd.volume = con_create_cvar("s_volume", SND_DEF_VOL, TRUE);
 
 	ghost.fps = con_create_cvar("fps_max", 100, TRUE);
 	//gworld.lock = con_create_cvar("dbg_lock", FALSE, FALSE);

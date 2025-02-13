@@ -329,6 +329,7 @@ static void in_events(int key, bool_t down)
 			gcon.cur_hist = gcon.num_hist - 1;
 			gcon.is_active = FALSE;
 			snd_play_wav(&test2, NULL, 1, 1, 0, 0, FALSE);
+			in_show_cursor(TRUE);
 		}
 		else
 		{

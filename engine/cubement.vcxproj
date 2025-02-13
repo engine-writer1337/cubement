@@ -24,6 +24,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="shared.h" />
     <ClInclude Include="sound.h" />
+    <ClInclude Include="trace.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vidinit.h" />
     <ClInclude Include="world.h" />
@@ -38,6 +39,7 @@
     <ClCompile Include="input.c" />
     <ClCompile Include="resource.c" />
     <ClCompile Include="sound.c" />
+    <ClCompile Include="trace.c" />
     <ClCompile Include="util.c" />
     <ClCompile Include="vidinit.c" />
     <ClCompile Include="world.c" />

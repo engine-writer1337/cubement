@@ -3,6 +3,7 @@
 static bool_t spawn_worldspawn(entity_s* pev) 
 { 
 	gplayer = NULL;
+	pev->contents = CONTENTS_WORLD;
 	return TRUE;
 }
 

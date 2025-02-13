@@ -14,6 +14,7 @@ typedef enum
 	ENTID_WORLDSPAWN,
 	ENTID_PLAYER,
 	ENTID_WALL,
+	ENTID_START,
 
 	MAX_ENTMAP = 512
 }entid_e;

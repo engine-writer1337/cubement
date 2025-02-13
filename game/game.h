@@ -11,6 +11,8 @@ typedef struct
 	ihandle_t cat2;
 
 	cvar_s* sens;
+
+	bool_t old_console;
 }global_s;
 
 extern global_s glob;

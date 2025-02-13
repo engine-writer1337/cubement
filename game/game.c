@@ -11,6 +11,7 @@ static void engine_init()
 	REGISTER_ENTITY(func_wall);
 	REGISTER_ENTITY(player);
 	REGISTER_ENTITY(worldspawn);
+	REGISTER_ENTITY(info_player_start);
 
 	glob.confont = cment->resource_get_handle("console.fnt");
 	glob.cat1 = cment->resource_precache("pics/1.jpg");
@@ -37,8 +38,16 @@ static void draw_2d()
 bool_t char_events(int ch) { return FALSE; }
 bool_t key_events(int key, bool_t down) { return FALSE; }
 
-static void window_active() { }
-static void window_inactive() {}
+static void window_active() 
+{
+	if (cment->world_load && !cment->console_active)
+		cment->cursor_show(FALSE);
+}
+
+static void window_inactive() 
+{
+	cment->cursor_show(TRUE);
+}
 
 static void game_precache() {}
 

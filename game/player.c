@@ -107,7 +107,16 @@ void cvar_init()
 
 static bool_t spawn_player(player_s* pev)
 {
+	entity_s* spawn;
+
 	gplayer = pev;
+	spawn = ent_find_by_id(ENTID_START);
+	if (spawn)
+	{
+		vec_copy(pev->base.origin, spawn->origin);
+		pev->base.angles[YAW] = spawn->angles[YAW];
+	}
+
 	return TRUE;
 }
 
@@ -125,7 +134,13 @@ static void think_player(player_s* pev)
 {
 	float spd_side, spd_forward;
 
-	if (cment->world_load && !cment->console_active)
+	if (glob.old_console != cment->console_active)
+	{//TODO: think something better
+		glob.old_console = cment->console_active;
+		cment->cursor_show(cment->console_active);
+	}
+
+	if (!cment->console_active)
 	{
 		int mx, my;
 
@@ -171,3 +186,18 @@ static void think_player(player_s* pev)
 static void saverestore_player(player_s* pev) {}
 
 LINK_ENTITY(player, ENTID_PLAYER, sizeof(player_s))
+
+static bool_t spawn_info_player_start(entity_s* pev) { return TRUE; }
+static void precache_info_player_start(entity_s* pev) {}
+static void keyvalue_info_player_start(entity_s* pev, keyvalue_s* kv)
+{
+	if (strcmpi(kv->key, "origin"))
+		vec_from_str(pev->origin, kv->value);
+	else if (strcmpi(kv->key, "angles"))
+		vec_from_str(pev->angles, kv->value);
+}
+
+static void saverestore_info_player_start(entity_s* pev) {}
+static void think_info_player_start(entity_s* pev) { }
+
+LINK_ENTITY(info_player_start, ENTID_START, sizeof(entity_s))

@@ -75,6 +75,24 @@ static void host_command(LPSTR lpCmdLine)
 	}
 }
 
+static void engine_update()
+{
+	gengine.entities = gents;
+	gengine.entities_max = MAX_ENTITIES;
+
+	gengine.time = ghost.time;
+	gengine.frametime = ghost.frametime;
+	gengine.gametime = ghost.gametime;
+
+	gengine.world_load = gworld.is_load;
+	gengine.console_active = gcon.is_active;
+
+	gengine.width = gvid.width;
+	gengine.height = gvid.height;
+	gengine.centr_x = gvid.centr_x;
+	gengine.centr_y = gvid.centr_y;
+}
+
 static void engine_int()
 {
 	gengine.ent_register = ent_register;
@@ -102,25 +120,7 @@ static void engine_int()
 	gengine.set_view_ang = world_view_ang;
 
 	gengine.sky_load = sky_load;
-	gengine.sky_rotate = sky_rotate;
-}
-
-static void engine_update()
-{
-	gengine.entities = gents;
-	gengine.entities_max = gnuments;
-
-	gengine.time = ghost.time;
-	gengine.frametime = ghost.frametime;
-	gengine.gametime = ghost.gametime;
-
-	gengine.world_load = gworld.is_load;
-	gengine.console_active = gcon.is_active;
-
-	gengine.width = gvid.width;
-	gengine.height = gvid.height;
-	gengine.centr_x = gvid.centr_x;
-	gengine.centr_y = gvid.centr_y;
+	gengine.sky_rotate = sky_rotate;	
 }
 
 static void engine_fps()
@@ -152,6 +152,7 @@ EXPORTFUNC void cubement(engine_s** e, game_s* g)
 	vid_msaa_func();
 	vid_init();
 	snd_init();
+	engine_update();
 	ghost.precache = PRE_PERS;
 
 	img_init();
@@ -161,7 +162,7 @@ EXPORTFUNC void cubement(engine_s** e, game_s* g)
 	snd_load("ui/latchunlocked2.wav", &test1);
 	snd_load("ui/lever4.ogg", &test2);
 
-	snd_music("music/Half-Life10.ogg");
+	//snd_music("music/Half-Life10.ogg");
 
 	ghost.precache = PRE_NOT;
 	con_printf(COLOR_WHITE, "Game Load Time: %ims", (int)(1000 * (util_time() - newtime)));

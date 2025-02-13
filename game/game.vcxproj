@@ -89,6 +89,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="entity.c" />
     <ClCompile Include="ent_brush.c" />
     <ClCompile Include="game.c" />
     <ClCompile Include="menu.c" />

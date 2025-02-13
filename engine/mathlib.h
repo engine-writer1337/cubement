@@ -168,4 +168,30 @@ inline float anglemod(float a)
 	return a;
 }
 
+inline void vec_from_str(vec3_t out, const char* str)
+{
+	int	j;
+	const char* pstr, * pfront;
+
+	pstr = pfront = str;
+	for (j = 0; j < 3; j++)
+	{
+		out[j] = atof(pfront);
+		while (*pstr && *pstr != ' ')
+			pstr++;
+
+		if (!*pstr)
+			break;
+
+		pstr++;
+		pfront = pstr;
+	}
+
+	if (j < 2)
+	{
+		for (j = j + 1; j < 3; j++)
+			out[j] = 0;
+	}
+}
+
 #endif

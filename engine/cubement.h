@@ -60,6 +60,7 @@ void host_shutdown();
 #include "bru_load.h"
 #include "entity.h"
 #include "world.h"
+#include "trace.h"
 
 #include "resource.h"
 

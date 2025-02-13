@@ -665,6 +665,7 @@ void world_load_map()
 	}
 
 	res_flush_temp();
+	ghost.gametime = 0;
 	if (!ghost.precache_once)
 	{
 		ghost.precache = PRE_PERS;
@@ -680,7 +681,6 @@ void world_load_map()
 		return;
 	}
 
-	ghost.gametime = 0;
 	gworld.is_load = TRUE;
 	ghost.newmap[0] = '\0';
 	ghost.precache = PRE_NOT;

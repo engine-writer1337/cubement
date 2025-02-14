@@ -7,6 +7,8 @@
 
 #define MATH_PI		3.14159265358979323846f
 
+#define EPSILON		0.01f
+
 #define NAN_MASK	(255 << 23)
 #define	is_nan(x)	(((*(int *)&x) & NAN_MASK) == NAN_MASK)
 
@@ -16,6 +18,9 @@
 
 #define vec2_copy(dst, src)			(dst[0] = src[0], dst[1] = src[1])
 #define vec2_set(dst, x, y)			(dst[0] = x, dst[1] = y)
+#define vec2_add(v, a, b)			(v[0] = a[0] + b[0], v[1] = a[1] + b[1]) 
+#define vec2_ma(v, a, scale, b)		(v[0] = a[0] + scale * b[0], v[1] = a[1] + scale * b[1])
+#define vec2_aabb(mn0, mx0, mn1, mx1)	(mx0[0] < mn1[0] || mn0[0] > mx1[0] || mx0[1] < mn1[1] || mn0[1] > mx1[1])
 
 #define vec_dot(x, y)				(x[0] * y[0] + x[1] * y[1] + x[2] * y[2])
 #define vec_len(v)					(sqrtf(vec_dot(v, v)))
@@ -35,6 +40,7 @@
 #define vec_lerp(a, scale, b, c)	(a[0] = b[0] + scale * (c[0] - b[0]), a[1] = b[1] + scale * (c[1] - b[1]), a[2] = b[2] + scale * (c[2] - b[2]))
 #define vec_normalize_fast(v)		{float ilength = math_rsqrt(vec_dot(v, v)); vec_mul(v, ilength);}
 #define vec_cross(cross, v1, v2)	(cross[0] = v1[1]*v2[2] - v1[2]*v2[1], cross[1] = v1[2]*v2[0] - v1[0]*v2[2], cross[2] = v1[0]*v2[1] - v1[1]*v2[0])
+#define vec_aabb(mn0, mx0, mn1, mx1)	(mx0[0] < mn1[0] || mn0[0] > mx1[0] || mx0[1] < mn1[1] || mn0[1] > mx1[1] || mx0[2] < mn1[2] || mn0[2] > mx1[2])
 
 #define vec4_init(dst, a)			(dst[0] = a, dst[1] = a, dst[2] = a, dst[3] = a)
 #define vec4_copy(dst, src)			(dst[0] = src[0], dst[1] = src[1], dst[2] = src[2], dst[3] = src[3])
@@ -191,6 +197,25 @@ inline void vec_from_str(vec3_t out, const char* str)
 	{
 		for (j = j + 1; j < 3; j++)
 			out[j] = 0;
+	}
+}
+
+inline void vec_maxmin(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, vec3_t absmin, vec3_t absmax)
+{
+	int i;
+
+	for (i = 0; i < 3; i++)
+	{
+		if (start[i] > end[i])
+		{
+			absmax[i] = start[i] + maxs[i];
+			absmin[i] = end[i] + mins[i];
+		}
+		else
+		{
+			absmin[i] = start[i] + mins[i];
+			absmax[i] = end[i] + maxs[i];
+		}
 	}
 }
 

@@ -23,8 +23,10 @@ typedef struct
 
 typedef struct
 {
-	char name[19];
-	bool_t active;
+	int framenum;
+
+	char name[20];
+	int activecount;
 
 	int num_boxes;
 	vec2_t* mins;
@@ -32,8 +34,6 @@ typedef struct
 
 	int num_brushareas;
 	word* brushareas;
-
-	int visframe;
 }area_s;
 
 typedef struct _surf_s
@@ -56,8 +56,7 @@ typedef struct
 
 typedef struct
 {
-	int visframe;
-	int framecount;
+	int framenum;
 
 	int num_surfes;
 	surf_s* surfes;

@@ -144,7 +144,7 @@ static void sky_draw()
 		return;
 
 	glDisable(GL_DEPTH_TEST);
-	rotate = (fabsf(gsky.ang[0]) > 0.01f) || (fabsf(gsky.ang[1]) > 0.01f) || (fabsf(gsky.ang[2]) > 0.01f);
+	rotate = (fabsf(gsky.ang[0]) > EPSILON) || (fabsf(gsky.ang[1]) > EPSILON) || (fabsf(gsky.ang[2]) > EPSILON);
 	if (rotate)
 	{
 		glPushMatrix();
@@ -318,17 +318,16 @@ static void world_area_visibles()
 	vec3_t absmin, absmax;
 	bool_t anyintersect = FALSE;
 
-	gbru.areas[0].visframe = gworld.framecount;
+	gbru.areas[0].framenum = gworld.framecount;
 	for (i = 1; i < gbru.num_areas; i++)
 	{
 		a = gbru.areas + i;
 		for (j = 0; j < a->num_boxes; j++)
 		{
-			if (gworld.vieworg[0] > a->maxs[j][0] || gworld.vieworg[1] > a->maxs[j][1] ||
-				gworld.vieworg[0] < a->mins[j][0] || gworld.vieworg[1] < a->mins[j][1])
+			if (vec2_aabb(gworld.vieworg, gworld.vieworg, a->mins[j], a->maxs[j]))
 				continue;
 
-			a->visframe = gworld.framecount;
+			a->framenum = gworld.framecount;
 			anyintersect = TRUE;
 			break;
 		}
@@ -337,13 +336,13 @@ static void world_area_visibles()
 	if (!anyintersect)
 	{
 		for (i = 1; i < gbru.num_areas; i++)
-			gbru.areas[i].visframe = gworld.framecount;
+			gbru.areas[i].framenum = gworld.framecount;
 	}
 
 	for (i = 0; i < gbru.num_areas; i++)
 	{
 		a = gbru.areas + i;
-		if (a->visframe != gworld.framecount && !a->active)
+		if (a->framenum != gworld.framecount && !a->activecount)
 			continue;
 
 		anyintersect = FALSE;
@@ -356,10 +355,10 @@ static void world_area_visibles()
 			for (k = 0; k < a->num_brushareas; k++)
 			{
 				b = gbru.brushes + a->brushareas[k];
-				if (b->visframe == gworld.framecount)
+				if (b->framenum == gworld.framecount)
 					continue;
 
-				b->visframe = gworld.framecount;
+				b->framenum = gworld.framecount;
 				if (frustum_clip(b->mins, b->maxs))
 					continue;
 
@@ -378,7 +377,7 @@ static void world_area_visibles()
 		}
 
 		if (anyintersect)
-			a->visframe = gworld.framecount;
+			a->framenum = gworld.framecount;
 	}
 
 	for (i = 0; i < gnuments; i++)
@@ -394,7 +393,7 @@ static void world_area_visibles()
 		anyintersect = FALSE;
 		for (j = 0; j < ed->num_areas; j++)
 		{
-			if (gbru.areas[ed->areas[j]].visframe != gworld.framecount)
+			if (gbru.areas[ed->areas[j]].framenum != gworld.framecount)
 				continue;
 
 			anyintersect = TRUE;
@@ -535,6 +534,54 @@ static void world_draw_solid()
 	}
 }
 
+static void world_test_trace()
+{
+	trace_s t;
+	vec3_t zeros = { 0, 0, 0 };
+	vec3_t end, mins = { -4, -4, -8 }, maxs = { 4, 4, 8 };
+
+	vec_ma(end, gworld.vieworg, 4096, gworld.v_forward);
+	/*if (gcon.test->value > 0)
+	{
+		int i, c = (int)gcon.test->value;
+		for (i = 0; i < c; i++)
+			trace(gworld.vieworg, end, mins, maxs, NULL, 0, &t);
+	}
+	else
+		trace(gworld.vieworg, end, mins, maxs, NULL, 0, &t);*/
+	
+	//int i;
+	//for (i = 0; i < 10000; i++)
+	trace(gworld.vieworg, end, mins, maxs, NULL, 0, &t);
+
+	//if (grdr.trace_test->value == 1)
+	//	tr_bbox(grdr.origin, end, NULL, NULL, &t, TRUE, SOLID_BSP);
+	//else
+	//	tr_bbox(grdr.origin, end, mins, maxs, &t, FALSE, SOLID_BSP);
+
+	glLineWidth(3);
+	vid_rendermode(RENDER_NORMAL);
+	glDisable(GL_TEXTURE_2D);
+	glBegin(GL_LINES);
+
+	glColor4f(1, 0, 0, 1);
+	glVertex3f(t.endpos[0] - 16, t.endpos[1], t.endpos[2]);
+	glVertex3f(t.endpos[0] + 16, t.endpos[1], t.endpos[2]);
+
+	glColor4f(0, 1, 0, 1);
+	glVertex3f(t.endpos[0], t.endpos[1] - 16, t.endpos[2]);
+	glVertex3f(t.endpos[0], t.endpos[1] + 16, t.endpos[2]);
+
+	glColor4f(0, 0, 1, 1);
+	glVertex3f(t.endpos[0], t.endpos[1], t.endpos[2] - 16);
+	glVertex3f(t.endpos[0], t.endpos[1], t.endpos[2] + 16);
+
+	glEnd();
+	glEnable(GL_TEXTURE_2D);
+	glColor4f(1, 1, 1, 1);
+	glLineWidth(1);
+}
+
 void world_draw()
 {
 	int i;
@@ -574,6 +621,8 @@ void world_draw()
 	//========== DRAW BEAMS ==========//
 
 	//========== DRAW SPRITES ==========//
+
+	world_test_trace();
 
 }
 

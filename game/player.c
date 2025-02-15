@@ -103,6 +103,7 @@ void cvar_init()
 	cment->con_create_cmd("-right", right_up);
 
 	glob.sens = cment->con_create_cvar("m_sens", 3, TRUE);
+	glob.noclip = cment->con_create_cvar("noclip", FALSE, FALSE);
 }
 
 static bool_t spawn_player(player_s* pev)
@@ -166,7 +167,7 @@ void PM_StepSlideMove(player_s* pev)
 	numplanes = 0;
 	time_left = cment->frametime;
 
-	for (bumpcount = 0; bumpcount < 4; bumpcount++)
+	for (bumpcount = 0; bumpcount < 3; bumpcount++)
 	{
 		for (i = 0; i < 3; i++)
 		{
@@ -174,6 +175,11 @@ void PM_StepSlideMove(player_s* pev)
 		}
 
 		cment->trace(pev->base.origin, end, mins, maxs, NULL, CONTENTS_ALL, &trace);
+		if (trace.endstuck)
+		{
+			vec_clear(pev->base.velocity);
+			return;
+		}
 		if (trace.fraction > 0)
 		{
 			vec_copy(pev->base.origin, trace.endpos);
@@ -183,21 +189,21 @@ void PM_StepSlideMove(player_s* pev)
 		if (trace.fraction == 1)
 			break; 
 
-
-		time_left -= time_left * trace.fraction;
+		time_left -= time_left * trace.fraction;//TODO: ?
 		if (numplanes >= 5)
 		{
 			vec_clear(pev->base.velocity);
 			break;
 		}
 
+		//cment->con_printf(COLOR_WHITE, "%s", trace.texturename);
 		vec_copy(planes[numplanes], trace.normal);
 		numplanes++;
 
 		for (i = 0; i < numplanes; i++)
 		{
 			PM_ClipVelocity(pev->base.velocity, planes[i], pev->base.velocity, 1.01f);
-			cment->con_printf(COLOR_WHITE, "%f %f %f", pev->base.velocity[0], pev->base.velocity[1], pev->base.velocity[2]);
+			//cment->con_printf(COLOR_WHITE, "%i %f %f %f", bumpcount, pev->base.velocity[0], pev->base.velocity[1], pev->base.velocity[2]);
 			for (j = 0; j < numplanes; j++)
 			{
 				if (j != i)
@@ -209,21 +215,6 @@ void PM_StepSlideMove(player_s* pev)
 
 			if (j == numplanes)
 				break;
-		}
-
-		if (i == numplanes)
-		{
-			if (numplanes != 2)
-			{
-				vec_clear(pev->base.velocity);
-				break;
-			}
-
-			vec_cross(dir, planes[0], planes[1]);
-			vec_normalize_fast(dir);
-
-			d = vec_dot(dir, pev->base.velocity);
-			vec_scale(pev->base.velocity, d, dir);
 		}
 
 		if (vec_dot(pev->base.velocity, primal_velocity) <= 0)
@@ -333,14 +324,19 @@ static void think_player(player_s* pev)
 	vec_scale(wishvel, spd_forward, pev->v_forward);
 	vec_ma(wishvel, wishvel, spd_side, pev->v_right);
 
-	vec_copy(wishdir, wishvel);
-	wishspeed = vec_normalize(wishdir);
-
-	PM_Accelerate(pev, wishdir, wishspeed, 10);
-	if (vec_len(pev->base.velocity) > 0.1f)
+	if (glob.noclip->value)
+		vec_ma(pev->base.origin, pev->base.origin, cment->frametime, wishvel);
+	else
 	{
-		PM_Friction(pev);
-		PM_StepSlideMove(pev);
+		vec_copy(wishdir, wishvel);
+		wishspeed = vec_normalize(wishdir);
+
+		PM_Accelerate(pev, wishdir, wishspeed, 10);
+		if (vec_len(pev->base.velocity) > 0.1f)
+		{
+			PM_Friction(pev);
+			PM_StepSlideMove(pev);
+		}
 	}
 
 	cment->set_view_org(pev->base.origin);

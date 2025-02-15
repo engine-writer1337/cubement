@@ -188,7 +188,7 @@ EXPORTFUNC void cubement(engine_s** e, game_s* g)
 
 		newtime = util_time();
 		ghost.frametime = newtime - oldtime;
-		if (ghost.fps->value > 4 && ghost.frametime < (1.f / ghost.fps->value))
+		if (ghost.fps->value > 4 && ghost.frametime < (1.f / (0.5f + ghost.fps->value)))
 			continue;
 
 		oldtime = newtime;

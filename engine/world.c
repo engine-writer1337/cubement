@@ -147,7 +147,7 @@ static void sky_draw()
 	vid_rendermode(RENDER_NORMAL);
 	glColor4ub(255, 255, 255, 255);
 
-	rotate = (fabsf(gsky.ang[0]) > EPSILON) || (fabsf(gsky.ang[1]) > EPSILON) || (fabsf(gsky.ang[2]) > EPSILON);
+	rotate = (fabsf(gsky.ang[0]) > 0.01f) || (fabsf(gsky.ang[1]) > 0.01f) || (fabsf(gsky.ang[2]) > 0.01f);
 	if (rotate)
 	{
 		glPushMatrix();

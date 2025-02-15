@@ -2,66 +2,102 @@
 
 static struct
 {
-	vec3_t dir;
-	vec3_t idir;
 	vec3_t start;
+	vec3_t end;
 
-	vec3_t trmin;
-	vec3_t trmax;
+	vec3_t mins;
+	vec3_t maxs;
 
 	vec3_t epsmin;
 	vec3_t epsmax;
 
-	vec3_t absmin;
-	vec3_t absmax;
-
-	float dist;
-
-	int brnum;
 	int brtype;
 	bool_t brsign;
+
+	vec3_t bmin;
+	vec3_t bmax;
+
+	float fraction;
+
+	bool_t startstuck;
+	bool_t endstuck;
 }gtrace;
 
 static bool_t trace_brush(brush_s* b)
 {
-	int k;
-	float dist;
-	vec3_t pt, bmin, bmax;
+	int i, k, hit;
+	bool_t startout, getout;
+	float d1, d2, enterfrac, leavefrac, dist;
 
-	for (k = 0; k < 3; k++)
+	enterfrac = -1;
+	leavefrac = 1;
+	startout = getout = FALSE;
+
+	for (k = 0; k < 6; k++)
 	{
-		if (!gtrace.dir[k])
-			continue;
-
-		if (gtrace.dir[k] > 0)
+		i = k >> 1;
+		if (k & 1)
 		{
-			if (gtrace.absmax[k] > b->mins[k])
-				continue;
-
-			dist = (gtrace.absmax[k] - b->mins[k]) * gtrace.idir[k];
-			if (dist > gtrace.dist)
-				return FALSE;
+			d1 = gtrace.start[i] - b->maxs[i] - gtrace.maxs[i];
+			d2 = gtrace.end[i] - b->maxs[i] - gtrace.maxs[i];
 		}
 		else
 		{
-			if (gtrace.absmin[k] < b->maxs[k])
-				continue;
-
-			dist = (gtrace.absmin[k] - b->maxs[k]) * gtrace.idir[k];
-			if (dist > gtrace.dist)
-				return FALSE;
+			d1 = -(gtrace.start[i] - b->mins[i] - gtrace.mins[i]);
+			d2 = -(gtrace.end[i] - b->mins[i] - gtrace.mins[i]);
 		}
 
-		vec_ma(pt, gtrace.start, dist, gtrace.dir);
-		vec_add(bmin, pt, gtrace.epsmin);
-		vec_add(bmax, pt, gtrace.epsmax);
-		if (vec_aabb(b->mins, b->maxs, bmin, bmax))
+		if (d2 > 0)
+			getout = TRUE;
+		if (d1 > 0)
+			startout = TRUE;
+
+		if (d1 > 0 && (d2 >= TRACE_EPSILON || d2 >= d1))
+			break;
+
+		if (d1 <= 0 && d2 <= 0)
 			continue;
 
-		gtrace.dist = dist;
-		vec_maxmin(gtrace.start, pt, gtrace.epsmin, gtrace.epsmax, gtrace.trmin, gtrace.trmax);
-		gtrace.brsign = (gtrace.dir[k] > 0);
-		gtrace.brtype = k;
+		if (d1 > d2)
+		{
+			dist = (d1 - TRACE_EPSILON) / (d1 - d2);
+			if (dist > enterfrac)
+			{
+				hit = k;
+				enterfrac = dist;
+			}
+		}
+		else
+		{
+			dist = (d1 + TRACE_EPSILON) / (d1 - d2);
+			if (dist < leavefrac)
+				leavefrac = dist;
+		}
+	}
+
+	if (!startout) 
+	{
+		gtrace.startstuck = TRUE;
+		if (!getout) 
+		{
+			gtrace.endstuck = TRUE;
+			gtrace.fraction = 0;
+		}
+		return FALSE;
+	}
+
+	if (enterfrac < leavefrac && enterfrac > -1 && enterfrac < gtrace.fraction)
+	{
+		vec3_t pt;
+
+		if (enterfrac < 0)
+			enterfrac = 0;
+
+		gtrace.fraction = enterfrac;
+		vec_lerp(pt, gtrace.fraction, gtrace.start, gtrace.end);
+		vec_maxmin(gtrace.start, pt, gtrace.epsmin, gtrace.epsmax, gtrace.bmin, gtrace.bmax);
+		gtrace.brtype = hit >> 1;
+		gtrace.brsign = !(hit & 1);
 		return TRUE;
 	}
 
@@ -74,93 +110,52 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 	surf_s* s;
 	entity_s* e;
 	edict_s* ed;
-	int i, j, k;
 	vec3_t offset;
+	int i, j, brnum;
 	resource_s* res;
 	brushmodel_s* bm;
 	brush_s* b, bfake;
-	float dist, startdist;
-	vec2_t vpt, vbmin, vbmax;
 
 	if (!gentworld)
 		return;
 
-	vec_sub(gtrace.dir, end, start);
-	gtrace.dist = startdist = vec_normalize(gtrace.dir);
-	for (i = 0; i < 3; i++)
-	{
-		if (fabs(gtrace.dir[i]) < 1e-5)
-			gtrace.dir[i] = gtrace.idir[i] = 0;
-		else
-			gtrace.idir[i] = -1.0f / gtrace.dir[i];
-	}
-
-	gtrace.brnum = -1;
+	brnum = -1;
 	gtrace.brtype = 0;
 	gtrace.brsign = FALSE;
-
-	gworld.framecount++;
+	gtrace.fraction = 1;
+	gtrace.endstuck = FALSE;
+	gtrace.startstuck = FALSE;
+	vec_copy(gtrace.end, end);
 	vec_copy(gtrace.start, start);
-	vec_add(gtrace.absmin, start, mins);
-	vec_add(gtrace.absmax, start, maxs);
-	vec_add_val(gtrace.epsmin, mins, -EPSILON);
-	vec_add_val(gtrace.epsmax, maxs, EPSILON);
-	vec_maxmin(start, end, gtrace.epsmin, gtrace.epsmax, gtrace.trmin, gtrace.trmax);
+	vec_copy(gtrace.mins, mins);
+	vec_copy(gtrace.maxs, maxs);
+	vec_add_val(gtrace.epsmin, mins, -TRACE_EPSILON);
+	vec_add_val(gtrace.epsmax, maxs, TRACE_EPSILON);
+	vec_maxmin(start, end, gtrace.epsmin, gtrace.epsmax, gtrace.bmin, gtrace.bmax);
 
 	tr->dist = 0;
 	vec_init(tr->color, 0);
 	vec_init(tr->normal, 0);
 	strcpyn(tr->texturename, "NULL");
 
-	for (i = 0; i < gbru.num_areas; i++)
+	gworld.framecount++;
+
+	for (i = 0; !gtrace.endstuck && i < gbru.num_areas; i++)
 	{
 		a = gbru.areas + i;
 		for (j = 0; j < a->num_boxes; j++)
 		{
-			if (!vec2_aabb(a->mins[j], a->maxs[j], gtrace.absmin, gtrace.absmax))
+			if (!vec2_aabb(a->mins[j], a->maxs[j], start, start))
 			{
 				a->framenum = gworld.framecount;
 				break;
 			}
 
-			if (!a->activecount)
+			if (!a->activecount || vec2_aabb(a->mins[j], a->maxs[j], gtrace.bmin, gtrace.bmax))
 				continue;
 
-			if (vec2_aabb(a->mins[j], a->maxs[j], gtrace.trmin, gtrace.trmax))
-				continue;
-
-			for (k = 0; k < 2; k++)
-			{
-				if (!gtrace.dir[k])
-					continue;
-
-				if (gtrace.dir[k] > 0)
-				{
-					if (gtrace.absmax[k] > a->mins[j][k])
-						continue;
-
-					dist = (gtrace.absmax[k] - a->mins[j][k]) * gtrace.idir[k];
-				}
-				else
-				{
-					if (gtrace.absmin[k] < a->maxs[j][k])
-						continue;
-
-					dist = (gtrace.absmin[k] - a->maxs[j][k]) * gtrace.idir[k];	
-				}
-
-				vec2_ma(vpt, start, dist, gtrace.dir);
-				vec2_add(vbmin, vpt, gtrace.epsmin);
-				vec2_add(vbmax, vpt, gtrace.epsmax);
-				if (vec2_aabb(a->mins[j], a->maxs[j], vbmin, vbmax))
-					continue;
-
-				a->framenum = gworld.framecount;
-				break;
-			}
-
-			if (a->framenum == gworld.framecount)
-				break;
+			a->framenum = gworld.framecount;
+			break;
 		}
 
 		if (a->framenum != gworld.framecount)
@@ -169,22 +164,22 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 		if (!(gentworld->contents & contents))
 			continue;
 
-		for (j = 0; j < a->num_brushareas; j++)
+		for (j = 0; !gtrace.endstuck && j < a->num_brushareas; j++)
 		{
 			b = gbru.brushes + a->brushareas[j];
 			if (b->framenum == gworld.framecount)
 				continue;
 
 			b->framenum = gworld.framecount;
-			if (vec_aabb(b->mins, b->maxs, gtrace.trmin, gtrace.trmax))
+			if (vec_aabb(b->mins, b->maxs, gtrace.bmin, gtrace.bmax))
 				continue;
 			
 			if (trace_brush(b))
-				gtrace.brnum = a->brushareas[j];
+				brnum = a->brushareas[j];
 		}
 	}
 
-	for (i = 1; i < gnuments; i++)
+	for (i = 1; !gtrace.endstuck && i < gnuments; i++)
 	{
 		ed = gedicts + i;
 		if (!ed->e)
@@ -205,25 +200,31 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 				b = bm->brushes + j;
 				vec_add(bfake.mins, offset, b->mins);
 				vec_add(bfake.maxs, offset, b->maxs);
-				if (vec_aabb(bfake.mins, bfake.maxs, gtrace.trmin, gtrace.trmax))
+				if (vec_aabb(bfake.mins, bfake.maxs, gtrace.bmin, gtrace.bmax))
 					continue;
 
 				if (trace_brush(&bfake))
-					gtrace.brnum = bm->start_brush + j;
+					brnum = bm->start_brush + j;
 			}
 			break;
 		}
 	}
 
-	vec_ma(tr->endpos, start, gtrace.dist, gtrace.dir);
-	tr->fraction = startdist / gtrace.dist;
+	tr->fraction = gtrace.fraction;
+	vec_lerp(tr->endpos, tr->fraction, start, end);
+	tr->endstuck = gtrace.endstuck;
+	tr->startstuck = gtrace.startstuck;
 
-	if (gtrace.brnum != -1)
+	if (brnum != -1)
 	{
-		//gtrace.dist -= 1;
-		//vec_ma(tr->endpos, start, gtrace.dist, gtrace.dir);
+		vec3_t dir;
 
-		b = gbru.brushes + gtrace.brnum;
+		vec_sub(dir, end, start);
+		vec_normalize_fast(dir);
+		vec_mul(dir, TRACE_EPSILON);
+		vec_sub(tr->endpos, tr->endpos, dir);
+
+		b = gbru.brushes + brnum;
 		for (i = 0; i < b->num_surfes; i++)
 		{
 			s = b->surfes + i;
@@ -238,12 +239,12 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 		if (gtrace.brsign)
 		{
 			tr->dist = b->mins[gtrace.brtype];
-			tr->normal[gtrace.brtype] = 1;
+			tr->normal[gtrace.brtype] = -1;
 		}
 		else
 		{
 			tr->dist = b->maxs[gtrace.brtype];
-			tr->normal[gtrace.brtype] = -1;
+			tr->normal[gtrace.brtype] = 1;
 		}
 	}
 }

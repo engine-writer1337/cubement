@@ -132,6 +132,9 @@ typedef struct
 
 	byte color[3];
 	char texturename[33];
+
+	bool_t endstuck;
+	bool_t startstuck;
 }trace_s;
 
 typedef struct

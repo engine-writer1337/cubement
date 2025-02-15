@@ -11,6 +11,7 @@ typedef struct
 	ihandle_t cat2;
 
 	cvar_s* sens;
+	cvar_s* noclip;
 
 	bool_t old_console;
 }global_s;

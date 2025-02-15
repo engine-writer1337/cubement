@@ -1,6 +1,6 @@
 #include "cubement.h"
 #include <setjmp.h>
-
+//TODO: check bru fields for zeros
 bru_s gbru;
 vertbuf_s gvertbuf;
 static jmp_buf gbru_jump;
@@ -143,15 +143,27 @@ static void bru_create_face(int index, surf_s* out, const vec3_t mins, const vec
 	int w, h, i;
 	bru_surf_s* in;
 	float* st, * xyz;
+	surftype_e stype;
 	tmp_texinfo_s* texinfo = NULL;
 
 	in = gsurfs + index;
 	texinfo = gtexinfo + in->texinfo;
 
 	out->offset = index << 2;
-	out->type = in->encode >> 12;
+	stype = in->encode >> 12;
+	if (stype < SURF_TYPE_SX)
+	{
+		out->sign = FALSE;
+		out->itype = stype;
+	}
+	else
+	{
+		out->sign = TRUE;
+		out->itype = stype - SURF_TYPE_SX;
+	}
+
 	out->texture = texinfo->texture;
-	vec4_set(out->color, gcolrow[in->encode & 15], gcolrow[(in->encode >> 4) & 15], gcolrow[(in->encode >> 8) & 15], 255);
+	vec_set(out->color, gcolrow[in->encode & 15], gcolrow[(in->encode >> 4) & 15], gcolrow[(in->encode >> 8) & 15]);
 
 	w = gbru.textures[texinfo->texture].width;
 	h = gbru.textures[texinfo->texture].height;
@@ -160,7 +172,7 @@ static void bru_create_face(int index, surf_s* out, const vec3_t mins, const vec
 
 	for (i = 3; i >= 0; i--)
 	{
-		switch (out->type)
+		switch (stype)
 		{
 		case SURF_TYPE_X:
 			switch (i)
@@ -279,7 +291,9 @@ static void bru_load_models(const byte* data, const bru_lump_s* l)
 	{
 		vec_copy(out[i].mins, in[i].mins);
 		vec_copy(out[i].maxs, in[i].maxs);
+		vec_set(out[i].origin, (out[i].maxs[0] + out[i].mins[0]) * 0.5f, (out[i].maxs[1] + out[i].mins[1]) * 0.5f, (out[i].maxs[2] + out[i].mins[2]) * 0.5f);
 		out[i].num_brushes = in[i].num_brushes;
+		out[i].start_brush = in[i].start_brush;
 		out[i].brushes = gbru.brushes + in[i].start_brush;
 	}
 }
@@ -308,6 +322,7 @@ static void bru_load_areas(const byte* data, const bru_lump_s* l)
 		out[i].brushareas = gbru.brushareas + in[i].start_brusharea;
 		out[i].mins = gbru.box_mins + in[i].start_box;
 		out[i].maxs = gbru.box_maxs + in[i].start_box;
+		out[i].activecount = 0;
 	}
 }
 

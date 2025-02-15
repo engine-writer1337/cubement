@@ -29,6 +29,9 @@ static void draw_2d()
 
 		sprintf(str, "ang: %.2f %.2f %.2f", gplayer->base.angles[0], gplayer->base.angles[1], gplayer->base.angles[2]);
 		cment->font_print(glob.confont, str, 0, 96, RENDER_TRANSPARENT, 255, 255, 255, 255);
+
+		sprintf(str, "vel: %.2f %.2f %.2f", gplayer->base.velocity[0], gplayer->base.velocity[1], gplayer->base.velocity[2]);
+		cment->font_print(glob.confont, str, 0, 128, RENDER_TRANSPARENT, 255, 255, 255, 255);
 	}
 
 	//cment->pic_draw(glob.cat1, 256, 256, RENDER_NORMAL, 255, 170, 30, 255, NULL);
@@ -53,9 +56,18 @@ static void game_precache() {}
 
 static bool_t draw_world() { return TRUE; }
 
-static bool_t pause_world() { return FALSE; }
+static bool_t pause_world() { return cment->console_active; }
 
 void after_draw_3d() { }
+
+void start_frame() 
+{
+	if (glob.old_console != cment->console_active)
+	{//TODO: think something better
+		glob.old_console = cment->console_active;
+		cment->cursor_show(cment->console_active);
+	}
+}
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -67,6 +79,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	g.engine_init = engine_init;
 
 	g.game_precache = game_precache;
+
+	g.start_frame = start_frame;
 
 	g.char_events = char_events;
 	g.key_events = key_events;

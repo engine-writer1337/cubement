@@ -38,10 +38,12 @@ typedef struct
 
 typedef struct _surf_s
 {
+	int itype;
+	bool_t sign;
+	byte color[3];
+
 	int offset;
 	int texture;
-	byte color[4];
-	surftype_e type;
 	struct _surf_s* next;
 }surf_s;
 
@@ -68,10 +70,12 @@ typedef struct
 typedef struct
 {
 	int num_brushes;
+	int start_brush;
 	brush_s* brushes;
 
 	vec3_t mins;
 	vec3_t maxs;
+	vec3_t origin;
 }brushmodel_s;
 
 typedef struct

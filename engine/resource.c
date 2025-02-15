@@ -60,6 +60,9 @@ static void res_free(ihandle_t idx)
 		util_tex_free(r->data.font.texture);
 		r->data.font.texture = 0;
 		break;
+	case RES_SOUND:
+		snd_free(&r->data.wav);
+		break;
 	}
 
 	r->name[0] = '\0';
@@ -127,6 +130,12 @@ static bool_t res_load(resource_s* r, const char* filename, restype_e type, int 
 	case RES_FONT:
 		font_load(filename, &r->data.font);
 		if (!r->data.font.texture)
+			return FALSE;
+		break;
+
+	case RES_SOUND:
+		snd_load(filename, &r->data.wav);
+		if (!r->data.wav.data)
 			return FALSE;
 		break;
 	}

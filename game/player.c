@@ -130,15 +130,171 @@ static void keyvalue_player(player_s* pev, keyvalue_s* kv)
 
 }
 
+#define STOP_EPSILON 0.1
+void PM_ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
+{
+	float backoff;
+	float change;
+	int i;
+
+	backoff = vec_dot(in, normal) * overbounce;
+	for (i = 0; i < 3; i++)
+	{
+		change = normal[i] * backoff;
+		out[i] = in[i] - change;
+		if ((out[i] > -STOP_EPSILON) && (out[i] < STOP_EPSILON))
+			out[i] = 0;
+	}
+}
+
+void PM_StepSlideMove(player_s* pev)
+{
+	int bumpcount;
+	vec3_t dir;
+	float d;
+	int numplanes;
+	vec3_t planes[5];
+	vec3_t primal_velocity;
+	int i, j;
+	trace_s trace;
+	vec3_t end;
+	float time_left;
+	vec3_t mins = { -16, -16, -32 }, maxs = { 16, 16, 32 };
+	//vec3_t mins = { 0, 0, 0 }, maxs = { 0, 0, 0 };
+
+	vec_copy(primal_velocity, pev->base.velocity);
+	numplanes = 0;
+	time_left = cment->frametime;
+
+	for (bumpcount = 0; bumpcount < 4; bumpcount++)
+	{
+		for (i = 0; i < 3; i++)
+		{
+			end[i] = pev->base.origin[i] + time_left * pev->base.velocity[i];
+		}
+
+		cment->trace(pev->base.origin, end, mins, maxs, NULL, CONTENTS_ALL, &trace);
+		if (trace.fraction > 0)
+		{
+			vec_copy(pev->base.origin, trace.endpos);
+			numplanes = 0;
+		}
+
+		if (trace.fraction == 1)
+			break; 
+
+
+		time_left -= time_left * trace.fraction;
+		if (numplanes >= 5)
+		{
+			vec_clear(pev->base.velocity);
+			break;
+		}
+
+		vec_copy(planes[numplanes], trace.normal);
+		numplanes++;
+
+		for (i = 0; i < numplanes; i++)
+		{
+			PM_ClipVelocity(pev->base.velocity, planes[i], pev->base.velocity, 1.01f);
+			cment->con_printf(COLOR_WHITE, "%f %f %f", pev->base.velocity[0], pev->base.velocity[1], pev->base.velocity[2]);
+			for (j = 0; j < numplanes; j++)
+			{
+				if (j != i)
+				{
+					if (vec_dot(pev->base.velocity, planes[j]) < 0)
+						break;
+				}
+			}
+
+			if (j == numplanes)
+				break;
+		}
+
+		if (i == numplanes)
+		{
+			if (numplanes != 2)
+			{
+				vec_clear(pev->base.velocity);
+				break;
+			}
+
+			vec_cross(dir, planes[0], planes[1]);
+			vec_normalize_fast(dir);
+
+			d = vec_dot(dir, pev->base.velocity);
+			vec_scale(pev->base.velocity, d, dir);
+		}
+
+		if (vec_dot(pev->base.velocity, primal_velocity) <= 0)
+		{
+			vec_clear(pev->base.velocity);
+			break;
+		}
+	}
+}
+
+void PM_Accelerate(player_s* pev, vec3_t wishdir, float wishspeed, float accel)
+{
+	int i;
+	float addspeed, accelspeed, currentspeed;
+
+	currentspeed = vec_dot(pev->base.velocity, wishdir);
+	addspeed = wishspeed - currentspeed;
+
+	if (addspeed <= 0)
+	{
+		return;
+	}
+
+	accelspeed = accel * cment->frametime * wishspeed;
+
+	if (accelspeed > addspeed)
+	{
+		accelspeed = addspeed;
+	}
+
+	for (i = 0; i < 3; i++)
+	{
+		pev->base.velocity[i] += accelspeed * wishdir[i];
+	}
+}
+
+void PM_Friction(player_s* pev)
+{
+	float* vel;
+	float speed, newspeed, control;
+	float friction;
+	float drop;
+
+	vel = pev->base.velocity;
+	speed = (float)sqrt(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);
+	if (speed < 1)
+	{
+		vel[0] = 0;
+		vel[1] = 0;
+		return;
+	}
+
+	drop = 0;
+	friction = 4;
+	control = speed < 100 ? 100 : speed;
+	drop += control * friction * cment->frametime;
+
+	newspeed = speed - drop;
+	if (newspeed < 0)
+		newspeed = 0;
+
+	newspeed /= speed;
+	vel[0] = vel[0] * newspeed;
+	vel[1] = vel[1] * newspeed;
+	vel[2] = vel[2] * newspeed;
+}
+
 static void think_player(player_s* pev)
 {
-	float spd_side, spd_forward;
-
-	if (glob.old_console != cment->console_active)
-	{//TODO: think something better
-		glob.old_console = cment->console_active;
-		cment->cursor_show(cment->console_active);
-	}
+	vec3_t wishdir, wishvel;
+	float spd_side, spd_forward, wishspeed;
 
 	if (!cment->console_active)
 	{
@@ -174,9 +330,18 @@ static void think_player(player_s* pev)
 	else
 		spd_side = 0;
 
-	vec_scale(pev->base.velocity, spd_forward, pev->v_forward);
-	vec_ma(pev->base.velocity, pev->base.velocity, spd_side, pev->v_right);
-	vec_ma(pev->base.origin, pev->base.origin, cment->frametime, pev->base.velocity);
+	vec_scale(wishvel, spd_forward, pev->v_forward);
+	vec_ma(wishvel, wishvel, spd_side, pev->v_right);
+
+	vec_copy(wishdir, wishvel);
+	wishspeed = vec_normalize(wishdir);
+
+	PM_Accelerate(pev, wishdir, wishspeed, 10);
+	if (vec_len(pev->base.velocity) > 0.1f)
+	{
+		PM_Friction(pev);
+		PM_StepSlideMove(pev);
+	}
 
 	cment->set_view_org(pev->base.origin);
 	cment->set_view_ang(pev->base.angles);

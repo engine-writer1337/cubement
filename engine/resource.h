@@ -24,6 +24,7 @@ typedef struct
 	union
 	{
 		pic_s pic;
+		wave_s wav;
 		font_s font;
 		brushmodel_s* brush;
 	}data;

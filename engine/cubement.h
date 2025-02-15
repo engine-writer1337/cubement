@@ -47,6 +47,7 @@ typedef struct
 
 extern host_s ghost;
 extern game_s ggame;
+extern engine_s gengine;
 
 void host_shutdown();
 

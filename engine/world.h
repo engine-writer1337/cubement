@@ -39,8 +39,14 @@ typedef struct
 	vec3_t v_up;
 
 	convar_s* vbo;
+	convar_s* lock;
+	convar_s* wireframe;
+	convar_s* shade;
 
 	edict_s* solid_chain;
+	edict_s* transparent_chain;
+	edict_s* alpha_chain;
+	edict_s* addtive_chain;
 }world_s;
 
 typedef struct

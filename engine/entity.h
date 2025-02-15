@@ -2,7 +2,7 @@
 #define _ENTITY_H_
 
 #define MAX_KEYVALUES	64
-#define MAX_ENTITIES	4096
+#define MAX_ENTITIES	2560
 
 typedef struct _edict_s
 {

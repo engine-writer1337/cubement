@@ -294,6 +294,8 @@ typedef struct
 	void (*engine_init)();
 	void (*engine_free)();
 
+	void (*start_frame)();
+
 	void (*game_precache)();
 	void (*game_start)();
 	void (*game_end)();

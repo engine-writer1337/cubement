@@ -85,6 +85,7 @@ entity_s* ent_create(const char* classname)
 	gedicts[i].e = gents[i];
 	gents[i]->id = map->id;
 	gents[i]->model = BAD_HANDLE;
+	gents[i]->renderamt = 255;
 	return gents[i];
 }
 
@@ -172,7 +173,7 @@ static void ent_post_init()
 			if (res->type == RES_BRUSH)
 			{
 				bm = res->data.brush;
-				vec_set(e->origin, (bm->maxs[0] + bm->mins[0]) * 0.5f, (bm->maxs[1] + bm->mins[1]) * 0.5f, (bm->maxs[2] + bm->mins[2]) * 0.5f);
+				vec_copy(e->origin, bm->origin);
 				vec_sub(e->maxs, bm->maxs, e->origin);
 				vec_sub(e->mins, bm->mins, e->origin);
 			}
@@ -306,6 +307,7 @@ bool_t ent_parse(const char* pfile)
 			ent_remove(ent);
 	}
 
+	gengine.entities_max = gnuments;
 	map = gentmap + ENTID_PLAYER;
 	gentplayer->id = ENTID_PLAYER;
 	map->precache(gentplayer);

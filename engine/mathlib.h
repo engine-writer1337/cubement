@@ -7,7 +7,7 @@
 
 #define MATH_PI		3.14159265358979323846f
 
-#define EPSILON		0.01f
+#define EPSILON		(1.0f / 32)//TODO: rename
 
 #define NAN_MASK	(255 << 23)
 #define	is_nan(x)	(((*(int *)&x) & NAN_MASK) == NAN_MASK)

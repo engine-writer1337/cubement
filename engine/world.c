@@ -144,6 +144,9 @@ static void sky_draw()
 		return;
 
 	glDisable(GL_DEPTH_TEST);
+	vid_rendermode(RENDER_NORMAL);
+	glColor4ub(255, 255, 255, 255);
+
 	rotate = (fabsf(gsky.ang[0]) > EPSILON) || (fabsf(gsky.ang[1]) > EPSILON) || (fabsf(gsky.ang[2]) > EPSILON);
 	if (rotate)
 	{
@@ -304,8 +307,6 @@ void sky_free()
 //==========================================================================//
 // WORLD DRAW
 //==========================================================================//
-#define APPEND_SURF(s)	
-
 static void world_area_visibles()
 {
 	area_s* a;
@@ -314,7 +315,6 @@ static void world_area_visibles()
 	entity_s* e;
 	edict_s* ed;
 	int i, j, k, m;
-	resource_s* res;
 	vec3_t absmin, absmax;
 	bool_t anyintersect = FALSE;
 
@@ -365,12 +365,11 @@ static void world_area_visibles()
 				for (m = 0; m < b->num_surfes; m++)
 				{
 					s = b->surfes + m;
-					if (((s->type < SURF_TYPE_SX) && (gworld.vieworg[s->type] > b->maxs[s->type])) || 
-						((s->type >= SURF_TYPE_SX) && (gworld.vieworg[s->type - SURF_TYPE_SX] < b->mins[s->type - SURF_TYPE_SX])))
-					{
-						s->next = gbru.textures[s->texture].chain;
-						gbru.textures[s->texture].chain = s;
-					}
+					if ((s->sign || gworld.vieworg[s->itype] < b->maxs[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > b->mins[s->itype]))
+						continue;
+
+					s->next = gbru.textures[s->texture].chain;
+					gbru.textures[s->texture].chain = s;
 				}
 			}
 			break;
@@ -408,12 +407,23 @@ static void world_area_visibles()
 		if (frustum_clip(absmin, absmax))
 			continue;
 
-		res = gres + e->model;
-		switch (res->type)
+		switch (e->render)
 		{
-		case RES_BRUSH:
+		default:
 			ed->next = gworld.solid_chain;
 			gworld.solid_chain = ed;
+			break;
+		case RENDER_TRANSPARENT:
+			ed->next = gworld.transparent_chain;
+			gworld.transparent_chain = ed;
+			break;
+		case RENDER_ALPHA:
+			ed->next = gworld.alpha_chain;
+			gworld.alpha_chain = ed;
+			break;
+		case RENDER_ADDTIVE:
+			ed->next = gworld.addtive_chain;
+			gworld.addtive_chain = ed;
 			break;
 		}
 	}
@@ -443,13 +453,60 @@ static void world_vbo()
 	}
 }
 
+static void world_shade_color(surf_s* s, entity_s* ent)
+{
+	if (gworld.shade->value > 0)
+	{
+		float dim = clamp(0, gworld.shade->value, 1);
+		if (s->sign)
+		{
+			if (gworld.v_forward[s->itype] < 0)
+				dim = (1.0f - dim);
+			else
+				dim = gworld.v_forward[s->itype] * dim + (1.0f - dim);
+		}
+		else
+		{
+			if (gworld.v_forward[s->itype] > 0)
+				dim = (1.0f - dim);
+			else
+				dim = -gworld.v_forward[s->itype] * dim + (1.0f - dim);
+		}
+
+		if (ent->flags & FL_MODULATE)
+			glColor4ub(dim * (s->color[0] * ent->color[0]) / 255, dim * (s->color[1] * ent->color[1]) / 255, dim * (s->color[2] * ent->color[2]) / 255, ent->renderamt);
+		else
+			glColor4ub(dim * s->color[0], dim * s->color[1], dim * s->color[2], ent->renderamt);
+	}
+	else
+	{
+		if (ent->flags & FL_MODULATE)
+			glColor4ub((s->color[0] * ent->color[0]) / 255, (s->color[1] * ent->color[1]) / 255, (s->color[2] * ent->color[2]) / 255, ent->renderamt);
+		else
+			glColor4ub(s->color[0], s->color[1], s->color[2], ent->renderamt);
+	}
+}
+
 static void world_draw_worldspawn()
 {
 	int i;
 	surf_s* s;
 	btexture_s* t;
 
-	vid_rendermode(RENDER_NORMAL);//TODO: grab rendermode from game.exe
+	world_vbo();
+	if (gvertbuf.buffer)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, gvertbuf.buffer);
+		glVertexPointer(3, GL_FLOAT, 0, NULL);
+		glTexCoordPointer(2, GL_FLOAT, 0, (void*)(gvertbuf.count * sizeof(vec3_t)));
+	}
+	else
+	{
+		glTexCoordPointer(2, GL_FLOAT, 0, gvertbuf.st);
+		glVertexPointer(3, GL_FLOAT, 0, gvertbuf.xyz);
+	}
+
+	vid_rendermode(gentworld->render);
 	for (i = 0; i < gbru.num_textures; i++)
 	{
 		t = gbru.textures + i;
@@ -460,49 +517,68 @@ static void world_draw_worldspawn()
 		img_bind(t->t);
 		while (s)
 		{
-			/*float angleDim = 1;
-			float dimStrength = 0.25f;
-			if (s->type < SURF_TYPE_SX)
-				angleDim = -gworld.v_forward[s->type] * dimStrength + (1.0 - dimStrength);
-			else
-				angleDim = gworld.v_forward[s->type - SURF_TYPE_SX] * dimStrength + (1.0 - dimStrength);
-			
-			glColor4ub(angleDim * s->color[0], angleDim * s->color[1], angleDim * s->color[2], 255);*/
-			glColor4ubv(s->color);
+			world_shade_color(s, gentworld);
 			glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
 			s = s->next;
 		}
 	}
+
+	if (gworld.wireframe->value)
+	{
+		glDisable(GL_TEXTURE_2D);
+		vid_rendermode(RENDER_NORMAL);
+		glColor4ub(255, 255, 255, 255);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		if (gworld.wireframe->value < 2)
+			glDisable(GL_DEPTH_TEST);
+
+		for (i = 0; i < gbru.num_textures; i++)
+		{
+			s = gbru.textures[i].chain;
+			while (s)
+			{
+				glDrawArrays(GL_QUADS, s->offset, 4);
+				s = s->next;
+			}
+		}
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnable(GL_TEXTURE_2D);
+		if (gworld.wireframe->value < 2)
+			glEnable(GL_DEPTH_TEST);
+	}
+
+	if (gvertbuf.buffer)
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-static void world_draw_solid()
+static void world_draw_ents(edict_s* ed)
 {
 	int i, m;
 	surf_s* s;
 	brush_s* b;
-	edict_s* ed;
 	entity_s* e;
 	resource_s* res;
 	brushmodel_s* bm;
 	vec3_t origin, offset, absmax, absmin;
 
-	ed = gworld.solid_chain;
 	while (ed)
 	{
 		e = ed->e;
 		if (e->model == BAD_HANDLE)
 			continue;
 
-		vid_rendermode(e->render);
 		res = gres + e->model;
 		switch (res->type)
 		{
 		case RES_BRUSH:
 			bm = res->data.brush;
-			vec_set(origin, (bm->maxs[0] + bm->mins[0]) * 0.5f, (bm->maxs[1] + bm->mins[1]) * 0.5f, (bm->maxs[2] + bm->mins[2]) * 0.5f);
+			vec_copy(origin, bm->origin);
 			vec_sub(offset, e->origin, origin);
 
-			glPushMatrix();
+			glPushMatrix();//TODO: translate only when offset not 0
 			glTranslatef(offset[0], offset[1], offset[2]);
 
 			for (i = 0; i < bm->num_brushes; i++)
@@ -513,16 +589,17 @@ static void world_draw_solid()
 				if (frustum_clip(absmin, absmax))
 					continue;
 
+				glTexCoordPointer(2, GL_FLOAT, 0, gvertbuf.st);
+				glVertexPointer(3, GL_FLOAT, 0, gvertbuf.xyz);
 				for (m = 0; m < b->num_surfes; m++)
 				{
 					s = b->surfes + m;
-					if (((s->type < SURF_TYPE_SX) && (gworld.vieworg[s->type] > b->maxs[s->type])) || 
-						((s->type >= SURF_TYPE_SX) && (gworld.vieworg[s->type - SURF_TYPE_SX] < b->mins[s->type - SURF_TYPE_SX])))
-					{
-						img_bind(gbru.textures[s->texture].t);
-						glColor4ubv(s->color);
-						glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
-					}
+					if ((s->sign || gworld.vieworg[s->itype] < b->maxs[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > b->mins[s->itype]))
+						continue;
+
+					world_shade_color(s, e);
+					img_bind(gbru.textures[s->texture].t);
+					glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
 				}
 			}
 
@@ -534,9 +611,12 @@ static void world_draw_solid()
 	}
 }
 
+byte gtrcolors[3];
+char gtrtexturename[64];
+
 static void world_test_trace()
 {
-	trace_s t;
+	trace_s t = { 0 };
 	vec3_t zeros = { 0, 0, 0 };
 	vec3_t end, mins = { -4, -4, -8 }, maxs = { 4, 4, 8 };
 
@@ -552,7 +632,10 @@ static void world_test_trace()
 	
 	//int i;
 	//for (i = 0; i < 10000; i++)
-	trace(gworld.vieworg, end, mins, maxs, NULL, 0, &t);
+	trace(gworld.vieworg, end, mins, maxs, NULL, CONTENTS_WORLD | CONTENTS_SOLID, &t);
+
+	vec_copy(gtrcolors, t.color);
+	strcpy(gtrtexturename, t.texturename);
 
 	//if (grdr.trace_test->value == 1)
 	//	tr_bbox(grdr.origin, end, NULL, NULL, &t, TRUE, SOLID_BSP);
@@ -585,45 +668,52 @@ static void world_test_trace()
 void world_draw()
 {
 	int i;
-	vec4_t oncs = { 1, 1, 1, 1 };
-	vec4_t pos = { gworld.vieworg[0], gworld.vieworg[1], gworld.vieworg[2], 1 };
 
-	gworld.framecount++;
-	gworld.solid_chain = NULL;
-	for (i = 0; i < gbru.num_textures; i++)
-		gbru.textures[i].chain = NULL;
+	if (gworld.lock->value < 2)
+	{
+		gworld.framecount++;
+		gworld.solid_chain = NULL;
+		gworld.transparent_chain = NULL;
+		gworld.alpha_chain = NULL;
+		gworld.addtive_chain = NULL;
 
-	world_vbo();
-	frustum_adjust();
+		for (i = 0; i < gbru.num_textures; i++)
+			gbru.textures[i].chain = NULL;
+
+		if (!gworld.lock->value)
+			frustum_adjust();
+
+		world_area_visibles();
+	}
+
 	sky_draw();
-	
-	world_area_visibles();
-
-	//========== DRAW BRUSHES ==========//
-	if (gvertbuf.buffer)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, gvertbuf.buffer);
-		glVertexPointer(3, GL_FLOAT, 0, NULL);
-		glTexCoordPointer(2, GL_FLOAT, 0, (void*)(gvertbuf.count * sizeof(vec3_t)));
-	}
-	else
-	{
-		glTexCoordPointer(2, GL_FLOAT, 0, gvertbuf.st);
-		glVertexPointer(3, GL_FLOAT, 0, gvertbuf.xyz);
-	}
-
 	world_draw_worldspawn();
-	world_draw_solid();
-	if (gvertbuf.buffer)
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//========== DRAW MODELS ==========//
 
-	//========== DRAW BEAMS ==========//
+	if (gworld.solid_chain)
+	{
+		vid_rendermode(RENDER_NORMAL);
+		world_draw_ents(gworld.solid_chain);
+	}
 
-	//========== DRAW SPRITES ==========//
+	if (gworld.transparent_chain)
+	{
+		vid_rendermode(RENDER_TRANSPARENT);
+		world_draw_ents(gworld.transparent_chain);
+	}
+
+	if (gworld.addtive_chain)
+	{
+		vid_rendermode(RENDER_ADDTIVE);
+		world_draw_ents(gworld.addtive_chain);
+	}
+
+	if (gworld.alpha_chain)
+	{
+		vid_rendermode(RENDER_ALPHA);
+		world_draw_ents(gworld.alpha_chain);
+	}
 
 	world_test_trace();
-
 }
 
 //==========================================================================//

@@ -451,9 +451,7 @@ void con_log_save(const char* error)
 	FILE* fp;
 	string_t name;
 
-	strcpy(name, "crash");
-	strcat(name, util_get_timestamp());
-	strcat(name, ".log");
+	sprintf(name, "crash%s.log", util_get_timestamp());
 	fp = fopen(name, "w");
 	if (!fp)
 		return;
@@ -546,14 +544,16 @@ void con_init()
 	gimg.aniso = con_create_cvar("r_aniso", TRUE, TRUE);
 	gimg.nofilter = con_create_cvar("r_nearest", FALSE, TRUE);
 	gworld.vbo = con_create_cvar("r_vbo", TRUE, TRUE);
+	gworld.shade = con_create_cvar("r_shade", 0.2f, TRUE);
 
 	gcon.test = con_create_cvar("test", FALSE, FALSE);
 
 	gsnd.volume = con_create_cvar("s_volume", SND_DEF_VOL, TRUE);
 
 	ghost.fps = con_create_cvar("fps_max", 100, TRUE);
-	//gworld.lock = con_create_cvar("dbg_lock", FALSE, FALSE);
-	//gworld.wireframe = con_create_cvar("dbg_wireframe", FALSE, FALSE);
+	gworld.lock = con_create_cvar("dbg_lock", FALSE, FALSE);
+	gworld.wireframe = con_create_cvar("dbg_wireframe", FALSE, FALSE);
+
 	//gworld.show_tree = con_create_cvar("dbg_tree", FALSE, FALSE);
 	//gworld.show_clip = con_create_cvar("dbg_clip", FALSE, FALSE);
 	//grdr.trace_test = con_create_cvar("dbg_trace", 0, FALSE);

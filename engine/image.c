@@ -247,9 +247,7 @@ void img_scrshot_cmd(const char* arg1, const char* arg2)
 	int i, pitch, size = 0;
 	byte* buffer, * output, * buffer2;
 
-	strcpy(name, gbru.name);
-	strcat(name, util_get_timestamp());
-	strcat(name, ".jpg");
+	sprintf(name, "%s%s.jpg", gbru.name, util_get_timestamp());
 	fp = util_open(name, "wb");
 	if (!fp)
 	{

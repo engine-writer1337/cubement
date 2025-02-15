@@ -2,6 +2,7 @@
 
 static bool_t spawn_func_wall(entity_s* pev)
 {
+	pev->contents = CONTENTS_SOLID;
 	return TRUE;
 }
 

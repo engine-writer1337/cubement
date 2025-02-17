@@ -2,7 +2,7 @@
 #define _ENTITY_H_
 
 #define MAX_KEYVALUES	64
-#define MAX_ENTITIES	2560
+#define MAX_ENTITIES	3072
 
 typedef struct _edict_s
 {
@@ -16,6 +16,10 @@ typedef struct _edict_s
 	float fps;
 	int sequence;
 	int numframes;
+
+	vec3_t oldorg;
+	vec3_t oldang;
+	ihandle_t oldmodel;
 
 	struct _edict_s* next;
 }edict_s;

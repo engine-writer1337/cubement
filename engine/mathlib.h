@@ -7,6 +7,8 @@
 
 #define MATH_PI		3.14159265358979323846f
 
+#define CMP_EPSILON		0.01f
+
 #define NAN_MASK	(255 << 23)
 #define	is_nan(x)	(((*(int *)&x) & NAN_MASK) == NAN_MASK)
 
@@ -23,6 +25,8 @@
 #define vec_dot(x, y)				(x[0] * y[0] + x[1] * y[1] + x[2] * y[2])
 #define vec_len(v)					(sqrtf(vec_dot(v, v)))
 #define vec_copy(dst, src)			(dst[0] = src[0], dst[1] = src[1], dst[2] = src[2])
+#define vec_cmp(dst, src)			(fabsf(dst[0] - src[0]) < CMP_EPSILON && fabsf(dst[1] - src[1]) < CMP_EPSILON && fabsf(dst[2] - src[2]) < CMP_EPSILON)
+#define vec_is_zero(dst)			(fabsf(dst[0]) < CMP_EPSILON && fabsf(dst[1]) < CMP_EPSILON && fabsf(dst[2]) < CMP_EPSILON)
 #define vec_set(dst, x, y, z)		(dst[0] = x, dst[1] = y, dst[2] = z)
 #define vec_init(dst, a)			(dst[0] = a, dst[1] = a, dst[2] = a)
 #define vec_neg(x, y)				(x[0] = -y[0], x[1] = -y[1], x[2] = -y[2])
@@ -215,6 +219,26 @@ inline void vec_maxmin(const vec3_t start, const vec3_t end, const vec3_t mins, 
 			absmax[i] = end[i] + maxs[i];
 		}
 	}
+}
+
+inline void vec_rotate(const vec3_t angles, const vec3_t offset, vec3_t mins, vec3_t maxs)
+{
+	vec3_t forward, right, up, temp;
+
+	vec_sub(mins, offset, mins);
+	vec_sub(maxs, offset, maxs);
+
+	vec_from_angles(angles, forward, right, up);
+
+	vec_copy(temp, mins);
+	mins[0] = vec_dot(temp, forward);
+	mins[1] = -vec_dot(temp, right);
+	mins[2] = vec_dot(temp, up);
+
+	vec_copy(temp, maxs);
+	maxs[0] = vec_dot(temp, forward);
+	maxs[1] = -vec_dot(temp, right);
+	maxs[2] = vec_dot(temp, up);
 }
 
 #endif

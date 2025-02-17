@@ -10,10 +10,18 @@
 
 typedef enum
 {
+	MAT_DEFAULT = 0,
+
+	MAX_MATERIALS = 64
+}material_e;
+
+typedef enum
+{
 	ENTID_FREE = -1,
 	ENTID_WORLDSPAWN,
 	ENTID_PLAYER,
 	ENTID_WALL,
+	ENTID_DOOR_ROT,
 	ENTID_START,
 
 	MAX_ENTMAP = 512

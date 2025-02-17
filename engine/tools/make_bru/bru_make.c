@@ -233,6 +233,8 @@ static int get_texture(const char* name)
 		return TEX_TRIGGER;
 	if (!_stricmp(name, "area"))
 		return TEX_AREA;
+	if (!_stricmp(name, "origin"))
+		return TEX_ORIGIN;
 
 	for (i = 0; i < gnum_textures; i++)
 	{
@@ -501,6 +503,9 @@ static void parse_brush(entity_s* mapent)
 				brush->mins[surf->type - SURF_TYPE_SX] = val;
 		}
 
+		if (t == TEX_ORIGIN)
+			brush->is_origin = TRUE;
+
 		if (t >= 0)
 		{
 			surf->texinfo = get_texinfo(t, UVaxis, scale, shift);
@@ -518,6 +523,7 @@ static void parse_brush(entity_s* mapent)
 
 static bool_t parse_ents()
 {
+	ebrush_s* brush;
 	entity_s* mapent;
 
 	if (!get_token(TRUE))
@@ -555,6 +561,19 @@ static bool_t parse_ents()
 			}
 		}
 	} while (1);
+
+	brush = mapent->ebrushes;
+	while (brush)
+	{
+		if (brush->is_origin)
+		{
+			mapent->has_offset = TRUE;
+			vec_set(mapent->offset, (brush->maxs[0] + brush->mins[0]) * 0.5, (brush->maxs[1] + brush->mins[1]) * 0.5, (brush->maxs[2] + brush->mins[2]) * 0.5);
+			break;
+		}
+
+		brush = brush->next;
+	}
 
 	return TRUE;
 }

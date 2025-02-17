@@ -27,7 +27,7 @@ static bool_t trace_brush(brush_s* b)
 {
 	int i, k, hit;
 	bool_t startout, getout;
-	float d1, d2, enterfrac, leavefrac, dist;
+	float d1, d2, enterfrac, leavefrac, frac;
 
 	enterfrac = -1;
 	leavefrac = 1;
@@ -53,25 +53,25 @@ static bool_t trace_brush(brush_s* b)
 			startout = TRUE;
 
 		if (d1 > 0 && (d2 >= TRACE_EPSILON || d2 >= d1))
-			break;
+			return FALSE;
 
 		if (d1 <= 0 && d2 <= 0)
 			continue;
 
 		if (d1 > d2)
 		{
-			dist = (d1 - TRACE_EPSILON) / (d1 - d2);
-			if (dist > enterfrac)
+			frac = (d1 - TRACE_EPSILON) / (d1 - d2);
+			if (frac > enterfrac)
 			{
 				hit = k;
-				enterfrac = dist;
+				enterfrac = frac;
 			}
 		}
 		else
 		{
-			dist = (d1 + TRACE_EPSILON) / (d1 - d2);
-			if (dist < leavefrac)
-				leavefrac = dist;
+			frac = (d1 + TRACE_EPSILON) / (d1 - d2);
+			if (frac < leavefrac)
+				leavefrac = frac;
 		}
 	}
 
@@ -111,15 +111,17 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 	entity_s* e;
 	edict_s* ed;
 	vec3_t offset;
+	entity_s* touch;
 	int i, j, brnum;
-	resource_s* res;
 	brushmodel_s* bm;
 	brush_s* b, bfake;
+	bool_t anyintersect;
 
 	if (!gentworld)
 		return;
 
 	brnum = -1;
+	touch = NULL;
 	gtrace.brtype = 0;
 	gtrace.brsign = FALSE;
 	gtrace.fraction = 1;
@@ -174,8 +176,11 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 			if (vec_aabb(b->mins, b->maxs, gtrace.bmin, gtrace.bmax))
 				continue;
 			
-			if (trace_brush(b))
-				brnum = a->brushareas[j];
+			if (!trace_brush(b))
+				continue;
+
+			touch = gentworld;
+			brnum = a->brushareas[j];
 		}
 	}
 
@@ -189,11 +194,23 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 		if (!(e->contents & contents) || e->model == BAD_HANDLE)
 			continue;
 
-		res = gres + e->model;
-		switch (res->type)
+		anyintersect = FALSE;
+		for (j = 0; j < ed->num_areas; j++)
+		{
+			if (gbru.areas[ed->areas[j]].framenum != gworld.framecount)
+				continue;
+
+			anyintersect = TRUE;
+			break;
+		}
+
+		if (!anyintersect)
+			continue;
+
+		switch (gres[e->model].type)
 		{
 		case RES_BRUSH:
-			bm = res->data.brush;
+			bm = gres[e->model].data.brush;
 			vec_sub(offset, e->origin, bm->origin);
 			for (j = 0; j < bm->num_brushes; j++)
 			{
@@ -203,8 +220,11 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 				if (vec_aabb(bfake.mins, bfake.maxs, gtrace.bmin, gtrace.bmax))
 					continue;
 
-				if (trace_brush(&bfake))
-					brnum = bm->start_brush + j;
+				if (!trace_brush(&bfake))
+					continue;
+
+				touch = e;
+				brnum = bm->start_brush + j;
 			}
 			break;
 		}
@@ -214,16 +234,10 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 	vec_lerp(tr->endpos, tr->fraction, start, end);
 	tr->endstuck = gtrace.endstuck;
 	tr->startstuck = gtrace.startstuck;
+	tr->ent = touch;
 
 	if (brnum != -1)
 	{
-		vec3_t dir;
-
-		vec_sub(dir, end, start);
-		vec_normalize_fast(dir);
-		vec_mul(dir, TRACE_EPSILON);
-		vec_sub(tr->endpos, tr->endpos, dir);
-
 		b = gbru.brushes + brnum;
 		for (i = 0; i < b->num_surfes; i++)
 		{

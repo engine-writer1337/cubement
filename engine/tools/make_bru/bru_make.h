@@ -19,6 +19,7 @@
 #define TEX_NULL	-1
 #define TEX_TRIGGER	-2
 #define TEX_AREA	-3
+#define TEX_ORIGIN	-4
 
 #define vec2_copy(dst, src)			(dst[0] = src[0], dst[1] = src[1])
 
@@ -66,6 +67,8 @@ typedef struct _esurf_s
 
 typedef struct _ebrush_s
 {
+	bool_t is_origin;
+
 	esurf_s* esurfes;
 	vec3_t mins, maxs;
 
@@ -76,6 +79,9 @@ typedef struct
 {
 	epair_s* epairs;
 	ebrush_s* ebrushes;
+
+	vec3_t offset;
+	bool_t has_offset;
 }entity_s;
 
 extern int gnum_entities;

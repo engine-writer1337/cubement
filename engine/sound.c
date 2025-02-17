@@ -586,7 +586,7 @@ static void snd_spatialize_origin(channel_s* ch)
 		dist = 1;
 
 	dot = vec_dot(gworld.v_right, source);
-	if (ch->distance < 0.01f)
+	if (ch->distance < CMP_EPSILON)
 	{
 		rscale = 1;
 		lscale = 1;

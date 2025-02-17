@@ -75,6 +75,7 @@ typedef struct
 
 	vec3_t mins;
 	vec3_t maxs;
+	vec3_t offset;
 	vec3_t origin;
 }brushmodel_s;
 

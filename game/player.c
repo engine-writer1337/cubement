@@ -151,8 +151,6 @@ void PM_ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 void PM_StepSlideMove(player_s* pev)
 {
 	int bumpcount;
-	vec3_t dir;
-	float d;
 	int numplanes;
 	vec3_t planes[5];
 	vec3_t primal_velocity;

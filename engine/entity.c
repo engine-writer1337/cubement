@@ -73,7 +73,10 @@ entity_s* ent_create(const char* classname)
 	}
 
 	if (i == gnuments)
+	{
 		gnuments++;
+		gengine.entities_max = gnuments;
+	}
 	else
 	{
 		if (gents[i])
@@ -82,11 +85,18 @@ entity_s* ent_create(const char* classname)
 
 	gents[i] = util_calloc(map->pev_size, sizeof(byte));
 	memzero(&gedicts[i], sizeof(gedicts[i]));
+	gedicts[i].oldmodel = BAD_HANDLE;
 	gedicts[i].e = gents[i];
+
 	gents[i]->id = map->id;
 	gents[i]->model = BAD_HANDLE;
 	gents[i]->renderamt = 255;
 	return gents[i];
+}
+
+static edict_s* ent_get_edict(entity_s* ent)
+{
+	return gedicts + ((ent - gents[0]) / sizeof(gents[0]));
 }
 
 void ent_remove(entity_s* ent)
@@ -104,24 +114,6 @@ void ent_remove(entity_s* ent)
 //=============================================================//
 // THINK
 //=============================================================//
-void ent_think()
-{
-	int i;
-	entity_s* e;
-	edict_s* ed;
-
-	for (i = 0; i < gnuments; i++)
-	{
-		ed = gedicts + i;
-		if (!ed->e)
-			continue;
-
-		e = ed->e;
-		if (e->nextthink < ghost.gametime)
-			gentmap[e->id].think(e);
-	}
-}
-
 static void ent_fill_areas(edict_s* ed)
 {
 	int i, j;
@@ -138,8 +130,7 @@ static void ent_fill_areas(edict_s* ed)
 		a = gbru.areas + i;
 		for (j = 0; j < a->num_boxes; j++)
 		{
-			if (absmin[0] > a->maxs[j][0] || absmin[1] > a->maxs[j][1] ||
-				absmax[0] < a->mins[j][0] || absmax[1] < a->mins[j][1])
+			if (vec2_aabb(absmin, absmax, a->mins[j], a->maxs[j]))
 				continue;
 
 			ed->areas[ed->num_areas++] = i;
@@ -152,13 +143,79 @@ static void ent_fill_areas(edict_s* ed)
 		ed->areas[ed->num_areas++] = 0;
 }
 
-static void ent_post_init()
+static void ent_update(edict_s* ed)
+{
+	int j;
+	bool_t relink;
+	brushmodel_s* bm;
+	entity_s* e = ed->e;
+
+	if (!e)
+		return;
+
+	relink = FALSE;
+	if (ed->oldmodel != e->model)
+	{
+		relink = TRUE;
+		ed->oldmodel = e->model;
+
+		if (e->model != BAD_HANDLE && gres[e->model].type == RES_BRUSH)
+		{
+			bm = gres[e->model].data.brush;
+			vec_copy(e->origin, bm->origin);
+			vec_sub(e->maxs, bm->maxs, e->origin);
+			vec_sub(e->mins, bm->mins, e->origin);
+		}
+	}
+
+	if (!vec_cmp(ed->oldorg, e->origin))
+	{
+		vec_copy(ed->oldorg, e->origin);
+		relink = TRUE;
+	}
+
+	if (!vec_cmp(ed->oldang, e->angles))
+	{
+		if (e->model != BAD_HANDLE && gres[e->model].type == RES_BRUSH)
+		{
+			for (j = 0; j < 3; j++)
+			{
+				e->angles[j] = anglemod(e->angles[j]);
+				if (e->angles[j] < 45 || e->angles[j] >= 315)
+					e->angles[j] = 0;
+				else if (e->angles[j] >= 45 || e->angles[j] < 135)
+					e->angles[j] = 90;
+				else if (e->angles[j] >= 135 || e->angles[j] < 225)
+					e->angles[j] = 180;
+				else if (e->angles[j] >= 225 || e->angles[j] < 315)
+					e->angles[j] = 270;
+			}
+
+			bm = gres[e->model].data.brush;
+			vec_rotate(e->angles, bm->offset, e->mins, e->maxs);
+		}
+
+		vec_copy(ed->oldang, e->angles);
+		relink = TRUE;
+	}
+
+	if (relink)
+	{
+		if (e->flags & FL_TEMP)
+		{
+			ed->num_areas = 1;
+			ed->areas[0] = 0;
+		}
+		else
+			ent_fill_areas(ed);
+	}
+}
+
+void ent_think()
 {
 	int i;
 	entity_s* e;
 	edict_s* ed;
-	resource_s* res;
-	brushmodel_s* bm;
 
 	for (i = 0; i < gnuments; i++)
 	{
@@ -167,22 +224,10 @@ static void ent_post_init()
 			continue;
 
 		e = ed->e;
-		if (e->model != BAD_HANDLE)
-		{
-			res = gres + e->model;
-			if (res->type == RES_BRUSH)
-			{
-				bm = res->data.brush;
-				vec_copy(e->origin, bm->origin);
-				vec_sub(e->maxs, bm->maxs, e->origin);
-				vec_sub(e->mins, bm->mins, e->origin);
-			}
+		if (e->nextthink < ghost.gametime)
+			gentmap[e->id].think(e);
 
-			if (e->flags & FL_TEMP)
-				ed->areas[ed->num_areas++] = 0;
-			else
-				ent_fill_areas(ed);
-		}		
+		ent_update(ed);
 	}
 }
 
@@ -305,13 +350,14 @@ bool_t ent_parse(const char* pfile)
 		map->precache(ent);
 		if (!map->spawn(ent))
 			ent_remove(ent);
+		else
+			ent_update(ent_get_edict(ent));
 	}
 
-	gengine.entities_max = gnuments;
 	map = gentmap + ENTID_PLAYER;
 	gentplayer->id = ENTID_PLAYER;
 	map->precache(gentplayer);
 	map->spawn(gentplayer);
-	ent_post_init();
+	ent_update(&gedicts[1]);
 	return TRUE;
 }

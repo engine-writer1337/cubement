@@ -121,6 +121,12 @@ static void emit_entities()
 			brush = e->ebrushes;
 			while (brush)
 			{
+				if (brush->is_origin)
+				{
+					brush = brush->next;
+					continue;
+				}
+
 				if (!istrig)
 				{
 					k = 0;
@@ -158,6 +164,13 @@ static void emit_entities()
 
 			mod->num_brushes = j;
 			mod->start_brush = gnum_brushes - j;
+			if (e->has_offset)
+			{
+				vec3_t origin;
+
+				vec_set(origin, (mod->maxs[0] + mod->mins[0]) * 0.5, (mod->maxs[1] + mod->mins[1]) * 0.5, (mod->maxs[2] + mod->mins[2]) * 0.5);
+				vec_sub(mod->ofs, e->offset, origin);
+			}
 
 			sprintf(line, "\"model\" \"*%i\"\n", gnum_models);
 			strcat(end, line); end += strlen(line);
@@ -198,7 +211,7 @@ static void emit_areas()
 
 	for (i = 1; i < gnum_areas; i++)
 	{
-		area = gareas + 1;
+		area = gareas + i;
 		area->start_brusharea = gnum_brushareas;
 		memset(alreadyadded, 0, sizeof(alreadyadded));
 		for (j = 0; j < area->num_boxes; j++)
@@ -225,6 +238,7 @@ static void emit_areas()
 		}
 
 		area->num_brushareas = gnum_brushareas - area->start_brusharea;
+		printf("Area %i, brushes: %i\n", i, area->num_brushareas);
 	}
 
 	area = gareas;

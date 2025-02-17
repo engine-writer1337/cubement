@@ -291,6 +291,7 @@ static void bru_load_models(const byte* data, const bru_lump_s* l)
 	{
 		vec_copy(out[i].mins, in[i].mins);
 		vec_copy(out[i].maxs, in[i].maxs);
+		vec_copy(out[i].offset, in[i].ofs);
 		vec_set(out[i].origin, (out[i].maxs[0] + out[i].mins[0]) * 0.5f, (out[i].maxs[1] + out[i].mins[1]) * 0.5f, (out[i].maxs[2] + out[i].mins[2]) * 0.5f);
 		out[i].num_brushes = in[i].num_brushes;
 		out[i].start_brush = in[i].start_brush;

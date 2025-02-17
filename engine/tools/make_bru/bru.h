@@ -86,6 +86,7 @@ typedef struct
 
 	short mins[3];
 	short maxs[3];
+	short ofs[3];
 }bru_model_s;
 
 typedef struct

@@ -147,7 +147,7 @@ static void sky_draw()
 	vid_rendermode(RENDER_NORMAL);
 	glColor4ub(255, 255, 255, 255);
 
-	rotate = (fabsf(gsky.ang[0]) > 0.01f) || (fabsf(gsky.ang[1]) > 0.01f) || (fabsf(gsky.ang[2]) > 0.01f);
+	rotate = !vec_is_zero(gsky.ang);
 	if (rotate)
 	{
 		glPushMatrix();
@@ -560,9 +560,9 @@ static void world_draw_ents(edict_s* ed)
 	surf_s* s;
 	brush_s* b;
 	entity_s* e;
-	resource_s* res;
 	brushmodel_s* bm;
-	vec3_t origin, offset, absmax, absmin;
+	bool_t move, rotate;
+	vec3_t offset, absmax, absmin;
 
 	while (ed)
 	{
@@ -570,16 +570,28 @@ static void world_draw_ents(edict_s* ed)
 		if (e->model == BAD_HANDLE)
 			continue;
 
-		res = gres + e->model;
-		switch (res->type)
+		switch (gres[e->model].type)
 		{
 		case RES_BRUSH:
-			bm = res->data.brush;
-			vec_copy(origin, bm->origin);
-			vec_sub(offset, e->origin, origin);
+			bm = gres[e->model].data.brush;
+			vec_sub(offset, bm->origin, e->origin);
 
-			glPushMatrix();//TODO: translate only when offset not 0
-			glTranslatef(offset[0], offset[1], offset[2]);
+			move = !vec_is_zero(offset);
+			rotate = !vec_is_zero(e->angles);
+			if (move || rotate)
+			{
+				glPushMatrix();
+				if (rotate)
+				{
+					glTranslatef(e->origin[0] + offset[0] + bm->offset[0], e->origin[1] + offset[1] + bm->offset[1], e->origin[2] + offset[2] + bm->offset[2]);
+					glRotatef(e->angles[YAW], 0, 0, 1);
+					glRotatef(e->angles[PITCH], 0, 1, 0);
+					glRotatef(e->angles[ROLL], 1, 0, 0);
+					glTranslatef(-(e->origin[0] + bm->offset[0]), -(e->origin[1] + bm->offset[1]), -(e->origin[2] + bm->offset[2]));
+				}
+				else
+					glTranslatef(offset[0], offset[1], offset[2]);
+			}
 
 			for (i = 0; i < bm->num_brushes; i++)
 			{
@@ -595,7 +607,7 @@ static void world_draw_ents(edict_s* ed)
 				{
 					s = b->surfes + m;
 					if ((s->sign || gworld.vieworg[s->itype] < b->maxs[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > b->mins[s->itype]))
-						continue;
+						continue;//TODO: not work?
 
 					world_shade_color(s, e);
 					img_bind(gbru.textures[s->texture].t);
@@ -603,7 +615,8 @@ static void world_draw_ents(edict_s* ed)
 				}
 			}
 
-			glPopMatrix();
+			if (move || rotate)
+				glPopMatrix();
 			break;
 		}
 
@@ -632,7 +645,7 @@ static void world_test_trace()
 	
 	//int i;
 	//for (i = 0; i < 10000; i++)
-	trace(gworld.vieworg, end, mins, maxs, NULL, CONTENTS_WORLD | CONTENTS_SOLID, &t);
+	trace(gworld.vieworg, end, zeros, zeros, NULL, CONTENTS_WORLD | CONTENTS_SOLID, &t);
 
 	vec_copy(gtrcolors, t.color);
 	strcpy(gtrtexturename, t.texturename);
@@ -642,7 +655,6 @@ static void world_test_trace()
 	//else
 	//	tr_bbox(grdr.origin, end, mins, maxs, &t, FALSE, SOLID_BSP);
 
-	glLineWidth(3);
 	vid_rendermode(RENDER_NORMAL);
 	glDisable(GL_TEXTURE_2D);
 	glBegin(GL_LINES);
@@ -662,7 +674,6 @@ static void world_test_trace()
 	glEnd();
 	glEnable(GL_TEXTURE_2D);
 	glColor4f(1, 1, 1, 1);
-	glLineWidth(1);
 }
 
 void world_draw()

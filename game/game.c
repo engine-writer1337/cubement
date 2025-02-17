@@ -12,6 +12,7 @@ static void engine_init()
 	REGISTER_ENTITY(player);
 	REGISTER_ENTITY(worldspawn);
 	REGISTER_ENTITY(info_player_start);
+	REGISTER_ENTITY(func_door_rotating);
 
 	glob.confont = cment->resource_get_handle("console.fnt");
 	glob.cat1 = cment->resource_precache("pics/1.jpg");

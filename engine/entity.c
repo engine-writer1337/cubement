@@ -178,6 +178,8 @@ static void ent_update(edict_s* ed)
 	{
 		if (e->model != BAD_HANDLE && gres[e->model].type == RES_BRUSH)
 		{
+			vec3_t offset;
+
 			for (j = 0; j < 3; j++)
 			{
 				e->angles[j] = anglemod(e->angles[j]);
@@ -192,7 +194,8 @@ static void ent_update(edict_s* ed)
 			}
 
 			bm = gres[e->model].data.brush;
-			vec_rotate(e->angles, bm->offset, e->mins, e->maxs);
+			vec_sub(offset, bm->origin, e->origin);
+			vec_rotate(e->angles, e->origin, bm->offset, e->mins, e->maxs);
 		}
 
 		vec_copy(ed->oldang, e->angles);

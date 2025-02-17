@@ -50,7 +50,8 @@ static void saverestore_func_door_rotating(entity_s* pev) {}
 
 static void think_func_door_rotating(entity_s* pev) 
 {
-
+	pev->origin[0] += cment->frametime;
+	pev->origin[1] += cment->frametime;
 }
 
 LINK_ENTITY(func_door_rotating, ENTID_DOOR_ROT, sizeof(entity_s))

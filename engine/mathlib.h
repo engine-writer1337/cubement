@@ -221,12 +221,12 @@ inline void vec_maxmin(const vec3_t start, const vec3_t end, const vec3_t mins, 
 	}
 }
 
-inline void vec_rotate(const vec3_t angles, const vec3_t offset, vec3_t mins, vec3_t maxs)
+inline void vec_rotate(const vec3_t angles, const vec3_t origin, const vec3_t offset, vec3_t mins, vec3_t maxs)
 {
 	vec3_t forward, right, up, temp;
 
-	vec_sub(mins, offset, mins);
-	vec_sub(maxs, offset, maxs);
+	vec_sub(mins, mins, offset);
+	vec_sub(maxs, maxs, offset);
 
 	vec_from_angles(angles, forward, right, up);
 
@@ -239,6 +239,12 @@ inline void vec_rotate(const vec3_t angles, const vec3_t offset, vec3_t mins, ve
 	maxs[0] = vec_dot(temp, forward);
 	maxs[1] = -vec_dot(temp, right);
 	maxs[2] = vec_dot(temp, up);
+
+	vec_add(mins, mins, origin);
+	vec_add(mins, mins, offset);
+
+	vec_add(maxs, maxs, origin);
+	vec_add(maxs, maxs, offset);
 }
 
 #endif

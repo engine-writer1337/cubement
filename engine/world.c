@@ -251,6 +251,92 @@ static void sky_draw()
 		glPopMatrix();
 }
 
+static void draw_bbox(const vec3_t mins, const vec3_t maxs)
+{
+	vec2_t st[4];
+	vec3_t verts[4];
+	static vec2_t texcoords[4] = { {0, 0}, {0, 1}, {1, 1}, {1, 0} };
+
+	img_bind(0);
+	vid_rendermode(RENDER_NORMAL);
+	glColor4ub(255, 255, 255, 255);
+
+	//==========================================================================//
+	vec2_copy(st[0], texcoords[2]);
+	vec2_copy(st[1], texcoords[1]);
+	vec2_copy(st[2], texcoords[0]);
+	vec2_copy(st[3], texcoords[3]);
+
+	vec_set(verts[0], maxs[0], maxs[1], mins[2]);
+	vec_set(verts[1], mins[0], maxs[1], mins[2]);
+	vec_set(verts[2], mins[0], maxs[1], maxs[2]);
+	vec_set(verts[3], maxs[0], maxs[1], maxs[2]);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, st);
+	glVertexPointer(3, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	//==========================================================================//
+	vec_set(verts[0], maxs[0], mins[1], mins[2]);
+	vec_set(verts[1], maxs[0], maxs[1], mins[2]);
+	vec_set(verts[2], maxs[0], maxs[1], maxs[2]);
+	vec_set(verts[3], maxs[0], mins[1], maxs[2]);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, st);
+	glVertexPointer(3, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	//==========================================================================//
+	vec2_copy(st[0], texcoords[0]);
+	vec2_copy(st[1], texcoords[3]);
+	vec2_copy(st[2], texcoords[2]);
+	vec2_copy(st[3], texcoords[1]);
+
+	vec_set(verts[0], maxs[0], mins[1], maxs[2]);
+	vec_set(verts[1], mins[0], mins[1], maxs[2]);
+	vec_set(verts[2], mins[0], mins[1], mins[2]);
+	vec_set(verts[3], maxs[0], mins[1], mins[2]);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, st);
+	glVertexPointer(3, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	//==========================================================================//
+	vec_set(verts[0], mins[0], mins[1], maxs[2]);
+	vec_set(verts[1], mins[0], maxs[1], maxs[2]);
+	vec_set(verts[2], mins[0], maxs[1], mins[2]);
+	vec_set(verts[3], mins[0], mins[1], mins[2]);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, st);
+	glVertexPointer(3, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	//==========================================================================//
+	vec2_copy(st[0], texcoords[1]);
+	vec2_copy(st[1], texcoords[0]);
+	vec2_copy(st[2], texcoords[3]);
+	vec2_copy(st[3], texcoords[2]);
+
+	vec_set(verts[0], maxs[0], maxs[1], maxs[2]);
+	vec_set(verts[1], mins[0], maxs[1], maxs[2]);
+	vec_set(verts[2], mins[0], mins[1], maxs[2]);
+	vec_set(verts[3], maxs[0], mins[1], maxs[2]);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, st);
+	glVertexPointer(3, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	//==========================================================================//
+	vec_set(verts[0], mins[0], maxs[1], mins[2]);
+	vec_set(verts[1], maxs[0], maxs[1], mins[2]);
+	vec_set(verts[2], maxs[0], mins[1], mins[2]);
+	vec_set(verts[3], mins[0], mins[1], mins[2]);
+
+	glTexCoordPointer(2, GL_FLOAT, 0, st);
+	glVertexPointer(3, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}
+
 void sky_rotate(const vec3_t ang)
 {
 	vec_copy(gsky.ang, ang);
@@ -404,8 +490,8 @@ static void world_area_visibles()
 
 		vec_add(absmax, e->origin, e->maxs);
 		vec_add(absmin, e->origin, e->mins);
-		if (frustum_clip(absmin, absmax))
-			continue;
+		//if (frustum_clip(absmin, absmax))
+		//	continue;//TODO:
 
 		switch (e->render)
 		{
@@ -583,11 +669,13 @@ static void world_draw_ents(edict_s* ed)
 				glPushMatrix();
 				if (rotate)
 				{
+					draw_bbox(e->mins, e->maxs);
+
 					glTranslatef(e->origin[0] + offset[0] + bm->offset[0], e->origin[1] + offset[1] + bm->offset[1], e->origin[2] + offset[2] + bm->offset[2]);
-					glRotatef(e->angles[YAW], 0, 0, 1);
-					glRotatef(e->angles[PITCH], 0, 1, 0);
 					glRotatef(e->angles[ROLL], 1, 0, 0);
-					glTranslatef(-(e->origin[0] + bm->offset[0]), -(e->origin[1] + bm->offset[1]), -(e->origin[2] + bm->offset[2]));
+					glRotatef(e->angles[PITCH], 0, 1, 0);
+					glRotatef(-e->angles[YAW], 0, 0, 1);
+					glTranslatef(-e->origin[0] - bm->offset[0], -e->origin[1] - bm->offset[1], -e->origin[2] - bm->offset[2]);
 				}
 				else
 					glTranslatef(offset[0], offset[1], offset[2]);
@@ -598,16 +686,16 @@ static void world_draw_ents(edict_s* ed)
 				b = bm->brushes + i;
 				vec_add(absmax, offset, b->maxs);
 				vec_add(absmin, offset, b->mins);
-				if (frustum_clip(absmin, absmax))
-					continue;
+				//if (frustum_clip(absmin, absmax))
+				//	continue;
 
 				glTexCoordPointer(2, GL_FLOAT, 0, gvertbuf.st);
 				glVertexPointer(3, GL_FLOAT, 0, gvertbuf.xyz);
 				for (m = 0; m < b->num_surfes; m++)
 				{
 					s = b->surfes + m;
-					if ((s->sign || gworld.vieworg[s->itype] < b->maxs[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > b->mins[s->itype]))
-						continue;//TODO: not work?
+					//if ((s->sign || gworld.vieworg[s->itype] < b->maxs[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > b->mins[s->itype]))
+					//	continue;//TODO: not work?
 
 					world_shade_color(s, e);
 					img_bind(gbru.textures[s->texture].t);

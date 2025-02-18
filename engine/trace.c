@@ -110,7 +110,7 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 	surf_s* s;
 	entity_s* e;
 	edict_s* ed;
-	vec3_t offset;
+	vec3_t movevec;
 	entity_s* touch;
 	int i, j, brnum;
 	brushmodel_s* bm;
@@ -211,12 +211,19 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 		{
 		case RES_BRUSH:
 			bm = gres[e->model].data.brush;
-			vec_sub(offset, e->origin, bm->origin);
+			vec_sub(movevec, e->origin, bm->origin);
 			for (j = 0; j < bm->num_brushes; j++)
 			{
 				b = bm->brushes + j;
-				vec_add(bfake.mins, offset, b->mins);
-				vec_add(bfake.maxs, offset, b->maxs);
+				//vec_copy(bfake.mins, b->mins);
+				//vec_copy(bfake.maxs, b->maxs);
+				//vec_add(bfake.mins, bfake.mins, movevec);
+				//vec_add(bfake.maxs, bfake.maxs, movevec);
+				//if (!vec_is_zero(e->angles))
+				//	vec_rotate_org_bbox(e->angles, e->origin, bm->offset, bfake.mins, bfake.maxs);
+
+				vec_add(bfake.mins, movevec, b->mins);
+				vec_add(bfake.maxs, movevec, b->maxs);
 				if (vec_aabb(bfake.mins, bfake.maxs, gtrace.bmin, gtrace.bmax))
 					continue;
 

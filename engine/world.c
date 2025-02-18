@@ -490,8 +490,8 @@ static void world_area_visibles()
 
 		vec_add(absmax, e->origin, e->maxs);
 		vec_add(absmin, e->origin, e->mins);
-		//if (frustum_clip(absmin, absmax))
-		//	continue;//TODO:
+		if (frustum_clip(absmin, absmax))
+			continue;//TODO: wrong rotate clip
 
 		switch (e->render)
 		{
@@ -648,7 +648,7 @@ static void world_draw_ents(edict_s* ed)
 	entity_s* e;
 	brushmodel_s* bm;
 	bool_t move, rotate;
-	vec3_t offset, absmax, absmin;
+	vec3_t movevec, absmax, absmin;
 
 	while (ed)
 	{
@@ -660,42 +660,45 @@ static void world_draw_ents(edict_s* ed)
 		{
 		case RES_BRUSH:
 			bm = gres[e->model].data.brush;
-			vec_sub(offset, bm->origin, e->origin);
+			vec_sub(movevec, e->origin, bm->origin);
 
-			move = !vec_is_zero(offset);
+			move = !vec_is_zero(movevec);
 			rotate = !vec_is_zero(e->angles);
 			if (move || rotate)
 			{
 				glPushMatrix();
 				if (rotate)
 				{
-					draw_bbox(e->mins, e->maxs);
-
-					glTranslatef(e->origin[0] + offset[0] + bm->offset[0], e->origin[1] + offset[1] + bm->offset[1], e->origin[2] + offset[2] + bm->offset[2]);
+					glTranslatef(e->origin[0] + bm->offset[0], e->origin[1] + bm->offset[1], e->origin[2] + bm->offset[2]);
 					glRotatef(e->angles[ROLL], 1, 0, 0);
-					glRotatef(e->angles[PITCH], 0, 1, 0);
+					glRotatef(-e->angles[PITCH], 0, 1, 0);
 					glRotatef(-e->angles[YAW], 0, 0, 1);
 					glTranslatef(-e->origin[0] - bm->offset[0], -e->origin[1] - bm->offset[1], -e->origin[2] - bm->offset[2]);
-				}
-				else
-					glTranslatef(offset[0], offset[1], offset[2]);
+				}	
+
+				glTranslatef(movevec[0], movevec[1], movevec[2]);
 			}
 
 			for (i = 0; i < bm->num_brushes; i++)
 			{
 				b = bm->brushes + i;
-				vec_add(absmax, offset, b->maxs);
-				vec_add(absmin, offset, b->mins);
-				//if (frustum_clip(absmin, absmax))
-				//	continue;
+				vec_copy(absmin, b->mins);
+				vec_copy(absmax, b->maxs);
+				vec_add(absmax, absmax, movevec);
+				vec_add(absmin, absmin, movevec);
+				if (rotate)
+					vec_rotate_org_bbox(e->angles, e->origin, bm->offset, absmin, absmax);
+
+				if (frustum_clip(absmin, absmax))
+					continue;//TODO: wrong rotate clip
 
 				glTexCoordPointer(2, GL_FLOAT, 0, gvertbuf.st);
 				glVertexPointer(3, GL_FLOAT, 0, gvertbuf.xyz);
 				for (m = 0; m < b->num_surfes; m++)
 				{
 					s = b->surfes + m;
-					//if ((s->sign || gworld.vieworg[s->itype] < b->maxs[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > b->mins[s->itype]))
-					//	continue;//TODO: not work?
+					if ((s->sign || gworld.vieworg[s->itype] < absmax[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > absmin[s->itype]))
+						continue;
 
 					world_shade_color(s, e);
 					img_bind(gbru.textures[s->texture].t);

@@ -96,19 +96,24 @@ entity_s* ent_create(const char* classname)
 
 static edict_s* ent_get_edict(entity_s* ent)
 {
-	return gedicts + ((ent - gents[0]) / sizeof(gents[0]));
+	int i;
+
+	for (i = 0; i < gnuments; i++)
+	{
+		if (gents[i] == ent)//TODO: think better solution
+			return gedicts + i;
+	}
+
+	return NULL;
 }
 
 void ent_remove(entity_s* ent)
 {
-	int ofs;
-
 	if (!ent || ent->id == ENTID_FREE || ent->id == ENTID_WORLDSPAWN || ent->id == ENTID_PLAYER)
 		return;
 
 	ent->id = ENTID_FREE;
-	ofs = (ent - gents[0]) / sizeof(gents[0]);
-	gedicts[ofs].e = NULL;
+	ent_get_edict(ent)->e = NULL;
 }
 
 //=============================================================//
@@ -163,8 +168,8 @@ static void ent_update(edict_s* ed)
 		{
 			bm = gres[e->model].data.brush;
 			vec_copy(e->origin, bm->origin);
-			vec_sub(e->maxs, bm->maxs, e->origin);
-			vec_sub(e->mins, bm->mins, e->origin);
+			vec_copy(e->maxs, bm->maxs);
+			vec_copy(e->mins, bm->mins);
 		}
 	}
 
@@ -178,8 +183,6 @@ static void ent_update(edict_s* ed)
 	{
 		if (e->model != BAD_HANDLE && gres[e->model].type == RES_BRUSH)
 		{
-			vec3_t offset;
-
 			for (j = 0; j < 3; j++)
 			{
 				e->angles[j] = anglemod(e->angles[j]);
@@ -194,8 +197,7 @@ static void ent_update(edict_s* ed)
 			}
 
 			bm = gres[e->model].data.brush;
-			vec_sub(offset, bm->origin, e->origin);
-			vec_rotate(e->angles, e->origin, bm->offset, e->mins, e->maxs);
+			vec_rotate_bbox(e->angles, bm->offset, e->mins, e->maxs);
 		}
 
 		vec_copy(ed->oldang, e->angles);

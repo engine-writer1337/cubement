@@ -5,9 +5,6 @@ host_s ghost;
 engine_s gengine;
 byte gbuffer[IMG_MAX_SIZE * 4];
 
-wave_s test1;
-wave_s test2;
-
 __declspec(dllexport) BOOL NvOptimusEnablement = TRUE;
 __declspec(dllexport) BOOL AmdPowerXpressRequestHighPerformance = TRUE;
 
@@ -110,6 +107,9 @@ static void engine_int()
 	gengine.resource_precache_ex = res_precache_ex;
 	gengine.resource_get_handle = res_find;
 
+	gengine.materials_file = mat_file;
+	gengine.materials_register = mat_register;
+
 	gengine.font_height = font_height;
 	gengine.font_len = font_len;
 	gengine.font_print = font_print;
@@ -126,9 +126,6 @@ static void engine_int()
 	gengine.trace = trace;
 }
 
-extern byte gtrcolors[3];
-extern char gtrtexturename[64];
-
 static void engine_fps()
 {
 	int w;
@@ -136,13 +133,6 @@ static void engine_fps()
 
 	w = font_len(gconfont, str);
 	font_print(gconfont, str, gvid.width - w, 0, RENDER_TRANSPARENT, 255, 255, 255, 255);
-
-	char str111[256];
-	sprintf(str111, "%s %hhu %hhu %hhu", gtrtexturename, gtrcolors[0], gtrcolors[1], gtrcolors[2]);
-	font_print(gconfont, str111, 0, 168, RENDER_TRANSPARENT, 255, 255, 255, 255);
-
-	sprintf(str111, "%.3f %.3f %.3f", gworld.v_forward[0], gworld.v_forward[1], gworld.v_forward[2]);
-	font_print(gconfont, str111, 0, 224, RENDER_TRANSPARENT, 255, 255, 255, 255);
 }
 
 EXPORTFUNC void cubement(engine_s** e, game_s* g)
@@ -171,11 +161,6 @@ EXPORTFUNC void cubement(engine_s** e, game_s* g)
 	img_init();
 	gconfont = res_precache("console.fnt");
 	ggame.engine_init();
-
-	snd_load("ui/latchunlocked2.wav", &test1);
-	snd_load("ui/lever4.ogg", &test2);
-
-	//snd_music("music/Half-Life10.ogg");
 
 	ghost.precache = PRE_NOT;
 	con_printf(COLOR_WHITE, "Game Load Time: %ims", (int)(1000 * (util_time() - newtime)));
@@ -234,10 +219,9 @@ EXPORTFUNC void cubement(engine_s** e, game_s* g)
 void host_shutdown()
 {
 	con_cfg_save();
+	ggame.engine_free();
 
 	snd_shutdown();
-	snd_free(&test1);
-	snd_free(&test2);
 
 	sky_free();
 	bru_free();

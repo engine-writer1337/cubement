@@ -121,6 +121,14 @@ typedef struct
 
 typedef struct
 {
+	const char* name;
+	material_e index;
+
+	hash_t hash;
+}matmap_s;
+
+typedef struct
+{
 	float fraction;
 	vec3_t endpos;
 	entity_s* ent;
@@ -129,10 +137,9 @@ typedef struct
 	vec3_t normal;
 
 	int hitbox;
+	material_e material;
 
 	byte color[3];
-	char texturename[33];
-
 	bool_t endstuck;
 	bool_t startstuck;
 }trace_s;
@@ -199,6 +206,12 @@ typedef struct
 	ihandle_t(*resource_precache)(const char* filename);
 	ihandle_t(*resource_precache_ex)(const char* filename, int flags);
 	ihandle_t(*resource_get_handle)(const char* filename);
+
+	//======================================================
+	// Materials
+	//======================================================
+	void (*materials_register)(const matmap_s* matmap, int num);
+	void (*materials_file)(const char* name);
 
 	//======================================================
 	// Font

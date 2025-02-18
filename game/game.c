@@ -1,10 +1,17 @@
 #include "game.h"
 #include <windows.h>
 
-#define WINDOW_NAME		"Cubement"
-
 global_s glob;
 engine_s* cment;
+
+#define WINDOW_NAME		"Cubement"
+
+static const matmap_s gmatmap[] =
+{
+	{ "$conc", MAT_DEFAULT },
+	{ "$dirt", MAT_DIRT },
+	{ "$metal", MAT_METAL },
+};
 
 static void engine_init()
 {
@@ -14,9 +21,16 @@ static void engine_init()
 	REGISTER_ENTITY(info_player_start);
 	REGISTER_ENTITY(func_door_rotating);
 
+	cment->materials_register(gmatmap, ARRAYSIZE(gmatmap));
+
 	glob.confont = cment->resource_get_handle("console.fnt");
-	glob.cat1 = cment->resource_precache("pics/1.jpg");
-	glob.cat2 = cment->resource_precache("pics/2.png");
+}
+
+static void cvar_init()
+{
+	plr_input_cvar();
+	plr_move_cvar();
+	plr_hud_cvar();
 }
 
 static void draw_2d()
@@ -70,30 +84,31 @@ void start_frame()
 	}
 }
 
+void engine_free() { }
+void game_start() { }
+void game_end() { }
+void draw_3d() { }
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	game_s g;
 
 	g.windowname = WINDOW_NAME;
-
 	g.cvar_init = cvar_init;
 	g.engine_init = engine_init;
-
-	g.game_precache = game_precache;
-
+	g.engine_free = engine_free;
 	g.start_frame = start_frame;
-
-	g.char_events = char_events;
-	g.key_events = key_events;
-
+	g.game_precache = game_precache;
+	g.game_start = game_start;
+	g.game_end = game_end;
+	g.draw_2d = draw_2d;
+	g.draw_3d = draw_3d;
 	g.window_active = window_active;
 	g.window_inactive = window_inactive;
-
-	g.draw_2d = draw_2d;
-	g.draw_3d = after_draw_3d;
-	g.draw_world = draw_world;
 	g.pause_world = pause_world;
-
+	g.draw_world = draw_world;
+	g.char_events = char_events;
+	g.key_events = key_events;
 	cubement(&cment, &g);
 	return 1;
 }

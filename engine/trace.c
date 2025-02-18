@@ -138,7 +138,7 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 	tr->dist = 0;
 	vec_init(tr->color, 0);
 	vec_init(tr->normal, 0);
-	strcpyn(tr->texturename, "NULL");
+	tr->material = MAT_DEFAULT;
 
 	gworld.framecount++;
 
@@ -148,7 +148,7 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 		for (j = 0; j < a->num_boxes; j++)
 		{
 			if (!vec2_aabb(a->mins[j], a->maxs[j], start, start))
-			{
+			{//TODO: mins maxs instead start
 				a->framenum = gworld.framecount;
 				break;
 			}
@@ -253,7 +253,7 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 				continue;
 
 			vec_copy(tr->color, s->color);
-			strcpyn(tr->texturename, gbru.textures[s->texture].name);
+			tr->material = gbru.textures[s->texture].material;
 			break;
 		}
 

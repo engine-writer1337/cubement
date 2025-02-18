@@ -20,6 +20,7 @@
     <ClInclude Include="image.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="keys.h" />
+    <ClInclude Include="materials.h" />
     <ClInclude Include="mathlib.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="shared.h" />
@@ -37,6 +38,7 @@
     <ClCompile Include="font.c" />
     <ClCompile Include="image.c" />
     <ClCompile Include="input.c" />
+    <ClCompile Include="materials.c" />
     <ClCompile Include="resource.c" />
     <ClCompile Include="sound.c" />
     <ClCompile Include="trace.c" />

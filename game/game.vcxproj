@@ -94,6 +94,9 @@
     <ClCompile Include="game.c" />
     <ClCompile Include="menu.c" />
     <ClCompile Include="player.c" />
+    <ClCompile Include="player_hud.c" />
+    <ClCompile Include="player_input.c" />
+    <ClCompile Include="player_move.c" />
     <ClCompile Include="world.c" />
   </ItemGroup>
   <ItemGroup>

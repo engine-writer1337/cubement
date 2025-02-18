@@ -261,7 +261,7 @@ char* util_fps()
 	}
 
 	framecount++;
-	strcat(_itoa(framerate, fps, 10), "fps");
+	sprintf(fps, "%.1ffps", framerate);
 	return fps;
 }
 

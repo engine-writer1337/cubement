@@ -12,7 +12,7 @@ typedef unsigned int	glbuf_t;
 typedef unsigned int	glpic_t;
 typedef float			vec4_t[4];
 typedef char			name_t[64];
-typedef char			constr_t[96];
+typedef char			constr_t[100];
 typedef char			string_t[1024];
 
 #include "util.h"
@@ -64,10 +64,8 @@ void host_shutdown();
 #include "trace.h"
 
 #include "resource.h"
+#include "materials.h"
 
 extern byte gbuffer[IMG_MAX_SIZE * 4];
-
-extern wave_s test1;
-extern wave_s test2;
 
 #endif

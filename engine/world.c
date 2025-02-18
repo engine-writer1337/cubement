@@ -715,58 +715,6 @@ static void world_draw_ents(edict_s* ed)
 	}
 }
 
-byte gtrcolors[3];
-char gtrtexturename[64];
-
-static void world_test_trace()
-{
-	trace_s t = { 0 };
-	vec3_t zeros = { 0, 0, 0 };
-	vec3_t end, mins = { -4, -4, -8 }, maxs = { 4, 4, 8 };
-
-	vec_ma(end, gworld.vieworg, 4096, gworld.v_forward);
-	/*if (gcon.test->value > 0)
-	{
-		int i, c = (int)gcon.test->value;
-		for (i = 0; i < c; i++)
-			trace(gworld.vieworg, end, mins, maxs, NULL, 0, &t);
-	}
-	else
-		trace(gworld.vieworg, end, mins, maxs, NULL, 0, &t);*/
-	
-	//int i;
-	//for (i = 0; i < 10000; i++)
-	trace(gworld.vieworg, end, zeros, zeros, NULL, CONTENTS_WORLD | CONTENTS_SOLID, &t);
-
-	vec_copy(gtrcolors, t.color);
-	strcpy(gtrtexturename, t.texturename);
-
-	//if (grdr.trace_test->value == 1)
-	//	tr_bbox(grdr.origin, end, NULL, NULL, &t, TRUE, SOLID_BSP);
-	//else
-	//	tr_bbox(grdr.origin, end, mins, maxs, &t, FALSE, SOLID_BSP);
-
-	vid_rendermode(RENDER_NORMAL);
-	glDisable(GL_TEXTURE_2D);
-	glBegin(GL_LINES);
-
-	glColor4f(1, 0, 0, 1);
-	glVertex3f(t.endpos[0] - 16, t.endpos[1], t.endpos[2]);
-	glVertex3f(t.endpos[0] + 16, t.endpos[1], t.endpos[2]);
-
-	glColor4f(0, 1, 0, 1);
-	glVertex3f(t.endpos[0], t.endpos[1] - 16, t.endpos[2]);
-	glVertex3f(t.endpos[0], t.endpos[1] + 16, t.endpos[2]);
-
-	glColor4f(0, 0, 1, 1);
-	glVertex3f(t.endpos[0], t.endpos[1], t.endpos[2] - 16);
-	glVertex3f(t.endpos[0], t.endpos[1], t.endpos[2] + 16);
-
-	glEnd();
-	glEnable(GL_TEXTURE_2D);
-	glColor4f(1, 1, 1, 1);
-}
-
 void world_draw()
 {
 	int i;
@@ -814,8 +762,6 @@ void world_draw()
 		vid_rendermode(RENDER_ALPHA);
 		world_draw_ents(gworld.alpha_chain);
 	}
-
-	world_test_trace();
 }
 
 //==========================================================================//
@@ -900,10 +846,7 @@ void world_load_map()
 
 	timer = util_time();
 	if (gworld.is_load)
-	{
-		bru_free();
-		gworld.is_load = FALSE;
-	}
+		world_end_map(NULL, NULL);
 
 	res_flush_temp();
 	ghost.gametime = 0;
@@ -922,8 +865,18 @@ void world_load_map()
 		return;
 	}
 
+	mat_update();
+	ggame.game_start();
 	gworld.is_load = TRUE;
 	ghost.newmap[0] = '\0';
 	ghost.precache = PRE_NOT;
 	con_printf(COLOR_WHITE, "Level Load Time: %ims", (int)(1000 * (util_time() - timer)));
+}
+
+void world_end_map(const char* arg1, const char* arg2)
+{
+	sky_free();
+	bru_free();
+	ggame.game_end();
+	gworld.is_load = FALSE;
 }

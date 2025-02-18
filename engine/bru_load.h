@@ -52,6 +52,7 @@ typedef struct
 	glpic_t t;
 	char name[32];
 	int width, height;
+	material_e material;
 
 	surf_s* chain;
 }btexture_s;

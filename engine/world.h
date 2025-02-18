@@ -73,6 +73,7 @@ void world_view_org(const vec3_t org);
 void world_setup3d();
 
 void world_map_cmd(const char* arg1, const char* arg2);
+void world_end_map(const char* arg1, const char* arg2);
 void world_load_map();
 
 #endif

@@ -11,6 +11,8 @@
 typedef enum
 {
 	MAT_DEFAULT = 0,
+	MAT_DIRT = 1,
+	MAT_METAL = 2,
 
 	MAX_MATERIALS = 64
 }material_e;

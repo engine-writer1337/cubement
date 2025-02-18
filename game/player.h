@@ -6,23 +6,31 @@
 #define IN_LEFT		(1 << 2)
 #define IN_RIGHT	(1 << 3)
 
-typedef struct
-{
-	int state;
-	int down[2];
-}kbutton_s;
+#define PLR_VIEW_OFS	24
+#define PLR_MAXSPEED	320
 
 typedef struct
 {
-	entity_s base; //should be always first
+	entity_s base;
 
 	int buttons;
-
 	vec3_t v_forward, v_right, v_up;
+
+	float maxspeed;
+	float spd_forward, spd_side;
+
+	float viewofs;
+	vec3_t vieworg;
 }player_s;
 
 extern player_s* gplayer;
 
-void cvar_init();
+void plr_inputs(player_s* pev);
+void plr_input_cvar();
+
+void plr_move(player_s* pev);
+void plr_move_cvar();
+
+void plr_hud_cvar();
 
 #endif 

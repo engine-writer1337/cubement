@@ -7,11 +7,9 @@ typedef struct
 {
 	ihandle_t confont;
 
-	ihandle_t cat1;
-	ihandle_t cat2;
-
 	cvar_s* sens;
 	cvar_s* noclip;
+	cvar_s* fov;
 
 	bool_t old_console;
 }global_s;

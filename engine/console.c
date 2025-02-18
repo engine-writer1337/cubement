@@ -36,7 +36,7 @@ static convar_s* con_create_cvar(const char* name, float initial, bool_t save)
 
 	if (!gcon.can_register)
 	{
-		con_printf(COLOR_RED, "%s - registration is not allowed", name);
+		con_printf(COLOR_RED, "%s - cvar registration is not allowed", name);
 		return NULL;
 	}
 
@@ -69,7 +69,7 @@ void con_create_cmd(const char* name, conact_t action)
 
 	if (!gcon.can_register)
 	{
-		con_printf(COLOR_RED, "%s - registration is not allowed", name);
+		con_printf(COLOR_RED, "%s - cvar registration is not allowed", name);
 		return;
 	}
 
@@ -497,11 +497,6 @@ static void con_modes(const char* arg1, const char* arg2)
 		con_printf(COLOR_WHITE, "%i = %i x %i", i, gvid.modes[i][0], gvid.modes[i][1]);
 }
 
-static void con_crash(const char* arg1, const char* arg2)
-{
-	*(int*)0 = 0xFFFFFFFF;
-}
-
 static void con_usage(const char* arg1, const char* arg2)
 {
 	util_musage();
@@ -518,7 +513,7 @@ static void con_clear(const char* arg1, const char* arg2)
 }
 
 void con_init()
-{//TODO: open command, endgame command
+{//TODO: open command
 	gcon.can_register = TRUE;
 	util_create_folder("misc");
 
@@ -528,11 +523,10 @@ void con_init()
 	con_create_cmd("unbindall", in_unding_all_cmd);
 	con_create_cmd("bindlist", in_bindlist_cmd);
 	con_create_cmd("scrshot", img_scrshot_cmd);
-
 	con_create_cmd("quit", con_quit);
 	con_create_cmd("list", con_list);
 	con_create_cmd("modes", con_modes);
-	con_create_cmd("crash", con_crash);
+	con_create_cmd("endgame", world_end_map);
 	con_create_cmd("usage", con_usage);
 	con_create_cmd("clear", con_clear);
 
@@ -553,14 +547,6 @@ void con_init()
 
 	gworld.lock = con_create_cvar("dbg_lock", FALSE, FALSE);
 	gworld.wireframe = con_create_cvar("dbg_wireframe", FALSE, FALSE);
-
-	//gworld.show_tree = con_create_cvar("dbg_tree", FALSE, FALSE);
-	//gworld.show_clip = con_create_cvar("dbg_clip", FALSE, FALSE);
-	//grdr.trace_test = con_create_cvar("dbg_trace", 0, FALSE);
-	//grdr.stat = con_create_cvar("dbg_stat", FALSE, FALSE);
-	//grdr.campos = con_create_cvar("dbg_campos", FALSE, FALSE);
-	//gsec.draw = con_create_cvar("dbg_sector", FALSE, FALSE);
-	//gplr.noclip = con_create_cvar("dbg_noclip", FALSE, FALSE);
 
 	ggame.cvar_init();
 	con_cfg_read();

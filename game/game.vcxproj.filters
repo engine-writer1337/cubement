@@ -29,6 +29,15 @@
     <ClCompile Include="entity.c">
       <Filter>Source Code</Filter>
     </ClCompile>
+    <ClCompile Include="player_input.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="player_move.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="player_hud.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.h">

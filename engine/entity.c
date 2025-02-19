@@ -100,7 +100,7 @@ static edict_s* ent_get_edict(entity_s* ent)
 
 	for (i = 0; i < gnuments; i++)
 	{
-		if (gents[i] == ent)//TODO: think better solution
+		if (gents[i] == ent)
 			return gedicts + i;
 	}
 
@@ -109,11 +109,15 @@ static edict_s* ent_get_edict(entity_s* ent)
 
 void ent_remove(entity_s* ent)
 {
+	edict_s* ed;
+
 	if (!ent || ent->id == ENTID_FREE || ent->id == ENTID_WORLDSPAWN || ent->id == ENTID_PLAYER)
 		return;
 
 	ent->id = ENTID_FREE;
-	ent_get_edict(ent)->e = NULL;
+	ed = ent_get_edict(ent);
+	if (ed)
+		ed->e = NULL;
 }
 
 //=============================================================//
@@ -123,19 +127,23 @@ static void ent_fill_areas(edict_s* ed)
 {
 	int i, j;
 	area_s* a;
+	entity_s* e;
 	vec3_t absmin, absmax;
 	bool_t anyintersect = FALSE;
 
+	e = ed->e;
 	ed->num_areas = 0;
-	vec_add(absmax, ed->e->origin, ed->e->maxs);
-	vec_add(absmin, ed->e->origin, ed->e->mins);
+	vec_add(absmax, e->origin, e->maxs);
+	vec_add(absmin, e->origin, e->mins);
+	vec_add_val(absmax, absmax, TRACE_EPSILON);
+	vec_add_val(absmin, absmin, -TRACE_EPSILON);
 
 	for (i = 1; i < gbru.num_areas; i++)
 	{
 		a = gbru.areas + i;
 		for (j = 0; j < a->num_boxes; j++)
 		{
-			if (vec2_aabb(absmin, absmax, a->mins[j], a->maxs[j]))
+			if (vec2_aabb(a->absmin[j], a->absmax[j], absmin, absmax))
 				continue;
 
 			ed->areas[ed->num_areas++] = i;

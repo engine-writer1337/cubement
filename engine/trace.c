@@ -38,13 +38,13 @@ static bool_t trace_brush(brush_s* b)
 		i = k >> 1;
 		if (k & 1)
 		{
-			d1 = gtrace.start[i] - b->maxs[i] - gtrace.maxs[i];
-			d2 = gtrace.end[i] - b->maxs[i] - gtrace.maxs[i];
+			d1 = gtrace.start[i] - b->absmax[i] - gtrace.maxs[i];
+			d2 = gtrace.end[i] - b->absmax[i] - gtrace.maxs[i];
 		}
 		else
 		{
-			d1 = -(gtrace.start[i] - b->mins[i] - gtrace.mins[i]);
-			d2 = -(gtrace.end[i] - b->mins[i] - gtrace.mins[i]);
+			d1 = -(gtrace.start[i] - b->absmin[i] - gtrace.mins[i]);
+			d2 = -(gtrace.end[i] - b->absmin[i] - gtrace.mins[i]);
 		}
 
 		if (d2 > 0)
@@ -110,12 +110,12 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 	surf_s* s;
 	entity_s* e;
 	edict_s* ed;
-	vec3_t movevec;
 	entity_s* touch;
 	int i, j, brnum;
 	brushmodel_s* bm;
 	brush_s* b, bfake;
-	bool_t anyintersect;
+	bool_t anyintersect, rotate;
+	vec3_t movevec, absmin, absmax;
 
 	if (!gentworld)
 		return;
@@ -133,6 +133,8 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 	vec_copy(gtrace.maxs, maxs);
 	vec_add_val(gtrace.epsmin, mins, -TRACE_EPSILON);
 	vec_add_val(gtrace.epsmax, maxs, TRACE_EPSILON);
+	vec_add(absmin, start, gtrace.epsmin);
+	vec_add(absmax, start, gtrace.epsmax);
 	vec_maxmin(start, end, gtrace.epsmin, gtrace.epsmax, gtrace.bmin, gtrace.bmax);
 
 	tr->dist = 0;
@@ -147,13 +149,13 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 		a = gbru.areas + i;
 		for (j = 0; j < a->num_boxes; j++)
 		{
-			if (!vec2_aabb(a->mins[j], a->maxs[j], start, start))
-			{//TODO: mins maxs instead start
+			if (!vec2_aabb(a->absmin[j], a->absmax[j], absmin, absmax))
+			{
 				a->framenum = gworld.framecount;
 				break;
 			}
 
-			if (!a->activecount || vec2_aabb(a->mins[j], a->maxs[j], gtrace.bmin, gtrace.bmax))
+			if (!a->activecount || vec2_aabb(a->absmin[j], a->absmax[j], gtrace.bmin, gtrace.bmax))
 				continue;
 
 			a->framenum = gworld.framecount;
@@ -173,7 +175,7 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 				continue;
 
 			b->framenum = gworld.framecount;
-			if (vec_aabb(b->mins, b->maxs, gtrace.bmin, gtrace.bmax))
+			if (vec_aabb(b->absmin, b->absmax, gtrace.bmin, gtrace.bmax))
 				continue;
 			
 			if (!trace_brush(b))
@@ -211,20 +213,19 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 		{
 		case RES_BRUSH:
 			bm = gres[e->model].data.brush;
+			rotate = !vec_is_zero(e->angles);
 			vec_sub(movevec, e->origin, bm->origin);
+
 			for (j = 0; j < bm->num_brushes; j++)
 			{
 				b = bm->brushes + j;
-				//vec_copy(bfake.mins, b->mins);
-				//vec_copy(bfake.maxs, b->maxs);
-				//vec_add(bfake.mins, bfake.mins, movevec);
-				//vec_add(bfake.maxs, bfake.maxs, movevec);
-				//if (!vec_is_zero(e->angles))
-				//	vec_rotate_org_bbox(e->angles, e->origin, bm->offset, bfake.mins, bfake.maxs);
+				vec_add(bfake.absmin, movevec, b->absmin);
+				vec_add(bfake.absmax, movevec, b->absmax);
 
-				vec_add(bfake.mins, movevec, b->mins);
-				vec_add(bfake.maxs, movevec, b->maxs);
-				if (vec_aabb(bfake.mins, bfake.maxs, gtrace.bmin, gtrace.bmax))
+				if (rotate)
+					vec_rotate_org_bbox(e->angles, e->origin, bm->offset, bfake.absmin, bfake.absmax);
+
+				if (vec_aabb(bfake.absmin, bfake.absmax, gtrace.bmin, gtrace.bmax))
 					continue;
 
 				if (!trace_brush(&bfake))
@@ -259,12 +260,12 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 
 		if (gtrace.brsign)
 		{
-			tr->dist = b->mins[gtrace.brtype];
+			tr->dist = b->absmin[gtrace.brtype];
 			tr->normal[gtrace.brtype] = -1;
 		}
 		else
 		{
-			tr->dist = b->maxs[gtrace.brtype];
+			tr->dist = b->absmax[gtrace.brtype];
 			tr->normal[gtrace.brtype] = 1;
 		}
 	}

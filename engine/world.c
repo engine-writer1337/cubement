@@ -81,55 +81,6 @@ static bool_t frustum_clip(const vec3_t mins, const vec3_t maxs)
 	return FALSE;
 }
 
-static bool_t frustum_clip2d(const vec2_t mins, const vec2_t maxs)
-{
-	int i;
-	plane_s* p;
-
-	for (i = 0; i < FRUSTUM_NUM; i++)
-	{
-		p = gfrustum + i;
-		switch (p->signbits)
-		{
-		case 0:
-			if (p->normal[0] * maxs[0] + p->normal[1] * maxs[1] + p->normal[2] * MAX_MAP_RANGE < p->dist)
-				return TRUE;
-			break;
-		case 1:
-			if (p->normal[0] * mins[0] + p->normal[1] * maxs[1] + p->normal[2] * MAX_MAP_RANGE < p->dist)
-				return TRUE;
-			break;
-		case 2:
-			if (p->normal[0] * maxs[0] + p->normal[1] * mins[1] + p->normal[2] * MAX_MAP_RANGE < p->dist)
-				return TRUE;
-			break;
-		case 3:
-			if (p->normal[0] * mins[0] + p->normal[1] * mins[1] + p->normal[2] * MAX_MAP_RANGE < p->dist)
-				return TRUE;
-			break;
-		case 4:
-			if (p->normal[0] * maxs[0] + p->normal[1] * maxs[1] - p->normal[2] * MAX_MAP_RANGE < p->dist)
-				return TRUE;
-			break;
-		case 5:
-			if (p->normal[0] * mins[0] + p->normal[1] * maxs[1] - p->normal[2] * MAX_MAP_RANGE < p->dist)
-				return TRUE;
-			break;
-		case 6:
-			if (p->normal[0] * maxs[0] + p->normal[1] * mins[1] - p->normal[2] * MAX_MAP_RANGE < p->dist)
-				return TRUE;
-			break;
-		case 7:
-			if (p->normal[0] * mins[0] + p->normal[1] * mins[1] - p->normal[2] * MAX_MAP_RANGE < p->dist)
-				return TRUE;
-			break;
-		default:
-			return FALSE;
-		}
-	}
-	return FALSE;
-}
-
 //==========================================================================//
 // SKYBOX
 //==========================================================================//
@@ -251,92 +202,6 @@ static void sky_draw()
 		glPopMatrix();
 }
 
-static void draw_bbox(const vec3_t mins, const vec3_t maxs)
-{
-	vec2_t st[4];
-	vec3_t verts[4];
-	static vec2_t texcoords[4] = { {0, 0}, {0, 1}, {1, 1}, {1, 0} };
-
-	img_bind(0);
-	vid_rendermode(RENDER_NORMAL);
-	glColor4ub(255, 255, 255, 255);
-
-	//==========================================================================//
-	vec2_copy(st[0], texcoords[2]);
-	vec2_copy(st[1], texcoords[1]);
-	vec2_copy(st[2], texcoords[0]);
-	vec2_copy(st[3], texcoords[3]);
-
-	vec_set(verts[0], maxs[0], maxs[1], mins[2]);
-	vec_set(verts[1], mins[0], maxs[1], mins[2]);
-	vec_set(verts[2], mins[0], maxs[1], maxs[2]);
-	vec_set(verts[3], maxs[0], maxs[1], maxs[2]);
-
-	glTexCoordPointer(2, GL_FLOAT, 0, st);
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	//==========================================================================//
-	vec_set(verts[0], maxs[0], mins[1], mins[2]);
-	vec_set(verts[1], maxs[0], maxs[1], mins[2]);
-	vec_set(verts[2], maxs[0], maxs[1], maxs[2]);
-	vec_set(verts[3], maxs[0], mins[1], maxs[2]);
-
-	glTexCoordPointer(2, GL_FLOAT, 0, st);
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	//==========================================================================//
-	vec2_copy(st[0], texcoords[0]);
-	vec2_copy(st[1], texcoords[3]);
-	vec2_copy(st[2], texcoords[2]);
-	vec2_copy(st[3], texcoords[1]);
-
-	vec_set(verts[0], maxs[0], mins[1], maxs[2]);
-	vec_set(verts[1], mins[0], mins[1], maxs[2]);
-	vec_set(verts[2], mins[0], mins[1], mins[2]);
-	vec_set(verts[3], maxs[0], mins[1], mins[2]);
-
-	glTexCoordPointer(2, GL_FLOAT, 0, st);
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	//==========================================================================//
-	vec_set(verts[0], mins[0], mins[1], maxs[2]);
-	vec_set(verts[1], mins[0], maxs[1], maxs[2]);
-	vec_set(verts[2], mins[0], maxs[1], mins[2]);
-	vec_set(verts[3], mins[0], mins[1], mins[2]);
-
-	glTexCoordPointer(2, GL_FLOAT, 0, st);
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	//==========================================================================//
-	vec2_copy(st[0], texcoords[1]);
-	vec2_copy(st[1], texcoords[0]);
-	vec2_copy(st[2], texcoords[3]);
-	vec2_copy(st[3], texcoords[2]);
-
-	vec_set(verts[0], maxs[0], maxs[1], maxs[2]);
-	vec_set(verts[1], mins[0], maxs[1], maxs[2]);
-	vec_set(verts[2], mins[0], mins[1], maxs[2]);
-	vec_set(verts[3], maxs[0], mins[1], maxs[2]);
-
-	glTexCoordPointer(2, GL_FLOAT, 0, st);
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-	//==========================================================================//
-	vec_set(verts[0], mins[0], maxs[1], mins[2]);
-	vec_set(verts[1], maxs[0], maxs[1], mins[2]);
-	vec_set(verts[2], maxs[0], mins[1], mins[2]);
-	vec_set(verts[3], mins[0], mins[1], mins[2]);
-
-	glTexCoordPointer(2, GL_FLOAT, 0, st);
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-}
-
 void sky_rotate(const vec3_t ang)
 {
 	vec_copy(gsky.ang, ang);
@@ -410,7 +275,7 @@ static void world_area_visibles()
 		a = gbru.areas + i;
 		for (j = 0; j < a->num_boxes; j++)
 		{
-			if (vec2_aabb(gworld.vieworg, gworld.vieworg, a->mins[j], a->maxs[j]))
+			if (vec2_aabb(gworld.vieworg, gworld.vieworg, a->absmin[j], a->absmax[j]))
 				continue;
 
 			a->framenum = gworld.framecount;
@@ -434,7 +299,7 @@ static void world_area_visibles()
 		anyintersect = FALSE;
 		for (j = 0; j < a->num_boxes; j++)
 		{
-			if (frustum_clip2d(a->mins[j], a->maxs[j]))
+			if (frustum_clip(a->absmin[j], a->absmax[j]))
 				continue;
 
 			anyintersect = TRUE;
@@ -445,13 +310,13 @@ static void world_area_visibles()
 					continue;
 
 				b->framenum = gworld.framecount;
-				if (frustum_clip(b->mins, b->maxs))
+				if (frustum_clip(b->absmin, b->absmax))
 					continue;
 
 				for (m = 0; m < b->num_surfes; m++)
 				{
 					s = b->surfes + m;
-					if ((s->sign || gworld.vieworg[s->itype] < b->maxs[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > b->mins[s->itype]))
+					if ((s->sign || gworld.vieworg[s->itype] < b->absmax[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > b->absmin[s->itype]))
 						continue;
 
 					s->next = gbru.textures[s->texture].chain;
@@ -491,7 +356,7 @@ static void world_area_visibles()
 		vec_add(absmax, e->origin, e->maxs);
 		vec_add(absmin, e->origin, e->mins);
 		if (frustum_clip(absmin, absmax))
-			continue;//TODO: wrong rotate clip
+			continue;
 
 		switch (e->render)
 		{
@@ -670,44 +535,61 @@ static void world_draw_ents(edict_s* ed)
 				if (rotate)
 				{
 					glTranslatef(e->origin[0] + bm->offset[0], e->origin[1] + bm->offset[1], e->origin[2] + bm->offset[2]);
-					glRotatef(e->angles[ROLL], 1, 0, 0);
+					glRotatef(-e->angles[ROLL], 1, 0, 0);
 					glRotatef(-e->angles[PITCH], 0, 1, 0);
 					glRotatef(-e->angles[YAW], 0, 0, 1);
 					glTranslatef(-e->origin[0] - bm->offset[0], -e->origin[1] - bm->offset[1], -e->origin[2] - bm->offset[2]);
+					glEnable(GL_CULL_FACE);
 				}	
 
 				glTranslatef(movevec[0], movevec[1], movevec[2]);
 			}
 
-			for (i = 0; i < bm->num_brushes; i++)
+			glTexCoordPointer(2, GL_FLOAT, 0, gvertbuf.st);
+			glVertexPointer(3, GL_FLOAT, 0, gvertbuf.xyz);
+			if (rotate)
 			{
-				b = bm->brushes + i;
-				vec_copy(absmin, b->mins);
-				vec_copy(absmax, b->maxs);
-				vec_add(absmax, absmax, movevec);
-				vec_add(absmin, absmin, movevec);
-				if (rotate)
-					vec_rotate_org_bbox(e->angles, e->origin, bm->offset, absmin, absmax);
-
-				if (frustum_clip(absmin, absmax))
-					continue;//TODO: wrong rotate clip
-
-				glTexCoordPointer(2, GL_FLOAT, 0, gvertbuf.st);
-				glVertexPointer(3, GL_FLOAT, 0, gvertbuf.xyz);
-				for (m = 0; m < b->num_surfes; m++)
+				for (i = 0; i < bm->num_brushes; i++)
 				{
-					s = b->surfes + m;
-					if ((s->sign || gworld.vieworg[s->itype] < absmax[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > absmin[s->itype]))
+					b = bm->brushes + i;
+					for (m = 0; m < b->num_surfes; m++)
+					{
+						s = b->surfes + m;
+						world_shade_color(s, e);
+						img_bind(gbru.textures[s->texture].t);
+						glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+					}
+				}
+			}
+			else
+			{
+				for (i = 0; i < bm->num_brushes; i++)
+				{
+					b = bm->brushes + i;
+					vec_add(absmax, movevec, b->absmax);
+					vec_add(absmin, movevec, b->absmin);
+					if (frustum_clip(absmin, absmax))
 						continue;
 
-					world_shade_color(s, e);
-					img_bind(gbru.textures[s->texture].t);
-					glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+					for (m = 0; m < b->num_surfes; m++)
+					{
+						s = b->surfes + m;
+						if ((s->sign || gworld.vieworg[s->itype] < absmax[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > absmin[s->itype]))
+							continue;
+
+						world_shade_color(s, e);
+						img_bind(gbru.textures[s->texture].t);
+						glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+					}
 				}
 			}
 
 			if (move || rotate)
+			{
 				glPopMatrix();
+				if (rotate)
+					glDisable(GL_CULL_FACE);
+			}
 			break;
 		}
 

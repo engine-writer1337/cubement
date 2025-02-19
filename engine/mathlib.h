@@ -204,66 +204,85 @@ inline void vec_from_str(vec3_t out, const char* str)
 
 inline void vec_maxmin(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, vec3_t absmin, vec3_t absmax)
 {
-	int i;
-
-	for (i = 0; i < 3; i++)
+	if (start[0] > end[0])
 	{
-		if (start[i] > end[i])
-		{
-			absmax[i] = start[i] + maxs[i];
-			absmin[i] = end[i] + mins[i];
-		}
-		else
-		{
-			absmin[i] = start[i] + mins[i];
-			absmax[i] = end[i] + maxs[i];
-		}
+		absmax[0] = start[0] + maxs[0];
+		absmin[0] = end[0] + mins[0];
+	}
+	else
+	{
+		absmin[0] = start[0] + mins[0];
+		absmax[0] = end[0] + maxs[0];
+	}
+
+	if (start[1] > end[1])
+	{
+		absmax[1] = start[1] + maxs[1];
+		absmin[1] = end[1] + mins[1];
+	}
+	else
+	{
+		absmin[1] = start[1] + mins[1];
+		absmax[1] = end[1] + maxs[1];
+	}
+
+	if (start[2] > end[2])
+	{
+		absmax[2] = start[2] + maxs[2];
+		absmin[2] = end[2] + mins[2];
+	}
+	else
+	{
+		absmin[2] = start[2] + mins[2];
+		absmax[2] = end[2] + maxs[2];
 	}
 }
 
-inline void vec_rotate_points(const vec3_t angles, vec3_t mins, vec3_t maxs)
+inline void vec_rotate_points(const vec3_t angles, vec3_t pt1, vec3_t pt2)
 {
 	vec3_t forward, right, up, temp;
 
 	vec_from_angles(angles, forward, right, up);
 
-	vec_copy(temp, mins);
-	mins[0] = vec_dot(temp, forward);
-	mins[1] = -vec_dot(temp, right);
-	mins[2] = vec_dot(temp, up);
+	vec_copy(temp, pt1);
+	pt1[0] = vec_dot(temp, forward);
+	pt1[1] = -vec_dot(temp, right);
+	pt1[2] = vec_dot(temp, up);
 
-	vec_copy(temp, maxs);
-	maxs[0] = vec_dot(temp, forward);
-	maxs[1] = -vec_dot(temp, right);
-	maxs[2] = vec_dot(temp, up);
+	vec_copy(temp, pt2);
+	pt2[0] = vec_dot(temp, forward);
+	pt2[1] = -vec_dot(temp, right);
+	pt2[2] = vec_dot(temp, up);
 }
 
 inline void vec_rotate_bbox(const vec3_t angles, const vec3_t offset, vec3_t mins, vec3_t maxs)
 {
-	vec_sub(mins, mins, offset);
-	vec_sub(maxs, maxs, offset);
+	vec3_t pt1, pt2, zeros;
 
-	vec_rotate_points(angles, mins, maxs);
+	vec_copy(pt1, mins);
+	vec_copy(pt2, maxs);
+	vec_init(zeros, 0);
 
-	vec_add(mins, mins, offset);
-	vec_add(maxs, maxs, offset);
+	vec_sub(pt1, pt1, offset);
+	vec_sub(pt2, pt2, offset);
+
+	vec_rotate_points(angles, pt1, pt2);
+
+	vec_add(pt1, pt1, offset);
+	vec_add(pt2, pt2, offset);
+
+	vec_maxmin(pt1, pt2, zeros, zeros, mins, maxs);
 }
 
-inline void vec_rotate_org_bbox(const vec3_t angles, const vec3_t origin, const vec3_t offset, vec3_t mins, vec3_t maxs)
+inline void vec_rotate_org_bbox(const vec3_t angles, const vec3_t origin, const vec3_t offset, vec3_t absmin, vec3_t absmax)
 {
-	vec_sub(mins, mins, origin);
-	vec_sub(maxs, maxs, origin);
+	vec_sub(absmin, absmin, origin);
+	vec_sub(absmax, absmax, origin);
 
-	vec_sub(mins, mins, offset);
-	vec_sub(maxs, maxs, offset);
+	vec_rotate_bbox(angles, offset, absmin, absmax);
 
-	vec_rotate_points(angles, mins, maxs);
-
-	vec_add(mins, mins, offset);
-	vec_add(maxs, maxs, offset);
-
-	vec_add(mins, mins, origin);
-	vec_add(maxs, maxs, origin);
+	vec_add(absmin, absmin, origin);
+	vec_add(absmax, absmax, origin);
 }
 
 #endif

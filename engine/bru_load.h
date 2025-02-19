@@ -29,8 +29,8 @@ typedef struct
 	int activecount;
 
 	int num_boxes;
-	vec2_t* mins;
-	vec2_t* maxs;
+	vec3_t* absmin;
+	vec3_t* absmax;
 
 	int num_brushareas;
 	word* brushareas;
@@ -64,8 +64,8 @@ typedef struct
 	int num_surfes;
 	surf_s* surfes;
 
-	vec3_t mins;
-	vec3_t maxs;
+	vec3_t absmin;
+	vec3_t absmax;
 }brush_s;
 
 typedef struct
@@ -76,6 +76,10 @@ typedef struct
 
 	vec3_t mins;
 	vec3_t maxs;
+
+	vec3_t absmin;
+	vec3_t absmax;
+
 	vec3_t offset;
 	vec3_t origin;
 }brushmodel_s;
@@ -101,8 +105,8 @@ typedef struct
 
 	word* brushareas;
 
-	vec2_t* box_maxs;
-	vec2_t* box_mins;
+	vec3_t* box_absmax;
+	vec3_t* box_absmin;
 }bru_s;
 
 extern bru_s gbru;

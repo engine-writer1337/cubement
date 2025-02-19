@@ -45,13 +45,13 @@ static void bru_load_areaboxes(const byte* data, const bru_lump_s* l)
 
 	in = (bru_areabox_s*)(data + l->ofs);
 	numboxes = l->len / sizeof(*in);
-	gbru.box_mins = util_malloc(numboxes * sizeof(vec2_t));
-	gbru.box_maxs = util_malloc(numboxes * sizeof(vec2_t));
+	gbru.box_absmin = util_malloc(numboxes * sizeof(vec3_t));
+	gbru.box_absmax = util_malloc(numboxes * sizeof(vec3_t));
 
 	for (i = 0; i < numboxes; i++)
 	{
-		vec2_copy(gbru.box_mins[i], in[i].mins);
-		vec2_copy(gbru.box_maxs[i], in[i].maxs);
+		vec_set(gbru.box_absmin[i], in[i].mins[0], in[i].mins[1], gbru.models[0].absmin[2]);
+		vec_set(gbru.box_absmax[i], in[i].maxs[0], in[i].maxs[1], gbru.models[0].absmax[2]);
 	}
 }
 
@@ -261,13 +261,13 @@ static void bru_load_brushes(const byte* data, const bru_lump_s* l)
 
 	for (i = 0; i < gbru.num_brushes; i++)
 	{
-		vec_copy(out[i].mins, in[i].mins);
-		vec_copy(out[i].maxs, in[i].maxs);
+		vec_copy(out[i].absmin, in[i].mins);
+		vec_copy(out[i].absmax, in[i].maxs);
 		out[i].num_surfes = in[i].num_surfaces;
 		out[i].surfes = gbru.surfes + in[i].start_surface;
 
 		for (j = 0; j < out[i].num_surfes; j++)
-			bru_create_face(in[i].start_surface + j, out[i].surfes + j, out[i].mins, out[i].maxs);
+			bru_create_face(in[i].start_surface + j, out[i].surfes + j, out[i].absmin, out[i].absmax);
 	}
 }
 
@@ -290,8 +290,13 @@ static void bru_load_models(const byte* data, const bru_lump_s* l)
 	for (i = 0; i < gbru.num_models; i++)
 	{
 		vec_set(out[i].origin, (in[i].maxs[0] + in[i].mins[0]) * 0.5f, (in[i].maxs[1] + in[i].mins[1]) * 0.5f, (in[i].maxs[2] + in[i].mins[2]) * 0.5f);
+
+		vec_copy(out[i].absmin, in[i].mins);
+		vec_copy(out[i].absmax, in[i].maxs);
+
 		vec_sub(out[i].mins, in[i].mins, out[i].origin);
 		vec_sub(out[i].maxs, in[i].maxs, out[i].origin);
+
 		vec_copy(out[i].offset, in[i].ofs);
 		out[i].num_brushes = in[i].num_brushes;
 		out[i].start_brush = in[i].start_brush;
@@ -321,8 +326,8 @@ static void bru_load_areas(const byte* data, const bru_lump_s* l)
 		out[i].num_boxes = in[i].num_boxes;
 		out[i].num_brushareas = in[i].num_brushareas;
 		out[i].brushareas = gbru.brushareas + in[i].start_brusharea;
-		out[i].mins = gbru.box_mins + in[i].start_box;
-		out[i].maxs = gbru.box_maxs + in[i].start_box;
+		out[i].absmin = gbru.box_absmin + in[i].start_box;
+		out[i].absmax = gbru.box_absmax + in[i].start_box;
 		out[i].activecount = 0;
 	}
 }
@@ -360,11 +365,11 @@ bool_t bru_load(const char* name)
 
 	bru_load_textures(data, &header->lumps[BRU_LUMP_TEXTURES]);
 	bru_load_texinfos(data, &header->lumps[BRU_LUMP_TEXINFOS]);
-	bru_load_brushareas(data, &header->lumps[BRU_LUMP_BRUSHAREAS]);
-	bru_load_areaboxes(data, &header->lumps[BRU_LUMP_AREABOXES]);
 	bru_load_faces(data, &header->lumps[BRU_LUMP_SURFACES]);
 	bru_load_brushes(data, &header->lumps[BRU_LUMP_BRUSHES]);
 	bru_load_models(data, &header->lumps[BRU_LUMP_MODELS]);
+	bru_load_brushareas(data, &header->lumps[BRU_LUMP_BRUSHAREAS]);
+	bru_load_areaboxes(data, &header->lumps[BRU_LUMP_AREABOXES]);
 	bru_load_areas(data, &header->lumps[BRU_LUMP_AREAS]);
 	bru_load_ent(data, &header->lumps[BRU_LUMP_ENTITIES]);
 
@@ -388,8 +393,8 @@ void bru_free()
 	util_free(gbru.models);
 	util_free(gbru.textures);
 	util_free(gbru.surfes);
-	util_free(gbru.box_mins);
-	util_free(gbru.box_maxs);
+	util_free(gbru.box_absmin);
+	util_free(gbru.box_absmax);
 	util_free(gbru.brushareas);
 	util_free(gbru.areas);
 	util_free(gvertbuf.st);

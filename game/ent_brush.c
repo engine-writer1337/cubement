@@ -21,7 +21,11 @@ static void keyvalue_func_wall(entity_s* pev, keyvalue_s* kv)
 
 static void saverestore_func_wall(entity_s* pev) {}
 
-static void think_func_wall(entity_s* pev) { }
+static void think_func_wall(entity_s* pev) 
+{
+	//pev->origin[0] += cment->frametime;
+	//pev->origin[1] += cment->frametime;
+}
 
 LINK_ENTITY(func_wall, ENTID_WALL, sizeof(entity_s))
 
@@ -29,6 +33,8 @@ LINK_ENTITY(func_wall, ENTID_WALL, sizeof(entity_s))
 static bool_t spawn_func_door_rotating(entity_s* pev)
 {
 	pev->angles[YAW] = 90;
+	//pev->angles[PITCH] = 180;
+	//pev->angles[ROLL] = 270;
 	pev->contents = CONTENTS_SOLID;
 	return TRUE;
 }
@@ -50,8 +56,8 @@ static void saverestore_func_door_rotating(entity_s* pev) {}
 
 static void think_func_door_rotating(entity_s* pev) 
 {
-	//pev->origin[0] += cment->frametime;
-	//pev->origin[1] += cment->frametime;
+	//pev->origin[0] += 4 * cment->frametime;
+	//pev->origin[1] += 4 * cment->frametime;
 }
 
 LINK_ENTITY(func_door_rotating, ENTID_DOOR_ROT, sizeof(entity_s))

@@ -515,7 +515,7 @@ void snd_music_stop()
 }
 
 static channel_s* snd_pick_channel(int entnum)
-{
+{//TODO:
 	channel_s* ch;
 	int i, chosen, life_left;
 
@@ -535,6 +535,30 @@ static channel_s* snd_pick_channel(int entnum)
 	ch = &gchannels[chosen];
 	memzero(ch, sizeof(*ch));
 	return ch;
+}
+
+void snd_play(ihandle_t idx, const entity_s* ent, channel_e chan, float volume, float distance)
+{
+	wave_s* w;
+	channel_s* ch;
+
+	if (!gsnd.p_ds || res_notvalid(idx, RES_SOUND))
+		return;
+
+	w = &gres[idx].data.wav;
+	if (!w->data)
+		return;
+
+	ch = snd_pick_channel(0);
+	vec_copy(ch->origin, ent->origin);
+
+	ch->wav = w;
+	ch->loop = FALSE;
+	ch->mastervol = volume * 255;
+	ch->entnum = 1;
+	ch->channel = chan;
+	ch->distance = 1.f / distance;
+	ch->end = gsnd.painted_time + w->samples;
 }
 
 void snd_play_wav(const wave_s* wav, const vec3_t origin, float fvol, int distance, int entnum, enum_t channel, bool_t loop)

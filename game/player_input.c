@@ -6,6 +6,7 @@ static kbutton_s in_left;
 static kbutton_s in_right;
 static kbutton_s in_forward;
 static kbutton_s in_back;
+static kbutton_s in_use;
 
 static void plr_key_down(kbutton_s* b, const char* arg1)
 {
@@ -71,11 +72,14 @@ static int plr_key_bits()
 		bits |= IN_LEFT;
 	if (in_right.state & 3)
 		bits |= IN_RIGHT;
+	if (in_use.state & 3)
+		bits |= IN_USE;
 
 	in_forward.state &= ~2;
 	in_back.state &= ~2;
 	in_left.state &= ~2;
 	in_right.state &= ~2;
+	in_use.state &= ~2;
 	return bits;
 }
 
@@ -90,6 +94,8 @@ cmd_key_up(left_up, &in_left);
 cmd_key_down(left_down, &in_left);
 cmd_key_up(right_up, &in_right);
 cmd_key_down(right_down, &in_right);
+cmd_key_up(use_up, &in_use);
+cmd_key_down(use_down, &in_use);
 
 void plr_inputs(player_s* pev)
 {
@@ -126,6 +132,8 @@ void plr_input_cvar()
 	cment->con_create_cmd("-left", left_up);
 	cment->con_create_cmd("+right", right_down);
 	cment->con_create_cmd("-right", right_up);
+	cment->con_create_cmd("+use", use_down);
+	cment->con_create_cmd("-use", use_up);
 
 	glob.sens = cment->con_create_cvar("m_sens", 3, TRUE);
 }

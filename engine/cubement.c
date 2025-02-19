@@ -124,6 +124,10 @@ static void engine_int()
 	gengine.sky_rotate = sky_rotate;	
 
 	gengine.trace = trace;
+
+	gengine.sound_play = snd_play;
+
+	gengine.area_active = bru_area_active;
 }
 
 static void engine_fps()

@@ -17,6 +17,9 @@ static restype_e res_type(const char* name)
 	if ((*(int*)(name + len - 4) == 'tnf.'))
 		return RES_FONT;
 
+	if ((*(int*)(name + len - 4) == 'vaw.') || (*(int*)(name + len - 4) == 'ggo.'))
+		return RES_SOUND;
+
 	return RES_BAD;
 }
 
@@ -149,14 +152,14 @@ ihandle_t res_precache_ex(const char* filename, int flags)
 	ihandle_t idx;
 	restype_e type;
 
-	if (!ghost.precache)
-	{
-		con_printf(COLOR_RED, "%s - precache is not allowed");
-		return BAD_HANDLE;
-	}
-
 	if (strnull(filename))
 		return BAD_HANDLE;
+
+	if (!ghost.precache)
+	{
+		con_printf(COLOR_RED, "%s - precache is not allowed", filename);
+		return BAD_HANDLE;
+	}
 
 	idx = res_find(filename);
 	if (idx != BAD_HANDLE)
@@ -165,7 +168,7 @@ ihandle_t res_precache_ex(const char* filename, int flags)
 	type = res_type(filename);
 	if (type == RES_BAD)
 	{
-		con_printf(COLOR_RED, "%s - unknown resource");
+		con_printf(COLOR_RED, "%s - unknown resource", filename);
 		return BAD_HANDLE;
 	}
 

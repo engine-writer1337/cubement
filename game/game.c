@@ -3,6 +3,7 @@
 
 global_s glob;
 engine_s* cment;
+const vec3_t gvec_zeros;
 
 #define WINDOW_NAME		"Cubement"
 
@@ -67,7 +68,10 @@ static void window_inactive()
 	cment->cursor_show(TRUE);
 }
 
-static void game_precache() {}
+static void game_precache() 
+{
+	glob.doorstop = cment->resource_precache("doorstop4.wav");
+}
 
 static bool_t draw_world() { return TRUE; }
 

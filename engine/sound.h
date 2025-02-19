@@ -107,6 +107,8 @@ void snd_music(const char* filename);
 void snd_stop_all();
 void snd_load(const char* name, wave_s* out);
 void snd_free(wave_s* wav);
+
+void snd_play(ihandle_t idx, const entity_s* ent, channel_e chan, float volume, float distance);
 void snd_play_wav(const wave_s* wav, const vec3_t origin, float fvol, int distance, int entnum, enum_t channel, bool_t loop);
 
 void snd_update();

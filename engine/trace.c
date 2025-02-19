@@ -193,7 +193,7 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 			continue;
 
 		e = ed->e;
-		if (!(e->contents & contents) || e->model == BAD_HANDLE)
+		if (ignore == e || !(e->contents & contents) || e->model == BAD_HANDLE)
 			continue;
 
 		anyintersect = FALSE;

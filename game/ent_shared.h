@@ -62,6 +62,7 @@ typedef struct entity_t
 	//======================================================
 	vec3_t velocity;
 
+	void (*use)(void* pev, struct entity_t* activator);
 }entity_s;
 
 #endif

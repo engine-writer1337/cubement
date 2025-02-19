@@ -28,4 +28,10 @@
 
 ]
 
+@SolidClass base(RenderClass) = func_door_rotating : "Wall" 
+[
+	area1(string) : "Area 1 name"
+	area2(string) : "Area 2 name"
+]
+
 

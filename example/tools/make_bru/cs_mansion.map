@@ -3668,24 +3668,8 @@
 // entity 5
 {
 "classname" "func_door_rotating"
-"angles" "0 0 0"
-"distance" "90"
-"unlocked_sentence" "0"
-"locked_sentence" "0"
-"unlocked_sound" "0"
-"locked_sound" "0"
-"health" "0"
-"delay" "0"
-"dmg" "0"
-"lip" "0"
-"wait" "4"
-"stopsnd" "0"
-"movesnd" "9"
-"speed" "100"
-"rendercolor" "0 0 0"
-"renderamt" "0"
-"rendermode" "0"
-"renderfx" "0"
+"area1" "home"
+"area2" "outside"
 // brush 0
 {
 ( -744 -960 -313 ) ( -744 -960 -217 ) ( -744 -961 -313 ) hl1/fifties_dr1 [ 0 1 0 -21 ] [ 0 0 -1 15 ] 270 1 1 0 268697856 0
@@ -3865,24 +3849,8 @@
 // entity 11
 {
 "classname" "func_door_rotating"
-"angles" "0 0 0"
-"distance" "90"
-"unlocked_sentence" "0"
-"locked_sentence" "0"
-"unlocked_sound" "0"
-"locked_sound" "0"
-"health" "0"
-"delay" "0"
-"dmg" "0"
-"lip" "0"
-"wait" "3"
-"stopsnd" "0"
-"movesnd" "10"
-"speed" "100"
-"rendercolor" "0 0 0"
-"renderamt" "0"
-"rendermode" "0"
-"renderfx" "0"
+"area1" "home"
+"area2" "outside"
 // brush 0
 {
 ( -384 -408 -313 ) ( -384 -408 -217 ) ( -384 -488 -313 ) hl1/fifties_dr1k [ 0 1 0 -57.600006 ] [ 0 0 -1 71 ] 270 1.25 1 0 268697856 0
@@ -3991,6 +3959,7 @@
 // entity 17
 {
 "classname" "area"
+"name" "outside"
 // brush 0
 {
 ( -400 304 -33 ) ( -400 305 -33 ) ( -400 304 -32 ) AREA [ 0 1 0 0 ] [ 0 0 -1 -1 ] 270 1 1 0 268697856 0
@@ -4031,6 +4000,7 @@
 // entity 18
 {
 "classname" "area"
+"name" "home"
 // brush 0
 {
 ( -1064 568 15 ) ( -1064 569 15 ) ( -1064 568 16 ) AREA [ 0 1 0 8 ] [ 0 0 -1 15 ] 180 1 1 0 268697856 0

@@ -7,6 +7,8 @@ typedef struct
 {
 	ihandle_t confont;
 
+	ihandle_t doorstop;
+
 	cvar_s* sens;
 	cvar_s* noclip;
 	cvar_s* fov;
@@ -15,6 +17,7 @@ typedef struct
 }global_s;
 
 extern global_s glob;
+extern const vec3_t gvec_zeros;
 
 #include "entity.h"
 #include "player.h"

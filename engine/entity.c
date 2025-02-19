@@ -205,6 +205,8 @@ static void ent_update(edict_s* ed)
 			}
 
 			bm = gres[e->model].data.brush;
+			vec_copy(e->maxs, bm->maxs);
+			vec_copy(e->mins, bm->mins);
 			vec_rotate_bbox(e->angles, bm->offset, e->mins, e->maxs);
 		}
 

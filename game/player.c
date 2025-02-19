@@ -33,6 +33,19 @@ static void think_player(player_s* pev)
 	plr_inputs(pev);
 	plr_move(pev);
 
+	if ((pev->buttons & IN_USE) && pev->nextuse < cment->gametime)
+	{
+		trace_s tr;
+		vec3_t endpos;
+
+		vec_ma(endpos, pev->vieworg, 128, pev->v_forward);
+		cment->trace(pev->vieworg, endpos, gvec_zeros, gvec_zeros, pev, CONTENTS_SOLID, &tr);
+		if (tr.ent && tr.ent->use)
+			tr.ent->use(tr.ent, pev);
+
+		pev->nextuse = cment->gametime + 0.2f;
+	}
+
 	cment->set_view_org(pev->vieworg);
 	cment->set_view_ang(pev->base.angles);
 	cment->set_view_fov(clamp(50, glob.fov->value, 150));

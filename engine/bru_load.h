@@ -25,6 +25,7 @@ typedef struct
 {
 	int framenum;
 
+	hash_t hash;
 	char name[20];
 	int activecount;
 
@@ -111,6 +112,8 @@ typedef struct
 
 extern bru_s gbru;
 extern vertbuf_s gvertbuf;
+
+void bru_area_active(const char* name, bool_t is_active);
 
 bool_t bru_load(const char* name);
 void bru_free();

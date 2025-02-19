@@ -328,7 +328,39 @@ static void bru_load_areas(const byte* data, const bru_lump_s* l)
 		out[i].brushareas = gbru.brushareas + in[i].start_brusharea;
 		out[i].absmin = gbru.box_absmin + in[i].start_box;
 		out[i].absmax = gbru.box_absmax + in[i].start_box;
+		out[i].hash = util_hash_str(out[i].name);
 		out[i].activecount = 0;
+	}
+}
+
+void bru_area_active(const char* name, bool_t is_active)
+{
+	int i;
+	area_s* a;
+	hash_t hash;
+
+	if (strnull(name))
+		return;
+
+	hash = util_hash_str(name);
+	for (i = 1; i < gbru.num_areas; i++)
+	{
+		a = gbru.areas + i;
+		if (a->hash != hash)
+			continue;
+
+		if (!strcmpi(a->name, name))
+			continue;
+
+		if (is_active)
+			a->activecount++;
+		else
+		{
+			a->activecount--;
+			if (a->activecount < 0)
+				a->activecount = 0;
+		}
+		return;
 	}
 }
 

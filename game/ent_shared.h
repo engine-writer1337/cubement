@@ -61,6 +61,7 @@ typedef struct entity_t
 	// Here are custom fields, can be written in any order
 	//======================================================
 	vec3_t velocity;
+	vec3_t avelocity;
 
 	void (*use)(void* pev, struct entity_t* activator);
 }entity_s;

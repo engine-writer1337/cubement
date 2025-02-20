@@ -82,6 +82,7 @@ static bool_t trace_brush(brush_s* b)
 		{
 			gtrace.endstuck = TRUE;
 			gtrace.fraction = 0;
+			return TRUE;
 		}
 		return FALSE;
 	}

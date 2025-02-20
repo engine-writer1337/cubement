@@ -32,6 +32,7 @@
 #define FL_NODISSIP		(1 << 6)
 #define FL_SAVE			(1 << 7)
 #define FL_TEMP			(1 << 8)
+#define FL_NOPHONG		(1 << 9)
 
 #define IMG_NEAREST		(1 << 0)
 #define IMG_CLAMP		(1 << 1)
@@ -197,8 +198,8 @@ typedef struct
 	void (*ent_saverestore)(void* data, int count, field_e type);
 	void (*ent_play_anim)(anim_s* anim, int flags);
 	void (*ent_set_body)(entity_s* ent, int group, int body);
-	void (*ent_get_bonepos)(const entity_s* ent, const char* name, vec3_t pos);
-	void (*ent_add_boneang)(const entity_s* ent, const char* name, const vec3_t ang);
+	void (*ent_set_boneang)(const entity_s* ent, const char* name, const vec3_t ang);
+	void (*ent_get_bonepos)(const entity_s* ent, const char* name, vec3_t pos, vec3_t ang);
 
 	//======================================================
 	// Resources

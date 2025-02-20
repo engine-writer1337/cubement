@@ -158,7 +158,6 @@ static void ent_fill_areas(edict_s* ed)
 
 static void ent_update(edict_s* ed)
 {
-	int j;
 	bool_t relink;
 	brushmodel_s* bm;
 	entity_s* e = ed->e;
@@ -191,18 +190,9 @@ static void ent_update(edict_s* ed)
 	{
 		if (e->model != BAD_HANDLE && gres[e->model].type == RES_BRUSH)
 		{
-			for (j = 0; j < 3; j++)
-			{
-				e->angles[j] = anglemod(e->angles[j]);
-				if (e->angles[j] < 45 || e->angles[j] >= 315)
-					e->angles[j] = 0;
-				else if (e->angles[j] >= 45 || e->angles[j] < 135)
-					e->angles[j] = 90;
-				else if (e->angles[j] >= 135 || e->angles[j] < 225)
-					e->angles[j] = 180;
-				else if (e->angles[j] >= 225 || e->angles[j] < 315)
-					e->angles[j] = 270;
-			}
+			e->angles[0] = anglemod(e->angles[0]);
+			e->angles[1] = anglemod(e->angles[1]);
+			e->angles[2] = anglemod(e->angles[2]);
 
 			bm = gres[e->model].data.brush;
 			vec_copy(e->maxs, bm->maxs);

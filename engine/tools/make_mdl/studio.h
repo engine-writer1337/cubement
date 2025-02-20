@@ -13,10 +13,6 @@
 #define MDL_MAX_MESHES		256
 #define MDL_MAX_MODELS		256
 #define MDL_MAX_VERTS		65536
-#define MDL_MAX_TEXCOORDS	65536
-
-#define TEXCOORD_SCALE		32000
-#define TEXCOORD_SCALE_INV	(1.f / 32000)
 
 #define TEXFLAG_TRANSPARENT		(1 << 0)
 #define TEXFLAG_ADDITIVE		(1 << 1)
@@ -24,62 +20,69 @@
 typedef float vec2_t[2];
 typedef float vec3_t[3];
 typedef unsigned char byte;
+typedef unsigned short word;
+typedef unsigned char bool_t;
 
 typedef struct 
 {
 	int magic;
 
 	int numbones;
-	int boneindex;
-
+	int ofsbones;
+	
 	int numverts;
-	int vertindex;
-
-	int numvertinfos;
-	int vertinfoindex;
-
+	int ofsverts;
+	int ofsvertbones;
+	
 	int numtexcoords;
-	int texcoordsindex;
-
+	int ofstexcoords;
+	
+	int numnormals;
+	int ofsnormals;
+	
 	int numseq;
-	int seqindex;
-
+	int ofsseq;
+	
 	int numtextures;
-	int textureindex;
-
+	int ofstextures;
+	
 	int numskins;
-	int numskinfamilies;
-	int skinindex;
-
+	int ofsskins;
+	
 	int numbodyparts;
-	int bodypartindex;
+	int ofsbodyparts;
 
 	int nummodels;
-	int modelindex;
-
+	int ofsmodels;
+	
 	int nummeshes;
-	int meshindex;
+	int ofsmeshes;
 }studiohdr_s;
 
 typedef struct
 {
-	char name[30];
+	char name[32];
+	
 	short parent;
+	bool_t is_gait;
+	byte hitbox;
+	
 	float value[6];
 	float scale[6];
+	
+	vec3_t mins;
+	vec3_t maxs;
 }mstudiobone_s;
 
 typedef struct
 {
-	char label[30];
-
-	byte fps;
+	char label[31];
 	byte numframes;
 
 	vec3_t bbmin;
 	vec3_t bbmax;
 
-	int animindex;
+	int ofsframes;
 }mstudioseqdesc_s;
 
 typedef struct
@@ -100,7 +103,7 @@ typedef union
 typedef struct
 {
 	byte flags;
-	char name[23];
+	char name[31];
 }mstudiotexture_s;
 
 //skin families
@@ -108,33 +111,40 @@ typedef struct
 
 typedef struct
 {
-	char name[31];
+	char name[30];
+	
 	byte nummodels;
-	byte modelindex;
+	byte start_model;
 }mstudiobodyparts_s;
 
 typedef struct
 {
 	char name[30];
+	
 	byte nummeshes;
-	byte meshindex;
+	byte start_mesh;
 }mstudiomodel_s;
 
 typedef struct
 {
-	unsigned short texture;
-	unsigned short numcommands;
-	int commandindex;
+	word texture;
+	word numcommands;
+	int ofscommands; //vert index (word) + normal (word) + texcoord (word)
 }mstudiomesh_s;
+
+typedef struct
+{
+	vec2_t uv;
+}mstudiotexcoord_s;
+
+typedef struct
+{
+	vec3_t norm;
+}mstudionorm_s;
 
 typedef struct
 {
 	vec3_t v;
 }mstudiovert_s;
-
-typedef struct
-{
-	short s, t;
-}mstudiotexcoord_s;
 
 #endif

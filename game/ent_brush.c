@@ -32,7 +32,7 @@ LINK_ENTITY(func_wall, ENTID_WALL, sizeof(entity_s))
 static void door_rot_use(door_rot_s* pev, entity_s* activator)
 {
 	pev->is_closed = !pev->is_closed;
-	pev->base.angles[YAW] = pev->is_closed ? 0 : 90;
+	pev->base.angles[YAW] = pev->is_closed ? 0 : 70;
 
 	cment->area_active(pev->area1, !pev->is_closed);
 	cment->area_active(pev->area2, !pev->is_closed);

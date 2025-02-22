@@ -9,7 +9,7 @@
 #include "cmdlib.h"
 #include "scriplib.h"
 #include "mathlib.h"
-#include "studiomdl.h"
+#include "make_mdl.h"
 
 static int totalframes = 0;
 static float totalseconds = 0;
@@ -18,7 +18,16 @@ static byte* pData;
 static byte* pStart;
 static studiohdr_s* phdr;
 
-studioseqhdr_s* pseqhdr;
+static int gnumnorms;
+static byte gbonenorms[MDL_MAX_VERTS];
+static mstudionorm_s gnorms[MDL_MAX_VERTS];
+
+static int gnumverts;
+static byte gboneverts[MDL_MAX_VERTS];
+static mstudiovert_s gverts[MDL_MAX_VERTS];
+
+static int gnumtexcoords;
+static mstudiotexcoord_s gtexcoords[MDL_MAX_VERTS];
 
 #define ALIGN(a) a = (byte *)((int)((byte *)a + 3) & ~ 3)
 
@@ -81,111 +90,26 @@ static void WriteBoneInfo()
 
 static void WriteSequenceInfo()
 {
-	int i, j;
+	int i;
+	mstudioseqdesc_s* pseqdesc;
 
-	mstudioseqgroup_t* pseqgroup;
-	mstudioseqdesc_t* pseqdesc;
-	mstudioseqdesc_t* pbaseseqdesc;
-	mstudioevent_t* pevent;
-	mstudiopivot_t* ppivot;
-	byte* ptransition;
-
-	// save sequence info
-	pseqdesc = (mstudioseqdesc_t*)pData;
-	pbaseseqdesc = pseqdesc;
+	pseqdesc = (mstudioseqdesc_s*)pData;
 	phdr->numseq = numseq;
-	phdr->seqindex = (pData - pStart);
-	pData += numseq * sizeof(mstudioseqdesc_t);
+	phdr->ofsseq = (pData - pStart);
+	pData += numseq * sizeof(mstudioseqdesc_s);
 
 	for (i = 0; i < numseq; i++, pseqdesc++)
 	{
-		strcpy(pseqdesc->label, sequence[i].name);
+		strncpy(pseqdesc->label, sequence[i].name, sizeof(pseqdesc->label) - 1);
 		pseqdesc->numframes = sequence[i].numframes;
-		pseqdesc->fps = sequence[i].fps;
-		pseqdesc->flags = sequence[i].flags;
-
-		pseqdesc->numblends = sequence[i].numblends;
-
-		pseqdesc->blendtype[0] = sequence[i].blendtype[0];
-		pseqdesc->blendtype[1] = sequence[i].blendtype[1];
-		pseqdesc->blendstart[0] = sequence[i].blendstart[0];
-		pseqdesc->blendend[0] = sequence[i].blendend[0];
-		pseqdesc->blendstart[1] = sequence[i].blendstart[1];
-		pseqdesc->blendend[1] = sequence[i].blendend[1];
-
-		pseqdesc->motiontype = sequence[i].motiontype;
-		pseqdesc->motionbone = 0; // sequence[i].motionbone;
-		VectorCopy(sequence[i].linearmovement, pseqdesc->linearmovement);
-
-		pseqdesc->seqgroup = sequence[i].seqgroup;
-
-		pseqdesc->animindex = sequence[i].animindex;
-
-		pseqdesc->activity = sequence[i].activity;
-		pseqdesc->actweight = sequence[i].actweight;
 
 		VectorCopy(sequence[i].bmin, pseqdesc->bbmin);
 		VectorCopy(sequence[i].bmax, pseqdesc->bbmax);
 
-		pseqdesc->entrynode = sequence[i].entrynode;
-		pseqdesc->exitnode = sequence[i].exitnode;
-		pseqdesc->nodeflags = sequence[i].nodeflags;
+		pseqdesc->ofsframes = sequence[i].animindex;
 
 		totalframes += sequence[i].numframes;
 		totalseconds += sequence[i].numframes / sequence[i].fps;
-
-		// save events
-		pevent = (mstudioevent_t*)pData;
-		pseqdesc->numevents = sequence[i].numevents;
-		pseqdesc->eventindex = (pData - pStart);
-		pData += pseqdesc->numevents * sizeof(mstudioevent_t);
-		for (j = 0; j < sequence[i].numevents; j++)
-		{
-			pevent[j].frame = sequence[i].event[j].frame - sequence[i].frameoffset;
-			pevent[j].event = sequence[i].event[j].event;
-			memcpy(pevent[j].options, sequence[i].event[j].options, sizeof(pevent[j].options));
-		}
-		ALIGN(pData);
-
-		// save pivots
-		ppivot = (mstudiopivot_t*)pData;
-		pseqdesc->numpivots = sequence[i].numpivots;
-		pseqdesc->pivotindex = (pData - pStart);
-		pData += pseqdesc->numpivots * sizeof(mstudiopivot_t);
-		for (j = 0; j < sequence[i].numpivots; j++)
-		{
-			VectorCopy(sequence[i].pivot[j].org, ppivot[j].org);
-			ppivot[j].start = sequence[i].pivot[j].start - sequence[i].frameoffset;
-			ppivot[j].end = sequence[i].pivot[j].end - sequence[i].frameoffset;
-		}
-		ALIGN(pData);
-	}
-
-	// save sequence group info
-	pseqgroup = (mstudioseqgroup_t*)pData;
-	phdr->numseqgroups = numseqgroups;
-	phdr->seqgroupindex = (pData - pStart);
-	pData += phdr->numseqgroups * sizeof(mstudioseqgroup_t);
-	ALIGN(pData);
-
-	for (i = 0; i < numseqgroups; i++)
-	{
-		strcpy(pseqgroup[i].label, sequencegroup[i].label);
-		strcpy(pseqgroup[i].name, sequencegroup[i].name);
-	}
-
-	// save transition graph
-	ptransition = (byte*)pData;
-	phdr->numtransitions = numxnodes;
-	phdr->transitionindex = (pData - pStart);
-	pData += numxnodes * numxnodes * sizeof(byte);
-	ALIGN(pData);
-	for (i = 0; i < numxnodes; i++)
-	{
-		for (j = 0; j < numxnodes; j++)
-		{
-			*ptransition++ = xnode[i][j];
-		}
 	}
 }
 
@@ -195,13 +119,10 @@ static byte* WriteAnimations(byte* pData, byte* pStart, int group)
 	mstudioanim_s* panim;
 	mstudioanimvalue_s* panimvalue;
 
-	// hack for seqgroup 0
-	// pseqgroup->data = (pData - pStart);
 	for (i = 0; i < numseq; i++)
 	{
 		if (sequence[i].seqgroup == group)
 		{
-			// save animations
 			panim = (mstudioanim_s*)pData;
 			sequence[i].animindex = (pData - pStart);
 			pData += sequence[i].numblends * numbones * sizeof(mstudioanim_s);
@@ -210,7 +131,6 @@ static byte* WriteAnimations(byte* pData, byte* pStart, int group)
 			panimvalue = (mstudioanimvalue_s*)pData;
 			for (q = 0; q < sequence[i].numblends; q++)
 			{
-				// save animation value info
 				for (j = 0; j < numbones; j++)
 				{
 					for (k = 0; k < 6; k++)
@@ -233,7 +153,6 @@ static byte* WriteAnimations(byte* pData, byte* pStart, int group)
 				}
 			}
 
-			// printf("raw bone data %d : %s\n", (byte *)panimvalue - pData, sequence[i].name);
 			pData = (byte*)panimvalue;
 			ALIGN(pData);
 		}
@@ -270,160 +189,216 @@ static void WriteTextures()
 	ALIGN(pData);
 }
 
+static int Emit_Vertex(vec3_t v, int bone)
+{
+	int i;
+
+	v[0] = (int)(v[0] * 100) / 100.0;
+	v[1] = (int)(v[1] * 100) / 100.0;
+	v[2] = (int)(v[2] * 100) / 100.0;
+
+	for (i = 0; i < gnumverts; i++)
+	{
+		if (gboneverts[i] == bone && gverts[i].v[0] == v[0] && gverts[i].v[1] == v[1] && gverts[i].v[2] == v[2])
+			return i;
+	}
+
+	if (i == MDL_MAX_VERTS)
+		Error("Too many verts in model\n");
+
+	gboneverts[i] = bone;
+	gverts[i].v[0] = v[0];
+	gverts[i].v[1] = v[1];
+	gverts[i].v[2] = v[2];
+	return gnumverts++;
+}
+
+static int Emit_Norms(vec3_t norm, int bone)
+{
+	int i;
+
+	norm[0] = (int)(norm[0] * 1000000) / 1000000.0;
+	norm[1] = (int)(norm[1] * 1000000) / 1000000.0;
+	norm[2] = (int)(norm[2] * 1000000) / 1000000.0;
+
+	for (i = 0; i < gnumnorms; i++)
+	{
+		if (gbonenorms[i] == bone && gnorms[i].norm[0] == norm[0] && gnorms[i].norm[1] == norm[1] && gnorms[i].norm[2] == norm[2])
+			return i;
+	}
+
+	if (i == MDL_MAX_VERTS)
+		Error("Too many normals in model\n");
+
+	gbonenorms[i] = bone;
+	gnorms[i].norm[0] = norm[0];
+	gnorms[i].norm[1] = norm[1];
+	gnorms[i].norm[2] = norm[2];
+	return gnumnorms++;
+}
+
+static int Emit_Texcoords(float u, float v)
+{
+	int i;
+
+	u = (int)(u * 1000000) / 1000000.0;
+	v = (int)(v * 1000000) / 1000000.0;
+
+	for (i = 0; i < gnumtexcoords; i++)
+	{
+		if (gtexcoords[i].uv[0] == u && gtexcoords[i].uv[1] == v)
+			return i;
+	}
+
+	if (i == MDL_MAX_VERTS)
+		Error("Too many texcoords in model\n");
+
+	gtexcoords[i].uv[0] = u;
+	gtexcoords[i].uv[1] = v;
+	return gnumtexcoords++;
+}
+
 static void WriteModel()
 {
-	int i, j, k;
+	word* cmd;
+	s_mesh_t* msh;
+	s_model_t* mod;
+	mstudiomesh_s* pmesh;
+	s_trianglevert_t* tri;
+	mstudiomodel_s* pmodel;
+	mstudiobodyparts_s* pbodypart;
+	int i, j, k, m, v, addmodels, addmeshes, cntmesh, cnttris;
 
-	mstudiobodyparts_t* pbodypart;
-	mstudiomodel_t* pmodel;
-	// vec3_t			*bbox;
-	byte* pbone;
-	vec3_t* pvert;
-	vec3_t* pnorm;
-	mstudiomesh_t* pmesh;
-	s_trianglevert_t* psrctri;
-	int				cur;
-	int				total_tris = 0;
-	int				total_strips = 0;
-
-	pbodypart = (mstudiobodyparts_t*)pData;
+	pbodypart = (mstudiobodyparts_s*)pData;
 	phdr->numbodyparts = numbodyparts;
-	phdr->bodypartindex = (pData - pStart);
-	pData += numbodyparts * sizeof(mstudiobodyparts_t);
+	phdr->ofsbodyparts = (pData - pStart);
+	pData += numbodyparts * sizeof(mstudiobodyparts_s);
 
-	pmodel = (mstudiomodel_t*)pData;
-	pData += nummodels * sizeof(mstudiomodel_t);
+	pmodel = (mstudiomodel_s*)pData;
+	phdr->nummodels = nummodels;
+	phdr->ofsmodels = (pData - pStart);
+	pData += nummodels * sizeof(mstudiomodel_s);
 
-	for (i = 0, j = 0; i < numbodyparts; i++)
+	cntmesh = cnttris = addmodels = addmeshes = 0;
+	for (i = 0; i < numbodyparts; i++)
 	{
-		strcpy(pbodypart[i].name, bodypart[i].name);
-		pbodypart[i].nummodels = bodypart[i].nummodels;
-		pbodypart[i].base = bodypart[i].base;
-		pbodypart[i].modelindex = ((byte*)&pmodel[j]) - pStart;
-		j += bodypart[i].nummodels;
+		for (j = 0; j < bodypart[i].nummodels; j++)
+		{
+			cntmesh += bodypart[i].pmodel[j]->nummesh;
+			if (cntmesh > MDL_MAX_MESHES)
+				Error("Too many meshes in model\n");
+		}
 	}
+
+	pmesh = (mstudiomesh_s*)pData;
+	phdr->nummeshes = cntmesh;
+	phdr->ofsmeshes = (pData - pStart);
+	pData += cntmesh * sizeof(mstudiomesh_s);
 	ALIGN(pData);
 
-	cur = (int)pData;
-	for (i = 0; i < nummodels; i++)
+	if (numbodyparts > MDL_MAX_GROUPS)
+		Error("Too many groups in model\n");
+
+	for (i = 0; i < numbodyparts; i++)
 	{
-		int normmap[MDL_MAX_VERTS];
-		int normimap[MDL_MAX_VERTS];
-		int n = 0;
+		if (bodypart[i].nummodels > MDL_MAX_BODIES)
+			Error("Too many bodies in model\n");
 
-		strcpy(pmodel[i].name, model[i]->name);
+		strncpy(pbodypart[i].name, bodypart[i].name, sizeof(pbodypart[i].name) - 1);
+		pbodypart[i].nummodels = bodypart[i].nummodels;
+		pbodypart[i].start_model = addmodels;
 
-		// save bbox info
-
-		// remap normals to be sorted by skin reference
-		for (j = 0; j < model[i]->nummesh; j++)
+		for (j = 0; j < bodypart[i].nummodels; j++)
 		{
-			for (k = 0; k < model[i]->numnorms; k++)
+			mod = bodypart[i].pmodel[j];
+			strncpy(pmodel[addmodels].name, mod->name, sizeof(pmodel[addmodels].name) - 1);
+			pmodel[addmodels].nummeshes = mod->nummesh;
+			pmodel[addmodels].start_mesh = addmeshes;
+
+			for (k = 0; k < mod->nummesh; k++)
 			{
-				if (model[i]->normal[k].skinref == model[i]->pmesh[j]->skinref)
+				msh = mod->pmesh[k];
+				pmesh[addmeshes].texture = msh->skinref;
+				pmesh[addmeshes].numcommands = msh->numtris;
+				pmesh[addmeshes].ofscommands = (pData - pStart);
+
+				cmd = (word*)pData;
+				cnttris += msh->numtris;
+				pData += 3 * 3 * msh->numtris * sizeof(word);
+				ALIGN(pData);
+
+				for (m = 0; m < msh->numtris; m++)
 				{
-					normmap[k] = n;
-					normimap[n] = k;
-					n++;
-					model[i]->pmesh[j]->numnorms++;
+					tri = msh->triangle[m];
+					for (v = 0; v < 3; v++)
+					{
+						*cmd++ = Emit_Norms(mod->normal[tri[v].normindex].org, mod->normal[tri[v].normindex].bone);
+						*cmd++ = Emit_Vertex(mod->vert[tri[v].vertindex].org, mod->vert[tri[v].vertindex].bone);
+						*cmd++ = Emit_Texcoords(tri[v].u, 1.0 - tri[v].v);
+					}
 				}
-			}
-		}
 
-		// save vertice bones
-		pbone = pData;
-		pmodel[i].numverts = model[i]->numverts;
-		pmodel[i].vertinfoindex = (pData - pStart);
-		for (j = 0; j < pmodel[i].numverts; j++)
-		{
-			*pbone++ = model[i]->vert[j].bone;
-		}
-		ALIGN(pbone);
-
-		// save normal bones
-		pmodel[i].numnorms = model[i]->numnorms;
-		pmodel[i].norminfoindex = ((byte*)pbone - pStart);
-		for (j = 0; j < pmodel[i].numnorms; j++)
-		{
-			*pbone++ = model[i]->normal[normimap[j]].bone;
-		}
-		ALIGN(pbone);
-
-		pData = pbone;
-
-		// save group info
-		pvert = (vec3_t*)pData;
-		pData += model[i]->numverts * sizeof(vec3_t);
-		pmodel[i].vertindex = ((byte*)pvert - pStart);
-		ALIGN(pData);
-
-		pnorm = (vec3_t*)pData;
-		pData += model[i]->numnorms * sizeof(vec3_t);
-		pmodel[i].normindex = ((byte*)pnorm - pStart);
-		ALIGN(pData);
-
-		for (j = 0; j < model[i]->numverts; j++)
-		{
-			VectorCopy(model[i]->vert[j].org, pvert[j]);
-		}
-
-		for (j = 0; j < model[i]->numnorms; j++)
-		{
-			VectorCopy(model[i]->normal[normimap[j]].org, pnorm[j]);
-		}
-		printf("vertices  %6d bytes (%d vertices, %d normals)\n", pData - cur, model[i]->numverts, model[i]->numnorms);
-		cur = (int)pData;
-
-		// save mesh info
-		pmesh = (mstudiomesh_t*)pData;
-		pmodel[i].nummesh = model[i]->nummesh;
-		pmodel[i].meshindex = (pData - pStart);
-		pData += pmodel[i].nummesh * sizeof(mstudiomesh_t);
-		ALIGN(pData);
-
-		total_tris = 0;
-		total_strips = 0;
-		for (j = 0; j < model[i]->nummesh; j++)
-		{
-			int numCmdBytes;
-			byte* pCmdSrc;
-
-			pmesh[j].numtris = model[i]->pmesh[j]->numtris;
-			pmesh[j].skinref = model[i]->pmesh[j]->skinref;
-			pmesh[j].numnorms = model[i]->pmesh[j]->numnorms;
-
-			psrctri = (s_trianglevert_t*)(model[i]->pmesh[j]->triangle);
-			for (k = 0; k < pmesh[j].numtris * 3; k++)
-			{
-				psrctri->normindex = normmap[psrctri->normindex];
-				psrctri++;
+				addmeshes++;
 			}
 
-			numCmdBytes = BuildTris(model[i]->pmesh[j]->triangle, model[i]->pmesh[j], &pCmdSrc);
-
-			pmesh[j].triindex = (pData - pStart);
-			memcpy(pData, pCmdSrc, numCmdBytes);
-			pData += numCmdBytes;
-			ALIGN(pData);
-			total_tris += pmesh[j].numtris;
-			total_strips += numcommandnodes;
+			addmodels++;
+			if (addmodels > MDL_MAX_MODELS)
+				Error("Too many models in model\n");
 		}
-		printf("mesh      %6d bytes (%d tris, %d strips)\n", pData - cur, total_tris, total_strips);
-		cur = (int)pData;
 	}
+
+	ALIGN(pData);
+
+	phdr->numverts = gnumverts;
+	phdr->ofsverts = (pData - pStart);
+	memcpy(pData, gverts, gnumverts * sizeof(mstudiovert_s));
+	pData += gnumverts * sizeof(mstudiovert_s);
+	ALIGN(pData);
+
+	phdr->ofsvertbones = (pData - pStart);
+	memcpy(pData, gboneverts, gnumverts * sizeof(byte));
+	pData += gnumverts * sizeof(byte);
+	ALIGN(pData);
+
+	phdr->numnormals = gnumnorms;
+	phdr->ofsnormals = (pData - pStart);
+	memcpy(pData, gnorms, gnumnorms * sizeof(mstudionorm_s));
+	pData += gnumnorms * sizeof(mstudionorm_s);
+	ALIGN(pData);
+
+	phdr->ofsnormbones = (pData - pStart);
+	memcpy(pData, gbonenorms, gnumnorms * sizeof(byte));
+	pData += gnumnorms * sizeof(byte);
+	ALIGN(pData);
+
+	phdr->numtexcoords = gnumtexcoords;
+	phdr->ofstexcoords = (pData - pStart);
+	memcpy(pData, gtexcoords, gnumtexcoords * sizeof(mstudiotexcoord_s));
+	pData += gnumtexcoords * sizeof(mstudiotexcoord_s);
+	ALIGN(pData);
+
+	phdr->numtris = cnttris;
+
+	printf("%6d meshes\n", cntmesh);
+	printf("%6d groups\n", numbodyparts);
+	printf("%6d models\n", nummodels);
+
+	printf("%6d verts\n", gnumverts);
+	printf("%6d norms\n", gnumnorms);
+	printf("%6d texcoords\n", gnumtexcoords);
+
+	printf("%6d tris\n", phdr->numtris);
 }
 
 #define FILEBUFFER (16 * 1024 * 1024)
 
 void WriteFile()
 {
-	FILE* modelouthandle;
 	int total = 0;
-	int i;
+	FILE* modelouthandle;
 
 	pStart = kalloc(1, FILEBUFFER);
 	StripExtension(outname);
-	for (i = 1; i < numseqgroups; i++)
 	strcat(outname, ".mdl");
 
 	printf("---------------------\n");

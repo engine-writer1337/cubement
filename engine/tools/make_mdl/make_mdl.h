@@ -1,5 +1,5 @@
-#ifndef _STUDIOMDL_H_
-#define _STUDIOMDL_H_
+#ifndef _MAKE_MDL_H_
+#define _MAKE_MDL_H_
 
 #include "studio.h"
 
@@ -21,13 +21,6 @@
 #define STUDIO_TYPES	0x7FFF
 
 #define STUDIO_LOOPING	0x0001
-
-#define STUDIO_VERSION	10
-
-#define IDSTUDIOHEADER	(('T'<<24)+('S'<<16)+('D'<<8)+'I')
-// little-endian "IDST"
-#define IDSTUDIOSEQHEADER	(('Q'<<24)+('S'<<16)+('D'<<8)+'I')
-														// little-endian "IDSQ"
 
 #ifndef EXTERN
 #define EXTERN extern
@@ -358,10 +351,10 @@ typedef struct
 	char				name[32];
 	int					nummodels;
 	int					base;
-	s_model_t* pmodel[MDL_MAX_MODELS];
+	s_model_t* pmodel[MDL_MAX_BODIES];
 } s_bodypart_t;
 
 EXTERN	int numbodyparts;
-EXTERN	s_bodypart_t bodypart[MDL_MAX_BODIES];
+EXTERN	s_bodypart_t bodypart[MDL_MAX_GROUPS];
 
 #endif

@@ -10,7 +10,7 @@
 #include "scriplib.h"
 #include "mathlib.h"
 #define EXTERN
-#include "studiomdl.h"
+#include "make_mdl.h"
 
 void Sys_Error(char* error, ...) {};
 void clip_rotations(vec3_t rot);
@@ -997,7 +997,7 @@ static s_mesh_t* lookup_mesh(s_model_t* pmodel, char* texturename)
 	}
 
 	if (i >= MDL_MAX_MESHES) {
-		Error("too many textures in model: \"%s\"\n", pmodel->name);
+		Error("too many meshes in model: \"%s\"\n", pmodel->name);
 	}
 
 	pmodel->nummesh = i + 1;

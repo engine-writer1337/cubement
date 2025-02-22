@@ -27,6 +27,8 @@ typedef struct
 {
 	int magic;
 
+	int numtris;
+
 	int numbones;
 	int ofsbones;
 	
@@ -39,6 +41,7 @@ typedef struct
 	
 	int numnormals;
 	int ofsnormals;
+	int ofsnormbones;
 	
 	int numseq;
 	int ofsseq;
@@ -129,7 +132,7 @@ typedef struct
 {
 	word texture;
 	word numcommands;
-	int ofscommands; //vert index (word) + normal (word) + texcoord (word)
+	int ofscommands; //normal (word) + vert index (word) + texcoord (word)
 }mstudiomesh_s;
 
 typedef struct

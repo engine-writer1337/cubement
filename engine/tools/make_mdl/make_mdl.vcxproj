@@ -58,9 +58,10 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -84,7 +85,7 @@
     <ClCompile Include="cmdlib.c" />
     <ClCompile Include="mathlib.c" />
     <ClCompile Include="scriplib.c" />
-    <ClCompile Include="studiomdl.c" />
+    <ClCompile Include="make_mdl.c" />
     <ClCompile Include="write.c" />
   </ItemGroup>
   <ItemGroup>
@@ -92,7 +93,7 @@
     <ClInclude Include="mathlib.h" />
     <ClInclude Include="scriplib.h" />
     <ClInclude Include="studio.h" />
-    <ClInclude Include="studiomdl.h" />
+    <ClInclude Include="make_mdl.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

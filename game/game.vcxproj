@@ -56,6 +56,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <DisableSpecificWarnings>4133</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -79,6 +80,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
+      <DisableSpecificWarnings>4133</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -94,7 +96,9 @@
   <ItemGroup>
     <ClCompile Include="entity.c" />
     <ClCompile Include="ent_brush.c" />
+    <ClCompile Include="ent_phys.c" />
     <ClCompile Include="game.c" />
+    <ClCompile Include="game_int.c" />
     <ClCompile Include="menu.c" />
     <ClCompile Include="player.c" />
     <ClCompile Include="player_hud.c" />

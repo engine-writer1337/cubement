@@ -11,7 +11,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="game.c">
+    <ClCompile Include="game_int.c">
       <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="menu.c">
@@ -36,6 +36,12 @@
       <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="player_hud.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="game.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="ent_phys.c">
       <Filter>Source Code</Filter>
     </ClCompile>
   </ItemGroup>

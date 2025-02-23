@@ -105,7 +105,7 @@ static bool_t trace_brush(brush_s* b)
 	return FALSE;
 }
 
-void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents, trace_s* tr)
+void trace_bbox(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents, trace_s* tr)
 {
 	area_s* a;
 	surf_s* s;
@@ -270,4 +270,50 @@ void trace(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t
 			tr->normal[gtrace.brtype] = 1;
 		}
 	}
+}
+
+entity_s* trace_test_stuck(const vec3_t org, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents)
+{
+	return NULL;
+}
+
+bool_t trace_test_stuck_ent(const entity_s* check, const vec3_t org, const vec3_t mins, const vec3_t maxs)
+{
+	int j;
+	bool_t rotate;
+	brushmodel_s* bm;
+	brush_s* b, bfake;
+	vec3_t movevec, absmin, absmax;
+
+	if (!check || check->id == ENTID_FREE || check->model == BAD_HANDLE)
+		return FALSE;
+
+	vec_add(absmin, org, mins);
+	vec_add(absmax, org, maxs);
+	if (vec_aabb(check->absmin, check->absmax, absmin, absmax))
+		return FALSE;
+
+	switch (gres[check->model].type)
+	{
+	case RES_BRUSH:
+		bm = gres[check->model].data.brush;
+		rotate = !vec_is_zero(check->angles);
+		vec_sub(movevec, check->origin, bm->origin);
+
+		for (j = 0; j < bm->num_brushes; j++)
+		{
+			b = bm->brushes + j;
+			vec_add(bfake.absmin, movevec, b->absmin);
+			vec_add(bfake.absmax, movevec, b->absmax);
+
+			if (rotate)
+				vec_rotate_org_bbox(check->angles, check->origin, bm->offset, bfake.absmin, bfake.absmax);
+
+			if (!vec_aabb(bfake.absmin, bfake.absmax, gtrace.bmin, gtrace.bmax))
+				return TRUE;		
+		}
+		break;
+	}
+
+	return FALSE;
 }

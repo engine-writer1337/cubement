@@ -65,6 +65,12 @@
     <ClInclude Include="materials.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="model.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="sprite.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cubement.c">
@@ -107,6 +113,12 @@
       <Filter>Source Code</Filter>
     </ClCompile>
     <ClCompile Include="materials.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="model.c">
+      <Filter>Source Code</Filter>
+    </ClCompile>
+    <ClCompile Include="sprite.c">
       <Filter>Source Code</Filter>
     </ClCompile>
   </ItemGroup>

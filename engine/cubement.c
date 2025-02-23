@@ -92,42 +92,126 @@ static void engine_update()
 
 static void engine_int()
 {
+	//======================================================
+	// Entity
+	//======================================================
 	gengine.ent_register = ent_register;
+	gengine.ent_create = ent_create;
+	gengine.ent_remove = ent_remove;
 
-	gengine.con_create_cmd = con_create_cmd;
-	gengine.con_create_cvar = con_create_cvar2;
-	gengine.con_printf = con_printf;
+	gengine.ent_saverestore = NULL;
+	gengine.ent_play_anim = NULL;
+	gengine.ent_set_body = NULL;
+	gengine.ent_set_boneang = NULL;
+	gengine.ent_get_bonepos = NULL;
 
+	//======================================================
+	// Resources
+	//======================================================
+	gengine.resource_precache = res_precache;
+	gengine.resource_precache_ex = res_precache_ex;
+	gengine.resource_get_handle = res_find;
+
+	//======================================================
+	// Materials
+	//======================================================
+	gengine.materials_register = mat_register;
+	gengine.materials_file = mat_file;
+
+	//======================================================
+	// Font
+	//======================================================
+	gengine.font_height = font_height;
+	gengine.font_len = font_len;
+	gengine.font_print = font_print;
+
+	//======================================================
+	// Skybox
+	//======================================================
+	gengine.sky_load = sky_load;
+	gengine.sky_visible = sky_visible;
+	gengine.sky_rotate = sky_rotate;
+
+	//======================================================
+	// Cursor
+	//======================================================
 	gengine.cursor_reset_pos = in_reset_cursor_pos;
 	gengine.cursor_show = in_show_cursor;
 	gengine.cursor_set_pos = in_set_cursor_pos;
 	gengine.cursor_get_pos = in_get_cursor_pos;
 
-	gengine.resource_precache = res_precache;
-	gengine.resource_precache_ex = res_precache_ex;
-	gengine.resource_get_handle = res_find;
-
-	gengine.materials_file = mat_file;
-	gengine.materials_register = mat_register;
-
-	gengine.font_height = font_height;
-	gengine.font_len = font_len;
-	gengine.font_print = font_print;
-
+	//======================================================
+	// Custom 2d drawing
+	//======================================================
+	gengine.pic_get_numframes = NULL;
+	gengine.pic_get_size = NULL;
 	gengine.pic_draw = img_pic_draw;
+	gengine.pic_draw_stretch = NULL;
 
+	gengine.world_to_screen = NULL;
+
+	gengine.rect_draw = NULL;
+
+	//======================================================
+	// Sound
+	//======================================================
+	gengine.music_play = NULL;
+	gengine.music_pause = NULL;
+	gengine.music_stop = NULL;
+
+	gengine.sound_play = snd_play;
+	gengine.sound_play_ambient = NULL;
+	gengine.sound_play_local = NULL;
+	gengine.sound_stop = NULL;
+
+	//======================================================
+	// Render settings
+	//======================================================
 	gengine.set_view_fov = world_set_fov;
 	gengine.set_view_org = world_view_org;
 	gengine.set_view_ang = world_view_ang;
+	gengine.set_fog = NULL;
 
-	gengine.sky_load = sky_load;
-	gengine.sky_rotate = sky_rotate;	
+	//======================================================
+	// Console
+	//======================================================
+	gengine.con_execute = con_line_execute;
+	gengine.con_printf = con_printf;
 
-	gengine.trace = trace;
+	gengine.con_create_cmd = con_create_cmd;
+	gengine.con_create_cvar = con_create_cvar2;
 
-	gengine.sound_play = snd_play;
+	//======================================================
+	// Custom 3d drawing
+	//======================================================
+	gengine.custom_model = NULL;
+	gengine.custom_sprite = NULL;
 
+	gengine.custom_bind = NULL;
+	gengine.custom_color = NULL;
+	gengine.custom_rendermode = NULL;
+	gengine.custom_color_pointer = NULL;
+	gengine.custom_texcoord_pointer = NULL;
+	gengine.custom_verts_pointer = NULL;
+	gengine.custom_draw_arrays = NULL;
+
+	//======================================================
+	// Trace
+	//======================================================
+	gengine.trace_bbox = trace_bbox;
+	gengine.trace_test_stuck = NULL;
+	gengine.trace_test_stuck_ent = trace_test_stuck_ent;
+
+	//======================================================
+	// Areas
+	//======================================================
 	gengine.area_active = bru_area_active;
+	gengine.get_areas = NULL;
+
+	//======================================================
+	// Uncategorized
+	//======================================================
+	gengine.get_mapname = NULL;
 }
 
 static void engine_fps()

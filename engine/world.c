@@ -207,6 +207,11 @@ void sky_rotate(const vec3_t ang)
 	vec_copy(gsky.ang, ang);
 }
 
+void sky_visible(bool_t is_visible)
+{
+	gsky.invisible = !is_visible;
+}
+
 void sky_load(const char* name)
 {
 	int i;
@@ -266,7 +271,6 @@ static void world_area_visibles()
 	entity_s* e;
 	edict_s* ed;
 	int i, j, k, m;
-	vec3_t absmin, absmax;
 	bool_t anyintersect = FALSE;
 
 	gbru.areas[0].framenum = gworld.framecount;
@@ -353,9 +357,7 @@ static void world_area_visibles()
 		if (!anyintersect)
 			continue;
 
-		vec_add(absmax, e->origin, e->maxs);
-		vec_add(absmin, e->origin, e->mins);
-		if (frustum_clip(absmin, absmax))
+		if (frustum_clip(e->absmin, e->absmax))
 			continue;
 
 		switch (e->render)

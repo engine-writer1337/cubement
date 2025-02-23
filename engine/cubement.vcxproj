@@ -22,9 +22,11 @@
     <ClInclude Include="keys.h" />
     <ClInclude Include="materials.h" />
     <ClInclude Include="mathlib.h" />
+    <ClInclude Include="model.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="shared.h" />
     <ClInclude Include="sound.h" />
+    <ClInclude Include="sprite.h" />
     <ClInclude Include="trace.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="vidinit.h" />
@@ -39,8 +41,10 @@
     <ClCompile Include="image.c" />
     <ClCompile Include="input.c" />
     <ClCompile Include="materials.c" />
+    <ClCompile Include="model.c" />
     <ClCompile Include="resource.c" />
     <ClCompile Include="sound.c" />
+    <ClCompile Include="sprite.c" />
     <ClCompile Include="trace.c" />
     <ClCompile Include="util.c" />
     <ClCompile Include="vidinit.c" />

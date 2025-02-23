@@ -128,7 +128,7 @@ typedef struct
 	hash_t hash;
 }matmap_s;
 
-typedef struct
+typedef struct trace_t
 {
 	float fraction;
 	vec3_t endpos;
@@ -292,15 +292,22 @@ typedef struct
 	void (*custom_draw_arrays)(bool_t quads, int first, int count);
 
 	//======================================================
+	// Trace
+	//======================================================
+	void (*trace_bbox)(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents, trace_s* tr);
+	entity_s* (*trace_test_stuck)(const vec3_t org, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents);
+	bool_t (*trace_test_stuck_ent)(const entity_s* check, const vec3_t org, const vec3_t mins, const vec3_t maxs);
+
+	//======================================================
+	// Areas
+	//======================================================
+	void (*area_active)(const char* name, bool_t is_active);
+	int (*get_areas)(const vec3_t org, const vec3_t mins, const vec3_t maxs, int* indicies, int count);
+
+	//======================================================
 	// Uncategorized
 	//======================================================
 	void (*get_mapname)(char* name);
-
-	void (*trace)(const vec3_t start, const vec3_t end, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents, trace_s* tr);
-	bool_t(*bbox_is_stuck)(const vec3_t org, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents);
-
-	void (*area_active)(const char* name, bool_t is_active);
-	int (*get_areas)(const vec3_t org, const vec3_t mins, const vec3_t maxs, int* indicies, int count);
 }engine_s;
 
 typedef struct

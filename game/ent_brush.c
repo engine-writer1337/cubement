@@ -2,7 +2,7 @@
 
 static bool_t spawn_func_wall(entity_s* pev)
 {
-	pev->contents = CONTENTS_SOLID;
+	pev->contents = CONTENTS_BRUSH;
 	return TRUE;
 }
 
@@ -31,19 +31,28 @@ LINK_ENTITY(func_wall, ENTID_WALL, sizeof(entity_s))
 
 static void door_rot_use(door_rot_s* pev, entity_s* activator)
 {
-	pev->is_closed = !pev->is_closed;
-	pev->base.angles[YAW] = pev->is_closed ? 0 : 70;
-
-	cment->area_active(pev->area1, !pev->is_closed);
-	cment->area_active(pev->area2, !pev->is_closed);
-
-	cment->sound_play(glob.doorstop, pev, 0, 1, 512);
+	if (pev->is_closed)
+	{
+		pev->ideal_yaw = 90;
+		pev->base.avelocity[YAW] = 100;
+		cment->area_active(pev->area1, TRUE);
+		cment->area_active(pev->area2, TRUE);
+		pev->is_closed = FALSE;
+	}
+	else
+	{
+		pev->ideal_yaw = 0;
+		pev->base.avelocity[YAW] = -100;
+		cment->area_active(pev->area1, FALSE);
+		cment->area_active(pev->area2, FALSE);
+		pev->is_closed = TRUE;
+	}
 }
 
 static bool_t spawn_func_door_rotating(door_rot_s* pev)
 {
 	pev->is_closed = TRUE;
-	pev->base.contents = CONTENTS_SOLID;
+	pev->base.contents = CONTENTS_BRUSH;
 	pev->base.use = door_rot_use;
 	return TRUE;
 }
@@ -69,8 +78,17 @@ static void saverestore_func_door_rotating(door_rot_s* pev) {}
 
 static void think_func_door_rotating(door_rot_s* pev)
 {
-	//pev->origin[0] += 4 * cment->frametime;
-	//pev->origin[1] += 4 * cment->frametime;
+	float delta = fabsf(pev->ideal_yaw - pev->base.angles[YAW]);
+	if (delta < 0.001f)
+		return;
+
+	if (delta < 1)
+	{
+		pev->base.angles[YAW] = pev->ideal_yaw;
+		cment->sound_play(glob.doorstop, pev, 0, 1, 512);
+	}
+	else
+		ent_rotate(pev, 0);
 }
 
 LINK_ENTITY(func_door_rotating, ENTID_DOOR_ROT, sizeof(door_rot_s))

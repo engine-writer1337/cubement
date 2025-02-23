@@ -41,7 +41,7 @@ void PM_StepSlideMove(player_s* pev)
 			end[i] = pev->base.origin[i] + time_left * pev->base.velocity[i];
 		}
 
-		cment->trace(pev->base.origin, end, mins, maxs, NULL, CONTENTS_ALL, &trace);
+		cment->trace_bbox(pev->base.origin, end, mins, maxs, NULL, CONTENTS_ALL, &trace);
 		if (trace.endstuck)
 		{
 			vec_clear(pev->base.velocity);

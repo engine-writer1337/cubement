@@ -3,10 +3,13 @@
 
 #define CONTENTS_EMPTY		0
 #define CONTENTS_WORLD		(1 << 0)
-#define CONTENTS_SOLID		(1 << 1)
-#define CONTENTS_TRIGGER	(1 << 2)
-#define CONTENTS_WATER		(1 << 3)
-#define CONTENTS_ALL		(CONTENTS_WORLD | CONTENTS_SOLID | CONTENTS_TRIGGER | CONTENTS_WATER)
+#define CONTENTS_BBOX		(1 << 1)
+#define CONTENTS_BRUSH		(1 << 2)
+#define CONTENTS_TRIGGER	(1 << 3)
+#define CONTENTS_WATER		(1 << 4)
+
+#define CONTENTS_SOLID		(CONTENTS_WORLD | CONTENTS_BBOX | CONTENTS_BRUSH)
+#define CONTENTS_ALL		(CONTENTS_WORLD | CONTENTS_BBOX | CONTENTS_BRUSH | CONTENTS_TRIGGER | CONTENTS_WATER)
 
 typedef enum
 {
@@ -46,6 +49,9 @@ typedef struct entity_t
 	vec3_t mins;
 	vec3_t maxs;
 
+	vec3_t absmin;
+	vec3_t absmax;
+
 	render_e render;
 	byte renderamt;
 	byte color[3];
@@ -55,14 +61,16 @@ typedef struct entity_t
 	float scale;
 
 	vec2_t scroll;
-
-	ftime_t nextthink;
 	//======================================================
 	// Here are custom fields, can be written in any order
 	//======================================================
 	vec3_t velocity;
 	vec3_t avelocity;
 
+	ftime_t nextthink;
+
+	void (*block)(void* pev, struct entity_t* blocker);
+	void (*touch)(void* pev, struct entity_t* toucher, struct trace_t* tr);
 	void (*use)(void* pev, struct entity_t* activator);
 }entity_s;
 

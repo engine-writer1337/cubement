@@ -85,7 +85,7 @@ entity_s* ent_create(const char* classname)
 
 	gents[i] = util_calloc(map->pev_size, sizeof(byte));
 	memzero(&gedicts[i], sizeof(gedicts[i]));
-	gedicts[i].oldmodel = BAD_HANDLE;
+	gedicts[i].old.model = BAD_HANDLE;
 	gedicts[i].e = gents[i];
 
 	gents[i]->id = map->id;
@@ -133,10 +133,8 @@ static void ent_fill_areas(edict_s* ed)
 
 	e = ed->e;
 	ed->num_areas = 0;
-	vec_add(absmax, e->origin, e->maxs);
-	vec_add(absmin, e->origin, e->mins);
-	vec_add_val(absmax, absmax, TRACE_EPSILON);
-	vec_add_val(absmin, absmin, -TRACE_EPSILON);
+	vec_add_val(absmax, e->absmax, TRACE_EPSILON);
+	vec_add_val(absmin, e->absmin, -TRACE_EPSILON);
 
 	for (i = 1; i < gbru.num_areas; i++)
 	{
@@ -165,11 +163,17 @@ static void ent_update(edict_s* ed)
 	if (!e)
 		return;
 
+	if (!vec_cmp(ed->old.absmin, e->absmin) || !vec_cmp(ed->old.absmax, e->absmax))
+	{
+		vec_copy(e->absmin, ed->old.absmin);
+		vec_copy(e->absmax, ed->old.absmax);
+	}
+
 	relink = FALSE;
-	if (ed->oldmodel != e->model)
+	if (ed->old.model != e->model)
 	{
 		relink = TRUE;
-		ed->oldmodel = e->model;
+		ed->old.model = e->model;
 
 		if (e->model != BAD_HANDLE && gres[e->model].type == RES_BRUSH)
 		{
@@ -180,13 +184,13 @@ static void ent_update(edict_s* ed)
 		}
 	}
 
-	if (!vec_cmp(ed->oldorg, e->origin))
+	if (!vec_cmp(ed->old.origin, e->origin))
 	{
-		vec_copy(ed->oldorg, e->origin);
+		vec_copy(ed->old.origin, e->origin);
 		relink = TRUE;
 	}
 
-	if (!vec_cmp(ed->oldang, e->angles))
+	if (!vec_cmp(ed->old.angles, e->angles))
 	{
 		if (e->model != BAD_HANDLE && gres[e->model].type == RES_BRUSH)
 		{
@@ -200,12 +204,17 @@ static void ent_update(edict_s* ed)
 			vec_rotate_bbox(e->angles, bm->offset, e->mins, e->maxs);
 		}
 
-		vec_copy(ed->oldang, e->angles);
+		vec_copy(ed->old.angles, e->angles);
 		relink = TRUE;
 	}
 
 	if (relink)
 	{
+		vec_add(e->absmax, e->origin, e->maxs);
+		vec_add(e->absmin, e->origin, e->mins);
+		vec_copy(ed->old.absmax, e->absmax);
+		vec_copy(ed->old.absmin, e->absmin);
+
 		if (e->flags & FL_TEMP)
 		{
 			ed->num_areas = 1;
@@ -229,9 +238,7 @@ void ent_think()
 			continue;
 
 		e = ed->e;
-		if (e->nextthink < ghost.gametime)
-			gentmap[e->id].think(e);
-
+		gentmap[e->id].think(e);
 		ent_update(ed);
 	}
 }

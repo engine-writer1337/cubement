@@ -17,9 +17,16 @@ typedef struct _edict_s
 	int sequence;
 	int numframes;
 
-	vec3_t oldorg;
-	vec3_t oldang;
-	ihandle_t oldmodel;
+	struct
+	{
+		vec3_t origin;
+		vec3_t angles;
+
+		vec3_t absmin;
+		vec3_t absmax;
+
+		ihandle_t model;
+	}old;
 
 	struct _edict_s* next;
 }edict_s;
@@ -30,11 +37,11 @@ extern entity_s* gents[MAX_ENTITIES];
 extern edict_s gedicts[MAX_ENTITIES];
 
 void ent_register(const entmap_s* ent);
+entity_s* ent_create(const char* classname);
+void ent_remove(entity_s* ent);
 
 void ent_think();
 
 bool_t ent_parse(const char* pfile);
-
-
 
 #endif

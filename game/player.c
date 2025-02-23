@@ -15,6 +15,7 @@ static bool_t spawn_player(player_s* pev)
 	}
 
 	pev->viewofs = PLR_VIEW_OFS;
+	pev->base.contents = CONTENTS_BBOX;
 	return TRUE;
 }
 
@@ -39,7 +40,7 @@ static void think_player(player_s* pev)
 		vec3_t endpos;
 
 		vec_ma(endpos, pev->vieworg, 128, pev->v_forward);
-		cment->trace(pev->vieworg, endpos, gvec_zeros, gvec_zeros, pev, CONTENTS_SOLID, &tr);
+		cment->trace_bbox(pev->vieworg, endpos, gvec_zeros, gvec_zeros, pev, CONTENTS_SOLID, &tr);
 		if (tr.ent && tr.ent->use)
 			tr.ent->use(tr.ent, pev);
 

@@ -63,6 +63,9 @@ void host_shutdown();
 #include "world.h"
 #include "trace.h"
 
+#include "sprite.h"
+#include "model.h"
+
 #include "resource.h"
 #include "materials.h"
 

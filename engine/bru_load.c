@@ -101,6 +101,7 @@ static void bru_load_textures(const byte* data, const bru_lump_s* l)
 		strcpyn(out[i].name, in[i].name);
 
 		out[i].t = img_load(tmp);
+		out[i].detail = BAD_HANDLE;//very ugly
 		out[i].width = gimg.out_width;
 		out[i].height = gimg.out_height;
 
@@ -431,7 +432,6 @@ void bru_free()
 	util_free(gbru.areas);
 	util_free(gvertbuf.st);
 	util_free(gvertbuf.xyz);
-	util_buf_free(gvertbuf.buffer);
 	memzero(&gbru, sizeof(gbru));
 	memzero(&gvertbuf, sizeof(gvertbuf));
 	memzero(gents, sizeof(gents));
@@ -448,14 +448,17 @@ void bru_unload()
 	}
 
 	sky_free();
-	util_buf_free(gvertbuf.buffer);
-	gvertbuf.buffer = 0;
+	det_unload();
 }
 
 void bru_reload()
 {
 	int i;
 	string_t tmp;
+
+	gimg.mipmap = TRUE;
+	gimg.clamp = FALSE;
+	gimg.nearest = gimg.nofilter->value;
 
 	for (i = 0; i < gbru.num_textures; i++)
 	{
@@ -464,4 +467,6 @@ void bru_reload()
 	}
 
 	sky_load(gsky.name);
+	det_reload();
+	det_update();
 }

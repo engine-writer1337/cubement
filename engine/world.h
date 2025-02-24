@@ -38,10 +38,12 @@ typedef struct
 	vec3_t v_right;
 	vec3_t v_up;
 
-	convar_s* vbo;//TODO: удалить VBO, на производительность мало влияет
 	convar_s* lock;
 	convar_s* wireframe;
 	convar_s* shade;
+
+	convar_s* detailtexture;
+	convar_s* detailfactor;
 
 	edict_s* solid_chain;
 	edict_s* transparent_chain;
@@ -64,6 +66,7 @@ extern entity_s* gentworld;
 void sky_rotate(const vec3_t ang);
 void sky_visible(bool_t is_visible);
 void sky_load(const char* name);
+void sky_load2(const char* name);
 void sky_free();
 
 void world_draw();

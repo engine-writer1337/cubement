@@ -212,6 +212,7 @@ typedef struct
 	// Materials
 	//======================================================
 	void (*materials_register)(const matmap_s* matmap, int num);
+	void (*materials_detail)(const char* name);
 	void (*materials_file)(const char* name);
 
 	//======================================================

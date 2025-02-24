@@ -54,6 +54,7 @@ void game_window_inactive()
 
 void game_precache()
 {
+	cment->materials_detail("misc/all.det");
 	glob.doorstop = cment->resource_precache("doorstop4.wav");
 }
 

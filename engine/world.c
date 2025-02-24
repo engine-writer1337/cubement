@@ -218,13 +218,7 @@ void sky_load(const char* name)
 	string_t path;
 	static const char* sides[6] = { "bk", "ft", "lf", "rt", "up", "dn" };
 
-	if (!ghost.precache)
-	{
-		con_printf(COLOR_RED, "%s - skybox loading not allowed");
-		return;
-	}
-
-	if (strnull(name) || strcmpi(gsky.name, name))
+	if (strnull(name))
 		return;
 
 	sky_free();
@@ -232,7 +226,6 @@ void sky_load(const char* name)
 	gimg.mipmap = FALSE;
 	gimg.nearest = gimg.nofilter->value;
 
-	strcpyn(gsky.name, name);
 	for (i = 0; i < 6; i++)
 	{
 		sprintf(path, SKY_FOLDER"%s%s", name, sides[i]);
@@ -244,6 +237,21 @@ void sky_load(const char* name)
 			return;
 		}
 	}
+}
+
+void sky_load2(const char* name)
+{
+	if (!ghost.precache)
+	{
+		con_printf(COLOR_RED, "%s - skybox loading not allowed", name);
+		return;
+	}
+
+	if (strnull(name) || strcmpi(gsky.name, name))
+		return;
+
+	strcpyn(gsky.name, name);
+	sky_load(name);
 }
 
 void sky_free()
@@ -325,6 +333,12 @@ static void world_area_visibles()
 
 					s->next = gbru.textures[s->texture].chain;
 					gbru.textures[s->texture].chain = s;
+
+					if (gbru.textures[s->texture].detail != BAD_HANDLE)
+					{//very ugly
+						s->nextdetail = gdetails[gbru.textures[s->texture].detail].chain;
+						gdetails[gbru.textures[s->texture].detail].chain = s;
+					}
 				}
 			}
 			break;
@@ -382,30 +396,6 @@ static void world_area_visibles()
 	}
 }
 
-static void world_vbo()
-{
-	if (gworld.vbo->value)
-	{
-		if (gvertbuf.buffer)
-			return;
-
-		gvertbuf.buffer = util_buf_gen();
-		glBindBuffer(GL_ARRAY_BUFFER, gvertbuf.buffer);
-		glBufferData(GL_ARRAY_BUFFER, gvertbuf.count * (sizeof(vec3_t) + sizeof(vec2_t)), 0, GL_STATIC_DRAW);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, gvertbuf.count * sizeof(vec3_t), gvertbuf.xyz);
-		glBufferSubData(GL_ARRAY_BUFFER, gvertbuf.count * sizeof(vec3_t), gvertbuf.count * sizeof(vec2_t), gvertbuf.st);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-	else
-	{
-		if (!gvertbuf.buffer)
-			return;
-
-		util_buf_free(gvertbuf.buffer);
-		gvertbuf.buffer = 0;
-	}
-}
-
 static void world_shade_color(surf_s* s, entity_s* ent)
 {
 	if (gworld.shade->value > 0)
@@ -446,20 +436,10 @@ static void world_draw_worldspawn()
 	surf_s* s;
 	btexture_s* t;
 
-	world_vbo();
-	if (gvertbuf.buffer)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, gvertbuf.buffer);
-		glVertexPointer(3, GL_FLOAT, 0, NULL);
-		glTexCoordPointer(2, GL_FLOAT, 0, (void*)(gvertbuf.count * sizeof(vec3_t)));
-	}
-	else
-	{
-		glTexCoordPointer(2, GL_FLOAT, 0, gvertbuf.st);
-		glVertexPointer(3, GL_FLOAT, 0, gvertbuf.xyz);
-	}
-
+	glTexCoordPointer(2, GL_FLOAT, 0, gvertbuf.st);
+	glVertexPointer(3, GL_FLOAT, 0, gvertbuf.xyz);
 	vid_rendermode(gentworld->render);
+
 	for (i = 0; i < gbru.num_textures; i++)
 	{
 		t = gbru.textures + i;
@@ -476,11 +456,47 @@ static void world_draw_worldspawn()
 		}
 	}
 
+	vid_rendermode(RENDER_NORMAL);
+	glColor4ub(255, 255, 255, 255);
+	if (gnum_details && gworld.detailtexture->value)
+	{
+		detail_s* det;
+
+		glDepthFunc(GL_EQUAL);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+		glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+		glEnable(GL_BLEND);
+
+		glMatrixMode(GL_TEXTURE);
+		glPushMatrix();
+		glScalef(gworld.detailfactor->value, gworld.detailfactor->value, gworld.detailfactor->value);
+		
+		for (i = 0; i < gnum_details; i++)
+		{
+			det = gdetails + i;
+			if (!det->chain || !det->texture)
+				continue;
+
+			s = det->chain;
+			img_bind(det->texture);
+			while (s)
+			{
+				glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+				s = s->nextdetail;
+			}
+		}
+
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+
+		glDisable(GL_BLEND);
+		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		glDepthFunc(GL_LEQUAL);
+	}
+
 	if (gworld.wireframe->value)
 	{
 		glDisable(GL_TEXTURE_2D);
-		vid_rendermode(RENDER_NORMAL);
-		glColor4ub(255, 255, 255, 255);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		if (gworld.wireframe->value < 2)
@@ -502,9 +518,53 @@ static void world_draw_worldspawn()
 		if (gworld.wireframe->value < 2)
 			glEnable(GL_DEPTH_TEST);
 	}
+}
 
-	if (gvertbuf.buffer)
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+static void world_draw_brush_det(const brush_s* b, const vec3_t absmax, const vec3_t absmin)
+{
+	int m;
+	surf_s* s;
+	render_e oldrender;
+
+	if (!gnum_details || !gworld.detailtexture->value)
+		return;
+
+	glColor4ub(255, 255, 255, 255);
+	oldrender = gvid.render;
+	gvid.render = BAD_HANDLE;//ugly hack
+
+	glDepthFunc(GL_EQUAL);
+	glDisable(GL_ALPHA_TEST);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+	glEnable(GL_BLEND);
+
+	glMatrixMode(GL_TEXTURE);
+	glPushMatrix();
+	glScalef(gworld.detailfactor->value, gworld.detailfactor->value, gworld.detailfactor->value);
+
+	for (m = 0; m < b->num_surfes; m++)
+	{
+		s = b->surfes + m;
+		if (absmax)
+		{
+			if ((s->sign || gworld.vieworg[s->itype] < absmax[s->itype]) && (!s->sign || gworld.vieworg[s->itype] > absmin[s->itype]))
+				continue;
+		}
+
+		if (gbru.textures[s->texture].detail == BAD_HANDLE)
+			continue;
+
+		img_bind(gdetails[gbru.textures[s->texture].detail].texture);
+		glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
+	}
+
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+
+	vid_rendermode(oldrender);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glDepthFunc(GL_LEQUAL);
 }
 
 static void world_draw_ents(edict_s* ed)
@@ -561,6 +621,8 @@ static void world_draw_ents(edict_s* ed)
 						img_bind(gbru.textures[s->texture].t);
 						glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
 					}
+
+					world_draw_brush_det(b, NULL, NULL);
 				}
 			}
 			else
@@ -583,6 +645,8 @@ static void world_draw_ents(edict_s* ed)
 						img_bind(gbru.textures[s->texture].t);
 						glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
 					}
+
+					world_draw_brush_det(b, absmax, absmin);
 				}
 			}
 
@@ -613,6 +677,9 @@ void world_draw()
 
 		for (i = 0; i < gbru.num_textures; i++)
 			gbru.textures[i].chain = NULL;
+
+		for (i = 0; i < gnum_details; i++)
+			gdetails[i].chain = NULL;
 
 		if (!gworld.lock->value)
 			frustum_adjust();
@@ -750,6 +817,7 @@ void world_load_map()
 	}
 
 	mat_update();
+	det_update();
 	ggame.game_start();
 	gworld.is_load = TRUE;
 	ghost.newmap[0] = '\0';

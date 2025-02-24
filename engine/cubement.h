@@ -8,7 +8,6 @@
 typedef unsigned short	word;
 typedef unsigned char	enum_t;
 typedef unsigned int	dword;
-typedef unsigned int	glbuf_t;
 typedef unsigned int	glpic_t;
 typedef float			vec4_t[4];
 typedef char			name_t[64];
@@ -30,7 +29,6 @@ typedef struct
 	int files;
 	int memory;
 	int textures;
-	int buffers;
 
 	ftime_t time;
 	ftime_t frametime;

@@ -1,11 +1,6 @@
 #include "cubement.h"
 
 vid_s gvid;
-PFNGLGENBUFFERSPROC glGenBuffers;
-PFNGLBINDBUFFERPROC glBindBuffer;
-PFNGLBUFFERDATAPROC glBufferData;
-PFNGLDELETEBUFFERSPROC glDeleteBuffers;
-PFNGLBUFFERSUBDATAPROC glBufferSubData;
 PFNWGLSWAPBUFFERPROC wglSwapBuffers;
 static PFNWGLSWAPINTERVALEXTPROC wglSwapInterval;
 static PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormat;
@@ -126,16 +121,7 @@ static void vid_glinit()
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glLineWidth(1.25f);
 
-		glGenBuffers = (PFNGLGENBUFFERSPROC)wglGetProcAddress("glGenBuffers");
-		glBindBuffer = (PFNGLBINDBUFFERPROC)wglGetProcAddress("glBindBuffer");
-		glBufferData = (PFNGLBUFFERDATAPROC)wglGetProcAddress("glBufferData");
-		glDeleteBuffers = (PFNGLDELETEBUFFERSPROC)wglGetProcAddress("glDeleteBuffers");
-		glBufferSubData = (PFNGLBUFFERSUBDATAPROC)wglGetProcAddress("glBufferSubData");
 		wglSwapInterval = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
-
-		if (!glGenBuffers)
-			util_fatal("VBO is not supported");
-
 		if (!wglChoosePixelFormat)
 			vid_msaa_init();
 	}

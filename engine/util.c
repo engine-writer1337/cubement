@@ -46,7 +46,6 @@ void util_musage()
 	con_printf(COLOR_WHITE, "%4i memory", ghost.memory);
 	con_printf(COLOR_WHITE, "%4i files", ghost.files);
 	con_printf(COLOR_WHITE, "%4i textures", ghost.textures);
-	con_printf(COLOR_WHITE, "%4i buffers", ghost.buffers);
 }
 
 FILE* util_open(const char* name, const char* mode)
@@ -88,32 +87,14 @@ void util_tex_free(glpic_t t)
 	glDeleteTextures(1, &t);
 }
 
-glbuf_t util_buf_gen()
-{
-	glbuf_t buf;
-
-	ghost.buffers++;
-	glGenBuffers(1, &buf);
-	return buf;
-}
-
-void util_buf_free(glbuf_t buf)
-{
-	if (!buf)
-		return;
-
-	ghost.buffers--;
-	glDeleteBuffers(1, &buf);
-}
-
 void util_checksum()
 {
 	string_t msg;
 
-	if (!ghost.textures && !ghost.memory && !ghost.files && !ghost.buffers)
+	if (!ghost.textures && !ghost.memory && !ghost.files)
 		return;
 
-	sprintf(msg, "Textures: %i\nMemory: %i\nFiles: %i\nVBOs: %i", ghost.textures, ghost.memory, ghost.files, ghost.buffers);
+	sprintf(msg, "Textures: %i\nMemory: %i\nFiles: %i", ghost.textures, ghost.memory, ghost.files);
 	MessageBox(NULL, msg, "Error checksum", MB_ICONERROR | MB_OK | MB_SYSTEMMODAL);
 }
 

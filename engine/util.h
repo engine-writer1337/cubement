@@ -12,9 +12,6 @@ void util_close(FILE* fp);
 glpic_t util_tex_gen();
 void util_tex_free(glpic_t t);
 
-glbuf_t util_buf_gen();
-void util_buf_free(glbuf_t buf);
-
 void util_checksum();
 bool_t util_exist(const char* filename);
 byte* util_full(const char* filename, int* len);

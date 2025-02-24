@@ -17,8 +17,6 @@ typedef struct
 	int count;
 	vec2_t* st;
 	vec3_t* xyz;
-
-	glbuf_t buffer;
 }vertbuf_s;
 
 typedef struct
@@ -45,15 +43,28 @@ typedef struct _surf_s
 
 	int offset;
 	int texture;
+
 	struct _surf_s* next;
+	struct _surf_s* nextdetail;
 }surf_s;
 
 typedef struct
 {
+	hash_t hash;
+	char name[32];
+	glpic_t texture;
+
+	surf_s* chain;
+}detail_s;
+
+typedef struct
+{
 	glpic_t t;
+
 	char name[32];
 	int width, height;
 	material_e material;
+	material_e detail;//why am I mixing this up???
 
 	surf_s* chain;
 }btexture_s;

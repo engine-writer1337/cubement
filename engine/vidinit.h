@@ -5,10 +5,7 @@
 #define WIN_CLASSNAME	" _cment_ "
 #define WIN_FLAGS		(WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX)
 
-#define GL_ARRAY_BUFFER		0x8892
 #define GL_CLAMP_TO_EDGE	0x812F
-#define GL_STATIC_DRAW		0x88E4
-#define GL_DYNAMIC_DRAW		0x88E8
 #define GL_MAX_SAMPLES		0x8D57
 
 #define WGL_ACCELERATION_ARB		0x2003
@@ -30,12 +27,6 @@
 
 typedef BOOL(WINAPI* PFNWGLSWAPBUFFERPROC) (HDC hdc);
 typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int interval);
-typedef void (WINAPI* PFNGLGENBUFFERSPROC) (GLsizei n, GLuint* buffers);
-typedef void (WINAPI* PFNGLBINDBUFFERPROC) (GLenum target, GLuint buffer);
-typedef void (WINAPI* PFNGLBUFFERDATAPROC) (GLenum target, size_t size, const GLvoid* data, GLenum usage);
-typedef void (WINAPI* PFNGLDELETEBUFFERSPROC) (GLsizei n, const GLuint* buffers);
-typedef void (WINAPI* PFNGLBUFFERSUBDATAPROC) (GLenum target, size_t offset, size_t size, const GLvoid* data);
-
 typedef BOOL(WINAPI* PFNWGLCHOOSEPIXELFORMATARBPROC) (HDC hdc, const int* piAttribIList, const FLOAT* pfAttribFList, UINT nMaxFormats, int* piFormats, UINT* nNumFormats);
 
 typedef struct
@@ -64,11 +55,6 @@ typedef struct
 
 extern vid_s gvid;
 extern PFNWGLSWAPBUFFERPROC wglSwapBuffers;
-extern PFNGLGENBUFFERSPROC glGenBuffers;
-extern PFNGLBINDBUFFERPROC glBindBuffer;
-extern PFNGLBUFFERDATAPROC glBufferData;
-extern PFNGLDELETEBUFFERSPROC glDeleteBuffers;
-extern PFNGLBUFFERSUBDATAPROC glBufferSubData;
 
 void vid_rendermode(render_e mode);
 void vid_setup2d();

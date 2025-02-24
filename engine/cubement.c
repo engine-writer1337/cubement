@@ -116,6 +116,7 @@ static void engine_int()
 	// Materials
 	//======================================================
 	gengine.materials_register = mat_register;
+	gengine.materials_detail = det_file;
 	gengine.materials_file = mat_file;
 
 	//======================================================
@@ -128,7 +129,7 @@ static void engine_int()
 	//======================================================
 	// Skybox
 	//======================================================
-	gengine.sky_load = sky_load;
+	gengine.sky_load = sky_load2;
 	gengine.sky_visible = sky_visible;
 	gengine.sky_rotate = sky_rotate;
 
@@ -312,6 +313,7 @@ void host_shutdown()
 	snd_shutdown();
 
 	sky_free();
+	det_unload();
 	bru_free();
 
 	img_free();

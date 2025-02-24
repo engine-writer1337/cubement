@@ -537,9 +537,10 @@ void con_init()
 
 	gimg.aniso = con_create_cvar("r_aniso", TRUE, TRUE);
 	gimg.nofilter = con_create_cvar("r_nearest", FALSE, TRUE);
-	gworld.vbo = con_create_cvar("r_vbo", TRUE, TRUE);
 	gworld.shade = con_create_cvar("r_shade", 0.2f, TRUE);
 	ghost.fps = con_create_cvar("r_fps", 100, TRUE);
+	gworld.detailtexture = con_create_cvar("r_detailtexture", TRUE, TRUE);
+	gworld.detailfactor = con_create_cvar("r_detailfactor", 8, TRUE);
 
 	gcon.test = con_create_cvar("test", FALSE, FALSE);
 

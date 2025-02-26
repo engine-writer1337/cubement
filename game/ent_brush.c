@@ -31,27 +31,27 @@ LINK_ENTITY(func_wall, ENTID_WALL, sizeof(entity_s))
 
 static void door_rot_use(door_rot_s* pev, entity_s* activator)
 {
-	if (pev->is_closed)
+	if (pev->toggle.is_closed)
 	{
-		pev->ideal_yaw = 90;
+		pev->toggle.ideal_yaw = 90;
 		pev->base.avelocity[YAW] = 100;
 		cment->area_active(pev->area1, TRUE);
 		cment->area_active(pev->area2, TRUE);
-		pev->is_closed = FALSE;
+		pev->toggle.is_closed = FALSE;
 	}
 	else
 	{
-		pev->ideal_yaw = 0;
+		pev->toggle.ideal_yaw = 0;
 		pev->base.avelocity[YAW] = -100;
 		cment->area_active(pev->area1, FALSE);
 		cment->area_active(pev->area2, FALSE);
-		pev->is_closed = TRUE;
+		pev->toggle.is_closed = TRUE;
 	}
 }
 
 static bool_t spawn_func_door_rotating(door_rot_s* pev)
 {
-	pev->is_closed = TRUE;
+	pev->toggle.is_closed = TRUE;
 	pev->base.contents = CONTENTS_BRUSH;
 	pev->base.use = door_rot_use;
 	return TRUE;
@@ -78,17 +78,17 @@ static void saverestore_func_door_rotating(door_rot_s* pev) {}
 
 static void think_func_door_rotating(door_rot_s* pev)
 {
-	float delta = fabsf(pev->ideal_yaw - pev->base.angles[YAW]);
+	float delta = fabsf(pev->toggle.ideal_yaw - pev->base.angles[YAW]);
 	if (delta < 0.001f)
 		return;
 
 	if (delta < 1)
 	{
-		pev->base.angles[YAW] = pev->ideal_yaw;
-		cment->sound_play(glob.doorstop, pev, 0, 1, 512);
+		pev->base.angles[YAW] = pev->toggle.ideal_yaw;
+		cment->sound_play(glob.doorstop, ENT(pev), 0, 1, 512);
 	}
 	else
-		ent_rotate(pev, 0);
+		ent_rotate(ENT(pev), 0);
 }
 
 LINK_ENTITY(func_door_rotating, ENTID_DOOR_ROT, sizeof(door_rot_s))

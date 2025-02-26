@@ -171,7 +171,7 @@ static void vid_create()
 	ReleaseDC(GetDesktopWindow(), desk_hdc);
 
 	ChangeDisplaySettings(NULL, 0);
-	if (gvid.fullscreen->value)
+	if (gvid.fullscreen->value == 1)
 	{
 		DEVMODE	devmode;
 
@@ -215,11 +215,28 @@ static void vid_create()
 		r.right = x + gvid.modes[(int)gvid.mode->value][0];
 		r.bottom = y + gvid.modes[(int)gvid.mode->value][1];
 
-		gvid.width = gvid.modes[(int)gvid.mode->value][0];
-		gvid.height = gvid.modes[(int)gvid.mode->value][1];
+		if (gvid.fullscreen->value == 2)
+		{
+			AdjustWindowRect(&r, WS_DLGFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX, FALSE);
+			gvid.hwnd = CreateWindow(WIN_CLASSNAME, ggame.windowname, WS_DLGFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX, x, y, r.right - r.left, r.bottom - r.top, NULL, NULL, gvid.hinst, NULL);
 
-		AdjustWindowRect(&r, WIN_FLAGS, FALSE);
-		gvid.hwnd = CreateWindow(WIN_CLASSNAME, ggame.windowname, WIN_FLAGS, x, y, r.right - r.left, r.bottom - r.top, NULL, NULL, gvid.hinst, NULL);
+			SetFocus(gvid.hwnd);
+			ShowWindow(gvid.hwnd, SW_MAXIMIZE);
+			UpdateWindow(gvid.hwnd);
+			SetForegroundWindow(gvid.hwnd);
+
+			GetClientRect(gvid.hwnd, &r);
+			gvid.width = r.right;
+			gvid.height = r.bottom;
+		}
+		else
+		{
+			gvid.width = gvid.modes[(int)gvid.mode->value][0];
+			gvid.height = gvid.modes[(int)gvid.mode->value][1];
+
+			AdjustWindowRect(&r, WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, FALSE);
+			gvid.hwnd = CreateWindow(WIN_CLASSNAME, ggame.windowname, WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, x, y, r.right - r.left, r.bottom - r.top, NULL, NULL, gvid.hinst, NULL);
+		}
 	}
 
 	if (!gvid.hwnd)
@@ -240,11 +257,13 @@ void vid_init()
 	gvid.mode->value = clamp(0, gvid.mode->value, gvid.num_modes - 1);
 
 	vid_create();
-
-	UpdateWindow(gvid.hwnd);
-	SetForegroundWindow(gvid.hwnd);
-	SetFocus(gvid.hwnd);
-	ShowWindow(gvid.hwnd, SW_NORMAL);
+	if (gvid.fullscreen->value != 2)
+	{
+		UpdateWindow(gvid.hwnd);
+		SetForegroundWindow(gvid.hwnd);
+		SetFocus(gvid.hwnd);
+		ShowWindow(gvid.hwnd, SW_NORMAL);
+	}
 }
 
 void vid_set_params()
@@ -296,7 +315,7 @@ void vid_dispose(bool_t dispose_hrc)
 		DestroyWindow(gvid.hwnd), gvid.hwnd = NULL;
 
 	UnregisterClass(WIN_CLASSNAME, gvid.hinst);
-	if (gvid.fullscreen->value)
+	if (gvid.fullscreen->value == 1)
 		ChangeDisplaySettings(NULL, 0);
 }
 

@@ -6,8 +6,17 @@ typedef struct
 	entity_s base;
 
 	float ideal_yaw;
-
 	bool_t is_closed;
+}entity_toggle_s;
+
+typedef struct
+{
+	union
+	{
+		entity_s base;
+		entity_toggle_s toggle;
+	};
+
 	char area1[20];
 	char area2[20];
 }door_rot_s;

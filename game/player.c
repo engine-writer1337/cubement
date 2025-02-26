@@ -40,9 +40,9 @@ static void think_player(player_s* pev)
 		vec3_t endpos;
 
 		vec_ma(endpos, pev->vieworg, 128, pev->v_forward);
-		cment->trace_bbox(pev->vieworg, endpos, gvec_zeros, gvec_zeros, pev, CONTENTS_SOLID, &tr);
+		cment->trace_bbox(pev->vieworg, endpos, gvec_zeros, gvec_zeros, ENT(pev), CONTENTS_SOLID, &tr);
 		if (tr.ent && tr.ent->use)
-			tr.ent->use(tr.ent, pev);
+			tr.ent->use(tr.ent, ENT(pev));
 
 		pev->nextuse = cment->gametime + 0.2f;
 	}

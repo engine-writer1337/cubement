@@ -408,27 +408,33 @@ LRESULT in_keys(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam)
 		host_shutdown();
 		break;
 
+	case WM_NCLBUTTONDBLCLK:
+		return WM_NULL;
+
+	case WM_SYSCOMMAND:
+		if (wparam == SC_RESTORE && !IsIconic(gvid.hwnd))
+			return WM_NULL;
+		break;
+
 	case WM_ACTIVATE:
 		if (wparam == WA_INACTIVE && !gvid.inactive)
 		{
 			ggame.window_inactive();
 			gvid.inactive = TRUE;
-			if (gvid.fullscreen->value)
+			if (gvid.fullscreen->value == 1)
 			{
 				ShowWindow(gvid.hwnd, SW_MINIMIZE);
-				if (gvid.fullscreen->value)
-					ChangeDisplaySettings(NULL, 0);
+				ChangeDisplaySettings(NULL, 0);
 			}
 		}
 		else if ((wparam == WA_ACTIVE || wparam == WA_CLICKACTIVE) && gvid.inactive)
 		{
 			ggame.window_active();
 			gvid.inactive = FALSE;
-			if (gvid.fullscreen->value)
+			if (gvid.fullscreen->value == 1)
 			{
 				ShowWindow(gvid.hwnd, SW_RESTORE);
-				if (gvid.fullscreen->value)
-					vid_fullscreen();
+				vid_fullscreen();
 			}
 		}
 		break;

@@ -532,7 +532,7 @@ void con_init()
 
 	gvid.mode = con_create_cvar("vid_mode", 0, TRUE);
 	gvid.msaa = con_create_cvar("vid_msaa", FALSE, TRUE);
-	gvid.fullscreen = con_create_cvar("vid_fullscreen", FALSE, TRUE);
+	gvid.fullscreen = con_create_cvar("vid_fullscreen", 0, TRUE);
 	gvid.vsync = con_create_cvar("vid_vsync", FALSE, TRUE);
 
 	gimg.aniso = con_create_cvar("r_aniso", TRUE, TRUE);

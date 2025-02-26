@@ -3,7 +3,6 @@
 
 #define WIN_MAX_MODES	32
 #define WIN_CLASSNAME	" _cment_ "
-#define WIN_FLAGS		(WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX)
 
 #define GL_CLAMP_TO_EDGE	0x812F
 #define GL_MAX_SAMPLES		0x8D57

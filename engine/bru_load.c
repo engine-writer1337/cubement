@@ -468,5 +468,4 @@ void bru_reload()
 
 	sky_load(gsky.name);
 	det_reload();
-	det_update();
 }

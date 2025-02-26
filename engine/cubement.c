@@ -13,7 +13,7 @@ static long _stdcall host_crash(PEXCEPTION_POINTERS info)
 	string_t error;
 	MEMORY_BASIC_INFORMATION mbi;
 
-	if (gvid.fullscreen->value)
+	if (gvid.fullscreen->value == 1)
 		ChangeDisplaySettings(NULL, 0);
 
 	con_cfg_save();

@@ -12,7 +12,7 @@
 
 typedef struct
 {
-	constr_t binding;
+	name_t binding;
 	bool_t down, hold;
 }key_s;
 

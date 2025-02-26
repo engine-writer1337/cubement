@@ -20,6 +20,12 @@ static restype_e res_type(const char* name)
 	if ((*(int*)(name + len - 4) == 'vaw.') || (*(int*)(name + len - 4) == 'ggo.'))
 		return RES_SOUND;
 
+	if ((*(int*)(name + len - 4) == 'lps.'))
+		return RES_SPRITE;
+
+	if ((*(int*)(name + len - 4) == 'ldm.'))
+		return RES_MODEL;
+
 	return RES_BAD;
 }
 
@@ -41,10 +47,10 @@ static ihandle_t res_alloc()
 		return BAD_HANDLE;
 	}
 
-	return gnumres++;	
+	return gnumres++;
 }
 
-static void res_free(ihandle_t idx)
+static void res_free(ihandle_t idx, bool_t is_reload)
 {
 	resource_s* r = gres + idx;
 	if (!r->name[0])
@@ -53,27 +59,34 @@ static void res_free(ihandle_t idx)
 	switch (r->type)
 	{
 	case RES_BRUSH:
-		r->data.brush = NULL;
+		r->brush = NULL;
 		break;
 	case RES_PIC:
-		util_tex_free(r->data.pic.t);
-		r->data.pic.t = 0;
+		util_tex_free(r->pic.texture);
+		r->pic.texture = 0;
 		break;
 	case RES_FONT:
-		util_tex_free(r->data.font.texture);
-		r->data.font.texture = 0;
+		util_tex_free(r->font.texture);
+		r->font.texture = 0;
 		break;
 	case RES_SOUND:
-		snd_free(&r->data.wav);
+		snd_free(&r->wav);
+		break;
+	case RES_SPRITE:
+		spr_free(&r->sprite, is_reload);
+		break;
+	case RES_MODEL:
+		mdl_free(&r->model, is_reload);
 		break;
 	}
 
-	r->name[0] = '\0';
+	if (!is_reload)
+		r->name[0] = '\0';
 }
 
 bool_t res_notvalid(ihandle_t handle, restype_e type)
 {
-	if ((unsigned)handle >= (unsigned)gnumres)
+	if ((dword)handle >= (dword)gnumres)
 		return TRUE;
 
 	if (!gres[handle].name[0])
@@ -102,7 +115,7 @@ ihandle_t res_find(const char* name)
 	return BAD_HANDLE;
 }
 
-static bool_t res_load(resource_s* r, const char* filename, restype_e type, int flags)
+static bool_t res_load(resource_s* r, const char* filename, restype_e type, int flags, bool_t is_reload)
 {
 	int ofs;
 
@@ -110,10 +123,10 @@ static bool_t res_load(resource_s* r, const char* filename, restype_e type, int 
 	{
 	case RES_BRUSH:
 		ofs = atoi(filename + 1);
-		if ((unsigned)ofs >= (unsigned)gbru.num_models)
+		if ((dword)ofs >= (dword)gbru.num_models)
 			return FALSE;
 
-		r->data.brush = gbru.models + ofs;
+		r->brush = gbru.models + ofs;
 		break;
 
 	case RES_PIC:
@@ -121,24 +134,56 @@ static bool_t res_load(resource_s* r, const char* filename, restype_e type, int 
 		gimg.clamp = (flags & IMG_CLAMP);
 		gimg.nearest = (flags & IMG_NEAREST);
 
-		r->data.pic.t = img_load(filename);
-		if (!r->data.pic.t)
+		r->pic.texture = img_load(filename);
+		if (!r->pic.texture)
 			return FALSE;
 
-		r->data.pic.flags = flags;
-		r->data.pic.width = gimg.out_width;
-		r->data.pic.height = gimg.out_height;
+		r->pic.flags = flags;
+		r->pic.width = gimg.out_width;
+		r->pic.height = gimg.out_height;
+		break;
+
+	case RES_SPRITE:
+		gimg.clamp = TRUE;
+		gimg.mipmap = (flags & IMG_MIPMAP);
+		gimg.nearest = (flags & IMG_NEAREST);
+
+		if (is_reload)
+		{
+			spr_load_pic(r->name, &r->sprite);
+			if (!r->sprite.texture)
+				return FALSE;
+		}
+		else
+		{
+			spr_load(filename, &r->sprite);
+			if (!r->sprite.texture)
+				return FALSE;
+		}
+
+		r->sprite.flags = flags;
+		break;
+
+	case RES_MODEL:
+		if (is_reload)
+			mdl_load_textures(&r->model);
+		else
+		{
+			mdl_load(filename, &r->model);
+			if (!r->model.heap)
+				return FALSE;
+		}
 		break;
 
 	case RES_FONT:
-		font_load(filename, &r->data.font);
-		if (!r->data.font.texture)
+		font_load(filename, &r->font);
+		if (!r->font.texture)
 			return FALSE;
 		break;
 
 	case RES_SOUND:
-		snd_load(filename, &r->data.wav);
-		if (!r->data.wav.data)
+		snd_load(filename, &r->wav);
+		if (!r->wav.data)
 			return FALSE;
 		break;
 	}
@@ -177,7 +222,7 @@ ihandle_t res_precache_ex(const char* filename, int flags)
 		return BAD_HANDLE;
 
 	r = gres + idx;
-	if (!res_load(r, filename, type, flags))
+	if (!res_load(r, filename, type, flags, FALSE))
 		return BAD_HANDLE;
 
 	r->type = type;
@@ -195,13 +240,11 @@ ihandle_t res_precache(const char* filename)
 void res_flush_temp()
 {
 	int i;
-	resource_s* r;
 
 	for (i = 0; i < gnumres; i++)
 	{
-		r = gres + i;
-		if (r->name[0] && r->is_temp)
-			res_free(i);
+		if (gres[i].is_temp)
+			res_free(i, FALSE);
 	}
 }
 
@@ -210,7 +253,7 @@ void res_free_all()
 	int i;
 
 	for (i = 0; i < gnumres; i++)
-		res_free(i);
+		res_free(i, FALSE);
 }
 
 void res_reload_font()
@@ -224,11 +267,11 @@ void res_reload_font()
 		if (!r->name[0] || r->type != RES_FONT)
 			continue;
 
-		util_tex_free(r->data.font.texture);
-		r->data.font.texture = 0;
+		util_tex_free(r->font.texture);
+		r->font.texture = 0;
 
-		font_load(r->name, &r->data.font);
-		if (!r->data.font.texture)
+		font_load(r->name, &r->font);
+		if (!r->font.texture)
 			r->name[0] = '\0';
 	}
 }
@@ -236,25 +279,11 @@ void res_reload_font()
 void res_unload()
 {
 	int i;
-	resource_s* r;
 
 	for (i = 0; i < gnumres; i++)
 	{
-		r = gres + i;
-		if (!r->name[0])
-			continue;
-
-		switch (r->type)
-		{
-		case RES_PIC:
-			util_tex_free(r->data.pic.t);
-			r->data.pic.t = 0;
-			break;
-		case RES_FONT:
-			util_tex_free(r->data.font.texture);
-			r->data.font.texture = 0;
-			break;
-		}
+		if (gres[i].type >= RES_PIC && gres[i].type <= RES_MODEL)
+			res_free(i, TRUE);
 	}
 }
 
@@ -269,7 +298,7 @@ void res_reload()
 		if (!r->name[0] || r->type < RES_PIC || r->type > RES_MODEL)
 			continue;
 
-		if (!res_load(r, r->name, r->type, (r->type == RES_PIC) ? r->data.pic.flags : 0))
+		if (!res_load(r, r->name, r->type, (r->type == RES_PIC || r->type == RES_SPRITE) ? r->pic.flags : 0, TRUE))
 			r->name[0] = '\0';
 	}
 }

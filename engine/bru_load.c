@@ -100,7 +100,7 @@ static void bru_load_textures(const byte* data, const bru_lump_s* l)
 		sprintf(tmp, TEXTURE_FOLDER"%s", in[i].name);
 		strcpyn(out[i].name, in[i].name);
 
-		out[i].t = img_load(tmp);
+		out[i].texture = img_load(tmp);
 		out[i].detail = BAD_HANDLE;//very ugly
 		out[i].width = gimg.out_width;
 		out[i].height = gimg.out_height;
@@ -420,7 +420,7 @@ void bru_free()
 	for (i = 0; i < gnuments; i++)
 		util_free(gents[i]);
 	for (i = 0; i < gbru.num_textures; i++)
-		util_tex_free(gbru.textures[i].t);
+		util_tex_free(gbru.textures[i].texture);
 
 	util_free(gbru.brushes);
 	util_free(gbru.models);
@@ -443,8 +443,8 @@ void bru_unload()
 
 	for (i = 0; i < gbru.num_textures; i++)
 	{
-		util_tex_free(gbru.textures[i].t);
-		gbru.textures[i].t = 0;
+		util_tex_free(gbru.textures[i].texture);
+		gbru.textures[i].texture = 0;
 	}
 
 	sky_free();
@@ -463,7 +463,7 @@ void bru_reload()
 	for (i = 0; i < gbru.num_textures; i++)
 	{
 		sprintf(tmp, TEXTURE_FOLDER"%s", gbru.textures[i].name);
-		gbru.textures[i].t = img_load(tmp);
+		gbru.textures[i].texture = img_load(tmp);
 	}
 
 	sky_load(gsky.name);

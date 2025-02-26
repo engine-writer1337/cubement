@@ -213,7 +213,7 @@ void trace_bbox(const vec3_t start, const vec3_t end, const vec3_t mins, const v
 		switch (gres[e->model].type)
 		{
 		case RES_BRUSH:
-			bm = gres[e->model].data.brush;
+			bm = gres[e->model].brush;
 			rotate = !vec_is_zero(e->angles);
 			vec_sub(movevec, e->origin, bm->origin);
 
@@ -296,7 +296,7 @@ bool_t trace_test_stuck_ent(const entity_s* check, const vec3_t org, const vec3_
 	switch (gres[check->model].type)
 	{
 	case RES_BRUSH:
-		bm = gres[check->model].data.brush;
+		bm = gres[check->model].brush;
 		rotate = !vec_is_zero(check->angles);
 		vec_sub(movevec, check->origin, bm->origin);
 

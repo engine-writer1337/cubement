@@ -223,7 +223,7 @@ glpic_t img_load(const char* filename)
 	{
 		string_t fullname;
 
-		strcpy(fullname, filename);
+		strcpyn(fullname, filename);
 		strcpy(fullname + len, ".jpg");
 		if (util_exist(fullname))
 			return img_load_jpg(fullname);
@@ -282,8 +282,8 @@ void img_pic_draw(ihandle_t idx, int frame, int x, int y, render_e render, byte 
 	if (res_notvalid(idx, RES_PIC))
 		return;
 
-	p = &gres[idx].data.pic;
-	if (!p->t)
+	p = &gres[idx].pic;
+	if (!p->texture)
 		return;
 
 	vec2_set(verts[0], x, y);
@@ -297,7 +297,7 @@ void img_pic_draw(ihandle_t idx, int frame, int x, int y, render_e render, byte 
 	vec2_set(texcoords[3], 0, 1);
 
 	vid_rendermode(render);
-	img_bind(p->t);
+	img_bind(p->texture);
 	glColor4ub(r, g, b, a);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glTexCoordPointer(2, GL_FLOAT, 0, texcoords);
@@ -363,8 +363,8 @@ void img_set_param()
 		{
 			for (i = 0; i < gbru.num_textures; i++)
 			{
-				if (gbru.textures[i].t)
-					img_set_filter(gbru.textures[i].t);
+				if (gbru.textures[i].texture)
+					img_set_filter(gbru.textures[i].texture);
 			}
 		}
 

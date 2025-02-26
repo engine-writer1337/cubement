@@ -26,8 +26,10 @@ typedef struct
 		pic_s pic;
 		wave_s wav;
 		font_s font;
+		model_s model;
+		sprite_s sprite;
 		brushmodel_s* brush;
-	}data;
+	};
 }resource_s;
 
 extern resource_s gres[MAX_RESOURCES];

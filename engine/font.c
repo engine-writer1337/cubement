@@ -30,7 +30,7 @@ int font_height(ihandle_t idx)
 {
 	if (res_notvalid(idx, RES_FONT))
 		return 0;
-	return gres[idx].data.font.height;
+	return gres[idx].font.height;
 }
 
 int font_len(ihandle_t idx, const char* text)
@@ -41,7 +41,7 @@ int font_len(ihandle_t idx, const char* text)
 	if (res_notvalid(idx, RES_FONT))
 		return 0;
 
-	f = &gres[idx].data.font;
+	f = &gres[idx].font;
 	if (!f->texture)
 		return 0;
 
@@ -69,7 +69,7 @@ int font_print(ihandle_t idx, const char* text, int x, int y, render_e render, b
 	if (res_notvalid(idx, RES_FONT) || strnull(text))
 		return x;
 
-	f = &gres[idx].data.font;
+	f = &gres[idx].font;
 	if (!f->texture)
 		return x;
 

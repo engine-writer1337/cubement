@@ -35,7 +35,7 @@ static entmap_s* ent_find_map(const char* name)
 
 void ent_register(const entmap_s* ent)
 {
-	if ((unsigned)ent->id >= MAX_ENTMAP)
+	if ((dword)ent->id >= MAX_ENTMAP)
 		return;
 
 	if (gentmap[ent->id].name || ent_find_map(ent->name))
@@ -177,7 +177,7 @@ static void ent_update(edict_s* ed)
 
 		if (e->model != BAD_HANDLE && gres[e->model].type == RES_BRUSH)
 		{
-			bm = gres[e->model].data.brush;
+			bm = gres[e->model].brush;
 			vec_copy(e->origin, bm->origin);
 			vec_copy(e->maxs, bm->maxs);
 			vec_copy(e->mins, bm->mins);
@@ -198,7 +198,7 @@ static void ent_update(edict_s* ed)
 			e->angles[1] = anglemod(e->angles[1]);
 			e->angles[2] = anglemod(e->angles[2]);
 
-			bm = gres[e->model].data.brush;
+			bm = gres[e->model].brush;
 			vec_copy(e->maxs, bm->maxs);
 			vec_copy(e->mins, bm->mins);
 			vec_rotate_bbox(e->angles, bm->offset, e->mins, e->maxs);

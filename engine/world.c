@@ -447,7 +447,7 @@ static void world_draw_worldspawn()
 			continue;
 
 		s = t->chain;
-		img_bind(t->t);
+		img_bind(t->texture);
 		while (s)
 		{
 			world_shade_color(s, gentworld);
@@ -586,7 +586,7 @@ static void world_draw_ents(edict_s* ed)
 		switch (gres[e->model].type)
 		{
 		case RES_BRUSH:
-			bm = gres[e->model].data.brush;
+			bm = gres[e->model].brush;
 			vec_sub(movevec, e->origin, bm->origin);
 
 			move = !vec_is_zero(movevec);
@@ -618,7 +618,7 @@ static void world_draw_ents(edict_s* ed)
 					{
 						s = b->surfes + m;
 						world_shade_color(s, e);
-						img_bind(gbru.textures[s->texture].t);
+						img_bind(gbru.textures[s->texture].texture);
 						glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
 					}
 
@@ -642,7 +642,7 @@ static void world_draw_ents(edict_s* ed)
 							continue;
 
 						world_shade_color(s, e);
-						img_bind(gbru.textures[s->texture].t);
+						img_bind(gbru.textures[s->texture].texture);
 						glDrawArrays(GL_TRIANGLE_FAN, s->offset, 4);
 					}
 

@@ -5,7 +5,7 @@
 
 typedef struct
 {
-	glpic_t t;
+	glpic_t texture;
 
 	int width;
 	int height;

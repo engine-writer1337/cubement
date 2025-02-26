@@ -1,10 +1,10 @@
 #include "cubement.h"
 
-static int gnum_matmaps;
-static matmap_s gmatmap[MAX_MATERIALS];
-
 int gnum_details;
 detail_s gdetails[MAX_MATERIALS];
+
+static int gnum_matmaps;
+static matmap_s gmatmap[MAX_MATERIALS];
 
 static int gnum_mats;
 static material_s gmats[MAX_MAT_ENRTIES];
@@ -119,7 +119,7 @@ void mat_update()
 		gbru.textures[i].material = mat_find_material(gbru.textures[i].name, gmats, gnum_mats);
 }
 
-static material_e det_find_index(const char* str)
+static int det_find_index(const char* str)
 {
 	int i;
 	hash_t hash;

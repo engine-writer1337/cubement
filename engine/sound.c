@@ -12,6 +12,9 @@ static samplepair_s grawsamples[SND_PAINT_SIZE];
 static struct
 {
 	int pos;
+	bool_t loop;
+	bool_t pause;
+
 	FILE* fp;
 	stb_vorbis* stream;
 }gogg;
@@ -316,16 +319,16 @@ static void snd_resample(wave_s* wav, byte* data)
 	}
 }
 
-static void snd_load_wav(const char* name, wave_s* out)
+static void snd_load_wav(const char* filename, wave_s* out)
 {
 	int len, size;
 	wav_header_s* head;
 	byte* src, * data, * endfile, * next;
 
-	data = util_full(name, &len);
+	data = util_full(filename, &len);
 	if (!data)
 	{
-		con_printf(COLOR_RED, "%s - not found", name);
+		con_printf(COLOR_RED, "%s - not found", filename);
 		return;
 	}
 
@@ -333,7 +336,7 @@ static void snd_load_wav(const char* name, wave_s* out)
 	if (head->chunk_id != 'FFIR' || head->format != 'EVAW' || head->subchunk1_id != ' tmf' || head->audio_format != WAVE_FORMAT_PCM)
 	{
 		util_free(data);
-		con_printf(COLOR_RED, "%s - bad header", name);
+		con_printf(COLOR_RED, "%s - bad header", filename);
 		return;
 	}
 
@@ -342,7 +345,7 @@ static void snd_load_wav(const char* name, wave_s* out)
 		head->num_channels != 1 && head->num_channels != 2)
 	{
 		util_free(data);
-		con_printf(COLOR_RED, "%s - bad format", name);
+		con_printf(COLOR_RED, "%s - bad format", filename);
 		return;
 	}
 
@@ -362,7 +365,7 @@ static void snd_load_wav(const char* name, wave_s* out)
 	if (!src)
 	{
 		util_free(data);
-		con_printf(COLOR_RED, "%s - no data chunk", name);
+		con_printf(COLOR_RED, "%s - no data chunk", filename);
 		return;
 	}
 
@@ -374,17 +377,17 @@ static void snd_load_wav(const char* name, wave_s* out)
 	util_free(data);
 }
 
-static void snd_load_ogg(const char* name, wave_s* out)
+static void snd_load_ogg(const char* filename, wave_s* out)
 {
 	byte* data;
 	short* temp;
 	int len, sz, res;
 	stb_vorbis* head;
 	
-	data = util_full(name, &len);
+	data = util_full(filename, &len);
 	if (!data)
 	{
-		con_printf(COLOR_RED, "%s - not found", name);
+		con_printf(COLOR_RED, "%s - not found", filename);
 		return;
 	}
 
@@ -393,7 +396,7 @@ static void snd_load_ogg(const char* name, wave_s* out)
 	if (res)
 	{
 		util_free(data);
-		con_printf(COLOR_RED, "%s - open memory error", name);
+		con_printf(COLOR_RED, "%s - open memory error", filename);
 		return;
 	}
 
@@ -402,7 +405,7 @@ static void snd_load_ogg(const char* name, wave_s* out)
 	{
 		stb_vorbis_close(head);
 		util_free(data);
-		con_printf(COLOR_RED, "%s - bad format", name);
+		con_printf(COLOR_RED, "%s - bad format", filename);
 		return;
 	}
 
@@ -418,7 +421,7 @@ static void snd_load_ogg(const char* name, wave_s* out)
 	{
 		if (res != out->samples)
 		{
-			con_printf(COLOR_RED, "%s - invalid read size", name);
+			con_printf(COLOR_RED, "%s - invalid read size", filename);
 			out->samples = res;
 		}
 	}
@@ -427,7 +430,7 @@ static void snd_load_ogg(const char* name, wave_s* out)
 		stb_vorbis_close(head);
 		util_free(temp);
 		util_free(data);
-		con_printf(COLOR_RED, "%s - something wrong", name);
+		con_printf(COLOR_RED, "%s - something wrong", filename);
 		return;
 	}
 
@@ -437,12 +440,12 @@ static void snd_load_ogg(const char* name, wave_s* out)
 	util_free(data);
 }
 
-void snd_load(const char* name, wave_s* out)
+void snd_load(const char* filename, wave_s* out)
 {
 	int len;
 	string_t path = SND_FOLDER;
 
-	strcat(path, name);
+	strcatn(path, filename);
 	len = strlen(path);
 	if (*(int*)(path + len - 4) == 'ggo.')
 	{
@@ -469,7 +472,7 @@ void snd_load(const char* name, wave_s* out)
 		return;
 	}
 
-	con_printf(COLOR_RED, "%s - unknown format", name);
+	con_printf(COLOR_RED, "%s - unknown format", filename);
 }
 
 void snd_free(wave_s* wav)
@@ -479,7 +482,7 @@ void snd_free(wave_s* wav)
 	wav->data = NULL;
 }
 
-void snd_music(const char* filename)
+void snd_music(const char* filename, bool_t loop)
 {
 	FILE* fp;
 	int res = 0;
@@ -502,6 +505,13 @@ void snd_music(const char* filename)
 
 	gogg.fp = fp;
 	gogg.pos = 0;
+	gogg.loop = loop;
+	gogg.pause = FALSE;
+}
+
+void snd_music_pause(bool_t pause)
+{
+	gogg.pause = pause;
 }
 
 void snd_music_stop()
@@ -545,7 +555,7 @@ void snd_play(ihandle_t idx, const entity_s* ent, channel_e chan, float volume, 
 	if (!gsnd.p_ds || res_notvalid(idx, RES_SOUND))
 		return;
 
-	w = &gres[idx].data.wav;
+	w = &gres[idx].wav;
 	if (!w->data)
 		return;
 
@@ -570,6 +580,7 @@ void snd_play_wav(const wave_s* wav, const vec3_t origin, float fvol, int distan
 		return;
 
 	vol = fvol * 255;
+	vol = clamp(0, vol, 255);
 	if (!vol)
 		return;
 
@@ -665,7 +676,7 @@ static void snd_update_soundtime()
 	if (sample_pos < old_samplepos)
 	{
 		buffers++;
-		if (gsnd.painted_time > 0x6FFFFFFF)//TODO: use unsigned int
+		if (gsnd.painted_time > 0x6FFFFFFF)
 		{
 			buffers = 0;
 			gsnd.painted_time = fullsamples;
@@ -717,8 +728,10 @@ static void snd_raw_samples(int samples, int rate, int width, int channels, byte
 	if (gsnd.rawend < gsnd.painted_time)
 		gsnd.rawend = gsnd.painted_time;
 
-	intvolume = gsnd.ivolume;//TODO: music cvar
+	intvolume = gsnd.musicvol->value * 255;
+	intvolume = clamp(0, intvolume, 255);
 	scale = (float)rate / SND_SPEED;
+
 	if (channels == 2 && width == 2)
 	{
 		for (i = 0; ; i++)
@@ -787,7 +800,7 @@ static void snd_raw_samples(int samples, int rate, int width, int channels, byte
 }
 
 static void snd_music_stream()
-{//TODO: play once or loop?
+{
 	short samples[SND_PAINT_SIZE / 2] = { 0 };
 	int read_samples = stb_vorbis_get_samples_short_interleaved(gogg.stream, gogg.stream->channels, samples, sizeof(samples) / sizeof(short));
 
@@ -797,7 +810,24 @@ static void snd_music_stream()
 		snd_raw_samples(read_samples, gogg.stream->sample_rate, sizeof(short), gogg.stream->channels, (byte*)samples);
 	}
 	else
-		snd_music_stop();
+	{
+		if (gogg.loop)
+		{
+			gogg.pos = 0;
+			stb_vorbis_seek_start(gogg.stream);
+
+			read_samples = stb_vorbis_get_samples_short_interleaved(gogg.stream, gogg.stream->channels, samples, sizeof(samples) / sizeof(short));
+			if (read_samples > 0)
+			{
+				gogg.pos += read_samples;
+				snd_raw_samples(read_samples, gogg.stream->sample_rate, sizeof(short), gogg.stream->channels, (byte*)samples);
+			}
+			else
+				snd_music_stop();
+		}
+		else
+			snd_music_stop();
+	}
 }
 
 static void snd_paint_channel_from8(channel_s* ch, samplepair_s* samp, int count)
@@ -948,7 +978,7 @@ void snd_update()
 
 	snd_update_pos();
 	snd_update_soundtime();
-	while (gogg.stream && ((gsnd.painted_time + SND_PAINT_SIZE - 2048) > gsnd.rawend))
+	while (gogg.stream && !gogg.pause && ((gsnd.painted_time + SND_PAINT_SIZE - 2048) > gsnd.rawend))
 		snd_music_stream();
 
 	samps = gdma.samples >> (SND_CHANNELS - 1);

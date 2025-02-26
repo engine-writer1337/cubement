@@ -29,13 +29,13 @@ typedef struct
 
 	int num_lines, top_line;
 	enum_t colors[CON_MAX_STRINGS];
-	constr_t lines[CON_MAX_STRINGS];
+	name_t lines[CON_MAX_STRINGS];
 
 	int num_hist, cur_hist;
-	constr_t history[CON_MAX_HIST];
+	name_t history[CON_MAX_HIST];
 
 	int len, cursor;
-	constr_t buffer;
+	name_t buffer;
 
 	float pulse;
 	bool_t underline;

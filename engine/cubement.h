@@ -10,8 +10,7 @@ typedef unsigned char	enum_t;
 typedef unsigned int	dword;
 typedef unsigned int	glpic_t;
 typedef float			vec4_t[4];
-typedef char			name_t[64];
-typedef char			constr_t[100];
+typedef char			name_t[100];
 typedef char			string_t[1024];
 
 #include "util.h"

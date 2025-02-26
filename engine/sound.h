@@ -94,6 +94,7 @@ typedef struct
 
 	int ivolume;
 	convar_s* volume;
+	convar_s* musicvol;
 }sound_s;
 
 extern sound_s gsnd;
@@ -101,11 +102,12 @@ extern sound_s gsnd;
 void snd_init();
 void snd_shutdown();
 
+void snd_music(const char* filename, bool_t loop);
+void snd_music_pause(bool_t pause);
 void snd_music_stop();
-void snd_music(const char* filename);
 
 void snd_stop_all();
-void snd_load(const char* name, wave_s* out);
+void snd_load(const char* filename, wave_s* out);
 void snd_free(wave_s* wav);
 
 void snd_play(ihandle_t idx, const entity_s* ent, channel_e chan, float volume, float distance);

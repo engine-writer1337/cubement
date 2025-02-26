@@ -283,7 +283,7 @@ static void in_game(int key, bool_t down)
 
 	if (gkeys[key].binding[0] == '+')
 	{
-		constr_t cmd;
+		name_t cmd;
 		char number[16];
 
 		number[0] = ' ';

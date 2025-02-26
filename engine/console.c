@@ -92,7 +92,7 @@ void con_print(color_e color, const char* text)
 {
 	if (gcon.num_lines >= CON_MAX_STRINGS)
 	{
-		memcpy(gcon.lines, gcon.lines[CON_MAX_STRS / 2], sizeof(constr_t) * CON_MAX_STRS);
+		memcpy(gcon.lines, gcon.lines[CON_MAX_STRS / 2], sizeof(name_t) * CON_MAX_STRS);
 		memcpy(gcon.colors, &gcon.colors[CON_MAX_STRS / 2], sizeof(enum_t) * CON_MAX_STRS);
 		gcon.num_lines = CON_MAX_STRS;
 	}
@@ -123,7 +123,7 @@ void con_line_execute(const char* line)
 {
 	int k, state;
 	convar_s* cvar;
-	constr_t args[3];
+	name_t args[3];
 	bool_t space, quote;
 
 	if (strnull(line))
@@ -237,7 +237,7 @@ void con_keys(int key, bool_t down)
 
 		if (gcon.num_hist >= CON_MAX_HIST)
 		{
-			memcpy(gcon.history, gcon.history[1], sizeof(constr_t) * (CON_MAX_HIST - 1));
+			memcpy(gcon.history, gcon.history[1], sizeof(name_t) * (CON_MAX_HIST - 1));
 			strcpyn(gcon.history[gcon.num_hist - 1], gcon.buffer);
 			gcon.cur_hist = gcon.num_hist - 1;
 		}
@@ -259,7 +259,7 @@ void con_keys(int key, bool_t down)
 		if (gcon.cursor > 0 && gcon.len > 0)
 		{
 			int sz;
-			constr_t tmp;
+			name_t tmp;
 
 			strcpyn(tmp, &gcon.buffer[gcon.cursor]);
 			sz = (int)strlen(&gcon.buffer[gcon.cursor]);
@@ -275,7 +275,7 @@ void con_keys(int key, bool_t down)
 		if (gcon.cursor < gcon.len && gcon.len > 0)
 		{
 			int sz;
-			constr_t tmp;
+			name_t tmp;
 
 			strcpyn(tmp, &gcon.buffer[gcon.cursor + 1]);
 			sz = (int)strlen(&gcon.buffer[gcon.cursor]);
@@ -339,7 +339,7 @@ void con_keys(int key, bool_t down)
 void con_put_char(int ch)
 {
 	int sz;
-	constr_t tmp;
+	name_t tmp;
 
 	if (gcon.len > (sizeof(tmp) - 2) || gcon.cursor > (sizeof(tmp) - 2))
 		return;
@@ -370,7 +370,7 @@ void con_draw()
 	{
 		if (gcon.cursor)
 		{
-			constr_t tmp;
+			name_t tmp;
 
 			strncpy(tmp, gcon.buffer, gcon.cursor);
 			tmp[gcon.cursor] = '\0';
@@ -405,7 +405,7 @@ void con_draw()
 static void con_cfg_read()
 {
 	FILE* fp;
-	constr_t line;
+	name_t line;
 
 	fp = util_open(CON_FOLDER"config.cfg", "r");
 	if (!fp)
@@ -540,12 +540,13 @@ void con_init()
 	gworld.shade = con_create_cvar("r_shade", 0.2f, TRUE);
 	ghost.fps = con_create_cvar("r_fps", 100, TRUE);
 	gworld.detailtexture = con_create_cvar("r_detailtexture", TRUE, TRUE);
-	gworld.detailfactor = con_create_cvar("r_detailfactor", 8, TRUE);
+	gworld.detailfactor = con_create_cvar("r_detailfactor", 4, TRUE);
 
 	gcon.test = con_create_cvar("test", FALSE, FALSE);
 
 	gsnd.volume = con_create_cvar("s_volume", SND_DEF_VOL, TRUE);
-
+	gsnd.musicvol = con_create_cvar("s_music", SND_DEF_VOL, TRUE);
+	
 	gworld.lock = con_create_cvar("dbg_lock", FALSE, FALSE);
 	gworld.wireframe = con_create_cvar("dbg_wireframe", FALSE, FALSE);
 

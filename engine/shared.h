@@ -23,6 +23,8 @@
 #define strcatn(dst, src)	(strncat(dst, src, sizeof(dst) - 1), dst[sizeof(dst) - 1] = '\0')
 #define memzero(mem, sz)	(memset(mem, 0, sz))
 
+#define TRACE_EPSILON	(1.0f / 32)
+
 #define FL_INVISIBLE	(1 << 0)
 #define FL_BEAM			(1 << 1)
 #define FL_UPRIGHT		(1 << 2)

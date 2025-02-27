@@ -26,7 +26,6 @@ typedef struct
 }global_s;
 
 extern global_s glob;
-extern const vec3_t gvec_zeros;
 
 #include "entity.h"
 #include "player.h"

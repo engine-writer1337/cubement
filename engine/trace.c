@@ -114,15 +114,16 @@ void trace_bbox(const vec3_t start, const vec3_t end, const vec3_t mins, const v
 	entity_s* touch;
 	int i, j, brnum;
 	brushmodel_s* bm;
-	brush_s* b, bfake;
-	bool_t anyintersect, rotate;
+	brush_s* b, bfake, bfaketouch;
 	vec3_t movevec, absmin, absmax;
+	bool_t anyintersect, rotate, faketouch;
 
 	if (!gentworld)
 		return;
 
 	brnum = -1;
 	touch = NULL;
+	faketouch = FALSE;
 	gtrace.brtype = 0;
 	gtrace.brsign = FALSE;
 	gtrace.fraction = 1;
@@ -178,7 +179,7 @@ void trace_bbox(const vec3_t start, const vec3_t end, const vec3_t mins, const v
 			b->framenum = gworld.framecount;
 			if (vec_aabb(b->absmin, b->absmax, gtrace.bmin, gtrace.bmax))
 				continue;
-			
+
 			if (!trace_brush(b))
 				continue;
 
@@ -194,7 +195,7 @@ void trace_bbox(const vec3_t start, const vec3_t end, const vec3_t mins, const v
 			continue;
 
 		e = ed->e;
-		if (ignore == e || !(e->contents & contents) || e->model == BAD_HANDLE)
+		if (ignore == e || !(e->contents & contents))
 			continue;
 
 		anyintersect = FALSE;
@@ -210,9 +211,8 @@ void trace_bbox(const vec3_t start, const vec3_t end, const vec3_t mins, const v
 		if (!anyintersect)
 			continue;
 
-		switch (gres[e->model].type)
+		if (e->model != BAD_HANDLE && gres[e->model].type == RES_BRUSH)
 		{
-		case RES_BRUSH:
 			bm = gres[e->model].brush;
 			rotate = !vec_is_zero(e->angles);
 			vec_sub(movevec, e->origin, bm->origin);
@@ -234,8 +234,27 @@ void trace_bbox(const vec3_t start, const vec3_t end, const vec3_t mins, const v
 
 				touch = e;
 				brnum = bm->start_brush + j;
+				faketouch = FALSE;
 			}
-			break;
+		}
+		else
+		{
+			vec_copy(bfake.absmin, e->absmin);
+			vec_copy(bfake.absmax, e->absmax);
+			if (vec_aabb(bfake.absmin, bfake.absmax, gtrace.bmin, gtrace.bmax))
+				continue;
+
+			if (!trace_brush(&bfake))
+				continue;
+
+			//if (e->model != BAD_HANDLE && gres[e->model].type == RES_MODEL)
+			//TODO: hitboxes (when mins and maxs is zeros)
+
+			touch = e;
+			brnum = -1;
+			faketouch = TRUE;
+			vec_copy(bfaketouch.absmin, bfake.absmin);
+			vec_copy(bfaketouch.absmax, bfake.absmax);
 		}
 	}
 
@@ -270,10 +289,126 @@ void trace_bbox(const vec3_t start, const vec3_t end, const vec3_t mins, const v
 			tr->normal[gtrace.brtype] = 1;
 		}
 	}
+	else if (faketouch)
+	{
+		if (gtrace.brsign)
+		{
+			tr->dist = bfaketouch.absmin[gtrace.brtype];
+			tr->normal[gtrace.brtype] = -1;
+		}
+		else
+		{
+			tr->dist = bfaketouch.absmax[gtrace.brtype];
+			tr->normal[gtrace.brtype] = 1;
+		}
+	}
 }
 
 entity_s* trace_test_stuck(const vec3_t org, const vec3_t mins, const vec3_t maxs, const entity_s* ignore, int contents)
 {
+	int i, j;
+	area_s* a;
+	entity_s* e;
+	edict_s* ed;
+	brushmodel_s* bm;
+	brush_s* b, bfake;
+	bool_t anyintersect, rotate;
+	vec3_t movevec, absmin, absmax;
+
+	if (!gentworld)
+		return NULL;
+
+	gworld.framecount++;
+	vec_add(absmin, org, mins);
+	vec_add(absmax, org, maxs);
+	vec_add_val(absmin, absmin, -TRACE_EPSILON * 4);
+	vec_add_val(absmax, absmax, TRACE_EPSILON * 4);
+
+	for (i = 0; i < gbru.num_areas; i++)
+	{
+		a = gbru.areas + i;
+		for (j = 0; j < a->num_boxes; j++)
+		{
+			if (!vec2_aabb(a->absmin[j], a->absmax[j], absmin, absmax))
+			{
+				a->framenum = gworld.framecount;
+				break;
+			}
+
+			if (!a->activecount || vec2_aabb(a->absmin[j], a->absmax[j], absmin, absmax))
+				continue;
+
+			a->framenum = gworld.framecount;
+			break;
+		}
+
+		if (a->framenum != gworld.framecount)
+			continue;
+
+		if (!(gentworld->contents & contents))
+			continue;
+
+		for (j = 0; j < a->num_brushareas; j++)
+		{
+			b = gbru.brushes + a->brushareas[j];
+			if (b->framenum == gworld.framecount)
+				continue;
+
+			b->framenum = gworld.framecount;
+			if (!vec_aabb(b->absmin, b->absmax, absmin, absmax))
+				return gentworld;
+		}
+	}
+
+	for (i = 1; i < gnuments; i++)
+	{
+		ed = gedicts + i;
+		if (!ed->e)
+			continue;
+
+		e = ed->e;
+		if (ignore == e || !(e->contents & contents))
+			continue;
+
+		anyintersect = FALSE;
+		for (j = 0; j < ed->num_areas; j++)
+		{
+			if (gbru.areas[ed->areas[j]].framenum != gworld.framecount)
+				continue;
+
+			anyintersect = TRUE;
+			break;
+		}
+
+		if (!anyintersect)
+			continue;
+
+		if (e->model != BAD_HANDLE && gres[e->model].type == RES_BRUSH)
+		{
+			bm = gres[e->model].brush;
+			rotate = !vec_is_zero(e->angles);
+			vec_sub(movevec, e->origin, bm->origin);
+
+			for (j = 0; j < bm->num_brushes; j++)
+			{
+				b = bm->brushes + j;
+				vec_add(bfake.absmin, movevec, b->absmin);
+				vec_add(bfake.absmax, movevec, b->absmax);
+
+				if (rotate)
+					vec_rotate_org_bbox(e->angles, e->origin, bm->offset, bfake.absmin, bfake.absmax);
+
+				if (!vec_aabb(bfake.absmin, bfake.absmax, absmin, absmax))
+					return e;
+			}
+		}
+		else
+		{
+			if (!vec_aabb(e->absmin, e->absmax, absmin, absmax))
+				return e;
+		}
+	}
+
 	return NULL;
 }
 
@@ -285,18 +420,24 @@ bool_t trace_test_stuck_ent(const entity_s* check, const vec3_t org, const vec3_
 	brush_s* b, bfake;
 	vec3_t movevec, absmin, absmax;
 
-	if (!check || check->id == ENTID_FREE || check->model == BAD_HANDLE)
+	if (!gentworld || !check || check->id == ENTID_FREE)
 		return FALSE;
 
 	vec_add(absmin, org, mins);
 	vec_add(absmax, org, maxs);
+	vec_add_val(absmin, absmin, -TRACE_EPSILON * 4);
+	vec_add_val(absmax, absmax, TRACE_EPSILON * 4);
+
 	if (vec_aabb(check->absmin, check->absmax, absmin, absmax))
 		return FALSE;
 
-	switch (gres[check->model].type)
+	if (check->model != BAD_HANDLE && gres[check->model].type == RES_BRUSH)
 	{
-	case RES_BRUSH:
-		bm = gres[check->model].brush;
+		if (check == gentworld)
+			bm = gbru.models;
+		else
+			bm = gres[check->model].brush;
+
 		rotate = !vec_is_zero(check->angles);
 		vec_sub(movevec, check->origin, bm->origin);
 
@@ -309,10 +450,9 @@ bool_t trace_test_stuck_ent(const entity_s* check, const vec3_t org, const vec3_
 			if (rotate)
 				vec_rotate_org_bbox(check->angles, check->origin, bm->offset, bfake.absmin, bfake.absmax);
 
-			if (!vec_aabb(bfake.absmin, bfake.absmax, gtrace.bmin, gtrace.bmax))
-				return TRUE;		
+			if (!vec_aabb(bfake.absmin, bfake.absmax, absmin, absmax))
+				return TRUE;
 		}
-		break;
 	}
 
 	return FALSE;

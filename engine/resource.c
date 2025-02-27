@@ -118,6 +118,7 @@ ihandle_t res_find(const char* name)
 static bool_t res_load(resource_s* r, const char* filename, restype_e type, int flags, bool_t is_reload)
 {
 	int ofs;
+	string_t path;
 
 	switch (type)
 	{
@@ -134,7 +135,8 @@ static bool_t res_load(resource_s* r, const char* filename, restype_e type, int 
 		gimg.clamp = (flags & IMG_CLAMP);
 		gimg.nearest = (flags & IMG_NEAREST);
 
-		r->pic.texture = img_load(filename);
+		sprintf(path, PIC_FOLDER"%s", filename);
+		r->pic.texture = img_load(path);
 		if (!r->pic.texture)
 			return FALSE;
 
@@ -166,7 +168,7 @@ static bool_t res_load(resource_s* r, const char* filename, restype_e type, int 
 
 	case RES_MODEL:
 		if (is_reload)
-			mdl_load_textures(&r->model);
+			mdl_load_textures(r->name, &r->model);
 		else
 		{
 			mdl_load(filename, &r->model);

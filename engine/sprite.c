@@ -2,29 +2,32 @@
 
 void spr_load_pic(const char* filename, sprite_s* spr)
 {
-	string_t cut;
+	string_t cut, path;
 
 	strncpy(cut, filename, strlen(filename) - 4);
-	spr->texture = img_load(cut);
+	sprintf(path, SPR_FOLDER"%s", cut);
+	spr->texture = img_load(path);
 }
 
 void spr_load(const char* filename, sprite_s* spr)
 {
 	int i;
 	FILE* fp;
+	string_t path;
 	sframe_s* frame;
 
-	fp = util_open(filename, "r");
+	sprintf(path, SPR_FOLDER"%s", filename);
+	fp = util_open(path, "r");
 	if (!fp)
 	{
-		con_printf(COLOR_RED, "%s - not found", filename);
+		con_printf(COLOR_RED, "%s - not found", path);
 		return;
 	}
 
 	fscanf(fp, "%i", &spr->numframes);
 	if (spr->numframes < 1)
 	{
-		con_printf(COLOR_RED, "%s - no frames", filename);
+		con_printf(COLOR_RED, "%s - no frames", path);
 		util_close(fp);
 		return;
 	}

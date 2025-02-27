@@ -25,6 +25,9 @@ typedef struct _edict_s
 		vec3_t absmin;
 		vec3_t absmax;
 
+		vec3_t mins;
+		vec3_t maxs;
+
 		ihandle_t model;
 	}old;
 

@@ -1,6 +1,5 @@
 #include "game.h"
 
-#define STOP_EPSILON 0.1
 void PM_ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 {
 	float backoff;
@@ -12,7 +11,7 @@ void PM_ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
 	{
 		change = normal[i] * backoff;
 		out[i] = in[i] - change;
-		if ((out[i] > -STOP_EPSILON) && (out[i] < STOP_EPSILON))
+		if ((out[i] > -TRACE_EPSILON) && (out[i] < TRACE_EPSILON))
 			out[i] = 0;
 	}
 }
@@ -22,18 +21,13 @@ void PM_StepSlideMove(player_s* pev)
 	int bumpcount;
 	int numplanes;
 	vec3_t planes[5];
-	vec3_t primal_velocity;
 	int i, j;
 	trace_s trace;
 	vec3_t end;
 	float time_left;
-	vec3_t mins = { -16, -16, -32 }, maxs = { 16, 16, 32 };
-	//vec3_t mins = { 0, 0, 0 }, maxs = { 0, 0, 0 };
 
-	vec_copy(primal_velocity, pev->base.velocity);
 	numplanes = 0;
 	time_left = cment->frametime;
-
 	for (bumpcount = 0; bumpcount < 3; bumpcount++)
 	{
 		for (i = 0; i < 3; i++)
@@ -41,7 +35,7 @@ void PM_StepSlideMove(player_s* pev)
 			end[i] = pev->base.origin[i] + time_left * pev->base.velocity[i];
 		}
 
-		cment->trace_bbox(pev->base.origin, end, mins, maxs, NULL, CONTENTS_ALL, &trace);
+		cment->trace_bbox(pev->base.origin, end, pev->base.mins, pev->base.maxs, ENT(pev), CONTENTS_ALL, &trace);
 		if (trace.endstuck)
 		{
 			vec_clear(pev->base.velocity);
@@ -63,14 +57,12 @@ void PM_StepSlideMove(player_s* pev)
 			break;
 		}
 
-		//cment->con_printf(COLOR_WHITE, "%s", trace.texturename);
 		vec_copy(planes[numplanes], trace.normal);
 		numplanes++;
 
 		for (i = 0; i < numplanes; i++)
 		{
 			PM_ClipVelocity(pev->base.velocity, planes[i], pev->base.velocity, 1.01f);
-			//cment->con_printf(COLOR_WHITE, "%i %f %f %f", bumpcount, pev->base.velocity[0], pev->base.velocity[1], pev->base.velocity[2]);
 			for (j = 0; j < numplanes; j++)
 			{
 				if (j != i)
@@ -82,12 +74,6 @@ void PM_StepSlideMove(player_s* pev)
 
 			if (j == numplanes)
 				break;
-		}
-
-		if (vec_dot(pev->base.velocity, primal_velocity) <= 0)
-		{
-			vec_clear(pev->base.velocity);
-			break;
 		}
 	}
 }

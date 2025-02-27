@@ -220,10 +220,14 @@ void det_unload()
 void det_reload()
 {
 	int i;
+	string_t path;
 
 	gimg.mipmap = TRUE;
 	gimg.clamp = FALSE;
 	gimg.nearest = FALSE;
 	for (i = 0; i < gnum_details; i++)
-		gdetails[i].texture = img_load(gdetails[i].name);
+	{
+		sprintf(path, DET_FOLDER"%s", gdetails[i].name);
+		gdetails[i].texture = img_load(path);
+	}
 }

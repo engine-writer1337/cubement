@@ -42,7 +42,7 @@ entity_s* ent_rotate(entity_s* pev, float friction)
 	for (i = 1; i < cment->entities_max; i++)
 	{
 		ent = cment->entities[i];
-		if (!ent || ent->id == ENTID_FREE)
+		if (!ent || ent == pev || ent->id == ENTID_FREE)
 			continue;
 
 		if (!(ent->contents & CONTENTS_SOLID))

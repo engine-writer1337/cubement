@@ -16,6 +16,8 @@ static bool_t spawn_player(player_s* pev)
 
 	pev->viewofs = PLR_VIEW_OFS;
 	pev->base.contents = CONTENTS_BBOX;
+	vec_set(pev->base.mins, -16, -16, -32);
+	vec_set(pev->base.maxs, 16, 16, 32);
 	return TRUE;
 }
 

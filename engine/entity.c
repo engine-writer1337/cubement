@@ -163,12 +163,6 @@ static void ent_update(edict_s* ed)
 	if (!e)
 		return;
 
-	if (!vec_cmp(ed->old.absmin, e->absmin) || !vec_cmp(ed->old.absmax, e->absmax))
-	{
-		vec_copy(e->absmin, ed->old.absmin);
-		vec_copy(e->absmax, ed->old.absmax);
-	}
-
 	relink = FALSE;
 	if (ed->old.model != e->model)
 	{
@@ -208,6 +202,13 @@ static void ent_update(edict_s* ed)
 		relink = TRUE;
 	}
 
+	if (!vec_cmp(ed->old.mins, e->mins) || !vec_cmp(ed->old.maxs, e->maxs))
+	{
+		vec_copy(ed->old.mins, e->mins);
+		vec_copy(ed->old.maxs, e->maxs);
+		relink = TRUE;
+	}
+
 	if (relink)
 	{
 		vec_add(e->absmax, e->origin, e->maxs);
@@ -222,6 +223,14 @@ static void ent_update(edict_s* ed)
 		}
 		else
 			ent_fill_areas(ed);
+	}
+	else
+	{
+		if (!vec_cmp(ed->old.absmin, e->absmin) || !vec_cmp(ed->old.absmax, e->absmax))
+		{
+			vec_copy(e->absmin, ed->old.absmin);
+			vec_copy(e->absmax, ed->old.absmax);
+		}
 	}
 }
 

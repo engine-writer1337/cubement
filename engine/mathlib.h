@@ -48,6 +48,8 @@
 #define vec4_copy(dst, src)			(dst[0] = src[0], dst[1] = src[1], dst[2] = src[2], dst[3] = src[3])
 #define vec4_set(dst, x, y, z, w)	(dst[0] = x, dst[1] = y, dst[2] = z, dst[3] = w)
 
+extern const vec3_t gvec_zeros;
+
 inline float math_rsqrt(float number)
 {
 	int i;
@@ -257,11 +259,10 @@ inline void vec_rotate_points(const vec3_t angles, vec3_t pt1, vec3_t pt2)
 
 inline void vec_rotate_bbox(const vec3_t angles, const vec3_t offset, vec3_t mins, vec3_t maxs)
 {
-	vec3_t pt1, pt2, zeros;
+	vec3_t pt1, pt2;
 
 	vec_copy(pt1, mins);
 	vec_copy(pt2, maxs);
-	vec_init(zeros, 0);
 
 	vec_sub(pt1, pt1, offset);
 	vec_sub(pt2, pt2, offset);
@@ -271,7 +272,7 @@ inline void vec_rotate_bbox(const vec3_t angles, const vec3_t offset, vec3_t min
 	vec_add(pt1, pt1, offset);
 	vec_add(pt2, pt2, offset);
 
-	vec_maxmin(pt1, pt2, zeros, zeros, mins, maxs);
+	vec_maxmin(pt1, pt2, gvec_zeros, gvec_zeros, mins, maxs);
 }
 
 inline void vec_rotate_org_bbox(const vec3_t angles, const vec3_t origin, const vec3_t offset, vec3_t absmin, vec3_t absmax)

@@ -1,4 +1,4 @@
-$detail/brick.png
+$brick.png
 hl1/{ladder2
 hl1/-0fift_wall13
 hl1/babtech_dr1c
@@ -33,12 +33,12 @@ hl1/pfab_dskdrwr
 hl1/silo2_wet4d
 hl1/trk_seat
 
-$detail/grass.png
+$grass.png
 hl1/out_dirt1
 hl1/out_grnd1
 hl1/out_grnd2
 
-$detail/wood.png
+$wood.png
 hl1/bcrate02
 hl1/c1a2_flr1
 hl1/cardbox1

@@ -443,9 +443,9 @@ static void snd_load_ogg(const char* filename, wave_s* out)
 void snd_load(const char* filename, wave_s* out)
 {
 	int len;
-	string_t path = SND_FOLDER;
+	string_t path;
 
-	strcatn(path, filename);
+	sprintf(path, SND_FOLDER"%s", filename);
 	len = strlen(path);
 	if (*(int*)(path + len - 4) == 'ggo.')
 	{

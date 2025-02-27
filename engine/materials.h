@@ -2,6 +2,7 @@
 #define _MATERIALS_H_
 
 #define MAX_MAT_ENRTIES		4096
+#define DET_FOLDER			"detail/"
 
 typedef struct
 {

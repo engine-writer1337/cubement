@@ -21,6 +21,7 @@ typedef float vec2_t[2];
 typedef float vec3_t[3];
 typedef unsigned char byte;
 typedef unsigned short word;
+typedef unsigned int hash_t;
 typedef unsigned char bool_t;
 
 typedef struct 
@@ -65,6 +66,7 @@ typedef struct
 typedef struct
 {
 	char name[32];
+	hash_t hash;
 	
 	short parent;
 	bool_t is_gait;
@@ -79,8 +81,9 @@ typedef struct
 
 typedef struct
 {
-	char label[31];
+	char name[31];
 	byte numframes;
+	hash_t hash;
 
 	vec3_t bbmin;
 	vec3_t bbmax;
@@ -107,6 +110,7 @@ typedef struct
 {
 	byte flags;
 	char name[31];
+	hash_t hash;
 }mstudiotexture_s;
 
 //skin families
@@ -118,6 +122,8 @@ typedef struct
 	
 	byte nummodels;
 	byte start_model;
+
+	hash_t hash;
 }mstudiobodyparts_s;
 
 typedef struct
@@ -126,6 +132,8 @@ typedef struct
 	
 	byte nummeshes;
 	byte start_mesh;
+
+	hash_t hash;
 }mstudiomodel_s;
 
 typedef struct

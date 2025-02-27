@@ -2,6 +2,7 @@
 #define _IMAGE_H_
 
 #define IMG_MAX_SIZE		1024 * 1024
+#define PIC_FOLDER			"pics/"
 
 typedef struct
 {

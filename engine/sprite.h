@@ -1,6 +1,8 @@
 #ifndef _SPRITE_H_
 #define _SPRITE_H_
 
+#define SPR_FOLDER		"sprites/"
+
 typedef struct
 {
 	int x, y, w, h;

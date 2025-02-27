@@ -31,6 +31,15 @@ static mstudiotexcoord_s gtexcoords[MDL_MAX_VERTS];
 
 #define ALIGN(a) a = (byte *)((int)((byte *)a + 3) & ~ 3)
 
+static hash_t util_hash_str(const char* string)
+{
+	hash_t i, hashkey = 0;
+
+	for (i = 0; string[i]; i++)
+		hashkey = (hashkey + i) * 37 + tolower(string[i]);
+	return hashkey;
+}
+
 static void WriteBoneInfo()
 {
 	int i, j;
@@ -43,6 +52,8 @@ static void WriteBoneInfo()
 	for (i = 0; i < numbones; i++)
 	{
 		strcpy(pbone[i].name, bonetable[i].name);
+		pbone[i].hash = util_hash_str(pbone[i].name);
+
 		pbone[i].parent = bonetable[i].parent;
 		pbone[i].value[0] = bonetable[i].pos[0];
 		pbone[i].value[1] = bonetable[i].pos[1];
@@ -100,7 +111,9 @@ static void WriteSequenceInfo()
 
 	for (i = 0; i < numseq; i++, pseqdesc++)
 	{
-		strncpy(pseqdesc->label, sequence[i].name, sizeof(pseqdesc->label) - 1);
+		strncpy(pseqdesc->name, sequence[i].name, sizeof(pseqdesc->name) - 1);
+		pseqdesc->hash = util_hash_str(pseqdesc->name);
+
 		pseqdesc->numframes = sequence[i].numframes;
 
 		VectorCopy(sequence[i].bmin, pseqdesc->bbmin);
@@ -167,6 +180,9 @@ static void WriteTextures()
 
 	phdr->numtextures = gnumtextures;
 	phdr->ofstextures = (pData - pStart);
+
+	for (i = 0; i < gnumtextures; i++)
+		gtexture[i].hash = util_hash_str(gtexture[i].name);
 
 	memcpy(pData, gtexture, gnumtextures * sizeof(mstudiotexture_s));
 	pData += gnumtextures * sizeof(mstudiotexture_s);
@@ -305,6 +321,8 @@ static void WriteModel()
 			Error("Too many bodies in model\n");
 
 		strncpy(pbodypart[i].name, bodypart[i].name, sizeof(pbodypart[i].name) - 1);
+		pbodypart[i].hash = util_hash_str(pbodypart[i].name);
+
 		pbodypart[i].nummodels = bodypart[i].nummodels;
 		pbodypart[i].start_model = addmodels;
 
@@ -312,6 +330,8 @@ static void WriteModel()
 		{
 			mod = bodypart[i].pmodel[j];
 			strncpy(pmodel[addmodels].name, mod->name, sizeof(pmodel[addmodels].name) - 1);
+			pmodel[addmodels].hash = util_hash_str(pmodel[addmodels].name);
+
 			pmodel[addmodels].nummeshes = mod->nummesh;
 			pmodel[addmodels].start_mesh = addmeshes;
 

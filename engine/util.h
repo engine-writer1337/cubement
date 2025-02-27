@@ -1,6 +1,8 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+#define path_separator(c)	((c) == '\\' || (c) == '/')
+
 void* util_malloc(size_t size);
 void* util_calloc(size_t count, size_t size);
 void util_free(void* mem);
@@ -33,5 +35,6 @@ float util_calc_fov(float* fov_x, float width, float height);
 void util_adjust_fov(float* fov_x, float* fov_y, float width, float height);
 
 hash_t util_hash_str(const char* string);
+void util_filepath(const char* path, char* dest);
 
 #endif

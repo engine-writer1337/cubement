@@ -3,6 +3,8 @@
 #include <direct.h>
 #include <psapi.h>
 
+const vec3_t gvec_zeros;
+
 void* util_malloc(size_t size)
 {
 	if (size < 1)
@@ -372,4 +374,16 @@ hash_t util_hash_str(const char* string)
 	for (i = 0; string[i]; i++)
 		hashkey = (hashkey + i) * 37 + tolower(string[i]);
 	return hashkey;
+}
+
+void util_filepath(const char* path, char* dest)
+{
+	const char* src;
+
+	src = path + strlen(path) - 1;
+	while (src != path && !path_separator(*(src - 1)))
+		src--;
+
+	memcpy(dest, path, src - path);
+	dest[src - path] = '\0';
 }

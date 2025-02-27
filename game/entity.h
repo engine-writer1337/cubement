@@ -1,6 +1,8 @@
 #ifndef _ENTITY_H_
 #define _ENTITY_H_
 
+#define ENT(ent)	&ent->base
+
 typedef struct
 {
 	entity_s base;

@@ -1,68 +1,54 @@
 #include "game.h"
 
-void PM_ClipVelocity(vec3_t in, vec3_t normal, vec3_t out, float overbounce)
+static void plr_clip_velocity(const vec3_t in, const vec3_t normal, vec3_t out, float overbounce)
 {
-	float backoff;
-	float change;
 	int i;
+	float backoff;
 
 	backoff = vec_dot(in, normal) * overbounce;
 	for (i = 0; i < 3; i++)
 	{
-		change = normal[i] * backoff;
-		out[i] = in[i] - change;
-		if ((out[i] > -TRACE_EPSILON) && (out[i] < TRACE_EPSILON))
+		out[i] = in[i] - (normal[i] * backoff);
+		if (out[i] > -BOUND_EPSILON && out[i] < BOUND_EPSILON)
 			out[i] = 0;
 	}
 }
 
-void PM_StepSlideMove(player_s* pev)
+static void plr_slide_move(player_s* pev)
 {
-	int bumpcount;
-	int numplanes;
-	vec3_t planes[5];
 	int i, j;
 	trace_s trace;
-	vec3_t end;
 	float time_left;
+	vec3_t end, planes[3];
+	int bumpcount, numplanes;
 
 	numplanes = 0;
 	time_left = cment->frametime;
+
 	for (bumpcount = 0; bumpcount < 3; bumpcount++)
 	{
-		for (i = 0; i < 3; i++)
-		{
-			end[i] = pev->base.origin[i] + time_left * pev->base.velocity[i];
-		}
-
+		vec_ma(end, pev->base.origin, time_left, pev->base.velocity);
 		cment->trace_bbox(pev->base.origin, end, pev->base.mins, pev->base.maxs, ENT(pev), CONTENTS_ALL, &trace);
+
 		if (trace.endstuck)
 		{
 			vec_clear(pev->base.velocity);
 			return;
 		}
+
 		if (trace.fraction > 0)
-		{
 			vec_copy(pev->base.origin, trace.endpos);
-			numplanes = 0;
-		}
 
 		if (trace.fraction == 1)
 			break;
 
-		time_left -= time_left * trace.fraction;//TODO: ?
-		if (numplanes >= 5)
-		{
-			vec_clear(pev->base.velocity);
-			break;
-		}
-
+		time_left -= time_left * trace.fraction;
 		vec_copy(planes[numplanes], trace.normal);
 		numplanes++;
 
 		for (i = 0; i < numplanes; i++)
 		{
-			PM_ClipVelocity(pev->base.velocity, planes[i], pev->base.velocity, 1.01f);
+			plr_clip_velocity(pev->base.velocity, planes[i], pev->base.velocity, 1.01f);
 			for (j = 0; j < numplanes; j++)
 			{
 				if (j != i)
@@ -75,6 +61,9 @@ void PM_StepSlideMove(player_s* pev)
 			if (j == numplanes)
 				break;
 		}
+
+		if (time_left <= 0)
+			break;
 	}
 }
 
@@ -151,7 +140,7 @@ static void plr_fly(player_s* pev)
 	if (vec_len(pev->base.velocity) > 0.1f)
 	{
 		PM_Friction(pev);
-		PM_StepSlideMove(pev);
+		plr_slide_move(pev);
 	}
 }
 

@@ -99,6 +99,8 @@ static void engine_int()
 	gengine.ent_create = ent_create;
 	gengine.ent_remove = ent_remove;
 
+	gengine.ent_rotate_brush_bbox = ent_rotate_brush_bbox;
+
 	gengine.ent_saverestore = NULL;
 	gengine.ent_play_anim = NULL;
 	gengine.ent_set_body = NULL;
@@ -200,7 +202,7 @@ static void engine_int()
 	// Trace
 	//======================================================
 	gengine.trace_bbox = trace_bbox;
-	gengine.trace_test_stuck = NULL;
+	gengine.trace_test_stuck = trace_test_stuck;
 	gengine.trace_test_stuck_ent = trace_test_stuck_ent;
 
 	//======================================================

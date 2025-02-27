@@ -41,9 +41,6 @@
     <ClCompile Include="game.c">
       <Filter>Source Code</Filter>
     </ClCompile>
-    <ClCompile Include="ent_phys.c">
-      <Filter>Source Code</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.h">
@@ -65,6 +62,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="world.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\engine\mathlib.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

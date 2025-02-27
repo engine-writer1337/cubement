@@ -24,6 +24,7 @@
 #define memzero(mem, sz)	(memset(mem, 0, sz))
 
 #define TRACE_EPSILON	(1.0f / 32)
+#define BOUND_EPSILON	(TRACE_EPSILON * 4)
 
 #define FL_INVISIBLE	(1 << 0)
 #define FL_BEAM			(1 << 1)
@@ -196,6 +197,8 @@ typedef struct
 	void (*ent_register)(const entmap_s* ent);
 	entity_s* (*ent_create)(const char* classname);
 	void (*ent_remove)(entity_s* ent);
+
+	void (*ent_rotate_brush_bbox)(const entity_s* e, vec3_t bmin, vec3_t bmax);
 
 	void (*ent_saverestore)(void* data, int count, field_e type);
 	void (*ent_play_anim)(anim_s* anim, int flags);

@@ -44,6 +44,7 @@ entity_s* ent_create(const char* classname);
 void ent_remove(entity_s* ent);
 
 void ent_think();
+void ent_rotate_brush_bbox(const entity_s* e, vec3_t bmin, vec3_t bmax);
 
 bool_t ent_parse(const char* pfile);
 

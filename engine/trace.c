@@ -321,8 +321,8 @@ entity_s* trace_test_stuck(const vec3_t org, const vec3_t mins, const vec3_t max
 	gworld.framecount++;
 	vec_add(absmin, org, mins);
 	vec_add(absmax, org, maxs);
-	vec_add_val(absmin, absmin, -TRACE_EPSILON * 4);
-	vec_add_val(absmax, absmax, TRACE_EPSILON * 4);
+	vec_add_val(absmin, absmin, -BOUND_EPSILON);
+	vec_add_val(absmax, absmax, BOUND_EPSILON);
 
 	for (i = 0; i < gbru.num_areas; i++)
 	{
@@ -425,8 +425,8 @@ bool_t trace_test_stuck_ent(const entity_s* check, const vec3_t org, const vec3_
 
 	vec_add(absmin, org, mins);
 	vec_add(absmax, org, maxs);
-	vec_add_val(absmin, absmin, -TRACE_EPSILON * 4);
-	vec_add_val(absmax, absmax, TRACE_EPSILON * 4);
+	vec_add_val(absmin, absmin, -BOUND_EPSILON);
+	vec_add_val(absmax, absmax, BOUND_EPSILON);
 
 	if (vec_aabb(check->absmin, check->absmax, absmin, absmax))
 		return FALSE;
@@ -451,7 +451,7 @@ bool_t trace_test_stuck_ent(const entity_s* check, const vec3_t org, const vec3_
 				vec_rotate_org_bbox(check->angles, check->origin, bm->offset, bfake.absmin, bfake.absmax);
 
 			if (!vec_aabb(bfake.absmin, bfake.absmax, absmin, absmax))
-				return TRUE;
+				return TRUE;			
 		}
 	}
 

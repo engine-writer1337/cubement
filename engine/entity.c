@@ -154,6 +154,24 @@ static void ent_fill_areas(edict_s* ed)
 		ed->areas[ed->num_areas++] = 0;
 }
 
+void ent_rotate_brush_bbox(const entity_s* e, vec3_t bmin, vec3_t bmax)
+{//TODO: this part from ent_update (duplicate)
+	vec3_t angles;
+	brushmodel_s* bm;
+
+	if (!e || e->model == BAD_HANDLE || gres[e->model].type != RES_BRUSH)
+		return;
+
+	angles[0] = anglemod(e->angles[0]);
+	angles[1] = anglemod(e->angles[1]);
+	angles[2] = anglemod(e->angles[2]);
+
+	bm = gres[e->model].brush;
+	vec_copy(bmin, bm->maxs);
+	vec_copy(bmax, bm->mins);
+	vec_rotate_bbox(e->angles, bm->offset, bmin, bmax);
+}
+
 static void ent_update(edict_s* ed)
 {
 	bool_t relink;

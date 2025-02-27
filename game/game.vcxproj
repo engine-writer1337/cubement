@@ -102,7 +102,6 @@
   <ItemGroup>
     <ClCompile Include="entity.c" />
     <ClCompile Include="ent_brush.c" />
-    <ClCompile Include="ent_phys.c" />
     <ClCompile Include="game.c" />
     <ClCompile Include="game_int.c" />
     <ClCompile Include="menu.c" />
@@ -113,6 +112,7 @@
     <ClCompile Include="world.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\engine\mathlib.h" />
     <ClInclude Include="..\engine\shared.h" />
     <ClInclude Include="entity.h" />
     <ClInclude Include="ent_shared.h" />
